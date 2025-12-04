@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.env
+.env.local
+.env.*.local
+*.log
+
+# Terraform
+terraform/
+*.tf
+*.tfstate*
+.terraform/
+
+# Cloud Build
+cloudbuild.yaml
+
+# Tests
+tests/
+
+# Misc
+.DS_Store
+Thumbs.db
