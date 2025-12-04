@@ -1,5 +1,5 @@
 [project]
-name = "etude-rag"
+name = "etude-rag2"
 version = "0.1.0"
 description = "RAG system with Google Drive and Vertex AI"
 readme = "README.md"
@@ -35,6 +35,7 @@ dependencies = [
 
     # Streamlit UI
     "streamlit>=1.39.0",
+    "httpx>=0.27.0",
 
     # Evaluation
     "ragas>=0.1.19",
