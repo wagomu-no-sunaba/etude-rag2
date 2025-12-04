@@ -1,0 +1,20 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+environment = "dev"
+
+# Cloud SQL (adjust for production)
+db_tier = "db-f1-micro"
+db_name = "rag_db"
+db_user = "raguser"
+
+# Cloud Run (adjust based on workload)
+cloud_run_cpu           = "2"
+cloud_run_memory        = "4Gi"
+cloud_run_min_instances = 0
+cloud_run_max_instances = 10
+cloud_run_concurrency   = 80
+
+# Container image (optional - defaults to gcr.io/${project_id}/etude-rag2:latest)
+# container_image = "gcr.io/your-project/etude-rag2:v1.0.0"
