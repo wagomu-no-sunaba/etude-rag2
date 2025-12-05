@@ -1,0 +1,58 @@
+# ============================================
+# Drive Ingester Dockerfile
+# マルチステージビルドでスタンドアロンイメージを作成
+# ============================================
+
+# Stage 1: Build stage with uv
+FROM python:3.12-slim AS builder
+
+# システム依存ライブラリのインストール（ビルド用）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# uvをコピー（高速パッケージインストール）
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# 依存関係ファイルを先にコピー（レイヤーキャッシュ最適化）
+# README.mdはhatchlingビルドに必要
+COPY pyproject.toml uv.lock README.md ./
+
+# 依存関係をインストール（プロジェクト本体は除く）
+RUN uv sync --frozen --no-dev --no-install-project
+
+# アプリケーションコードをコピー
+COPY src/ ./src/
+COPY schemas/ ./schemas/
+
+# プロジェクト本体をインストール
+RUN uv sync --frozen --no-dev
+
+# ============================================
+# Stage 2: Runtime stage（軽量イメージ）
+# ============================================
+FROM python:3.12-slim AS runtime
+
+# ランタイムに必要な依存のみインストール
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ビルドステージから仮想環境をコピー
+COPY --from=builder /app/.venv /app/.venv
+
+# アプリケーションコードをコピー
+COPY --from=builder /app/src/ ./src/
+COPY --from=builder /app/schemas/ ./schemas/
+
+# 環境変数の設定
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+# Drive Ingesterを実行
+CMD ["python", "-m", "src.main"]

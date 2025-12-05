@@ -1,0 +1,43 @@
+# ============================================
+# API用ベースイメージ
+# 依存関係をプリインストールしたイメージ
+# 使用タイミング: pyproject.toml または uv.lock を変更した場合
+# ============================================
+
+# Stage 1: Build stage with uv
+FROM python:3.12-slim AS builder
+
+# システム依存ライブラリのインストール（ビルド用）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# uvをコピー（高速パッケージインストール）
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# 依存関係ファイルをコピー
+# README.mdはhatchlingビルドに必要
+COPY pyproject.toml uv.lock README.md ./
+
+# 依存関係をインストール（プロジェクト本体は除く）
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Stage 2: Runtime stage（軽量イメージ）
+FROM python:3.12-slim
+
+# ランタイムに必要な依存のみインストール
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ビルドステージから仮想環境をコピー
+COPY --from=builder /app/.venv /app/.venv
+
+# 環境変数の設定
+ENV PATH="/app/.venv/bin:$PATH"
