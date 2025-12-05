@@ -288,11 +288,30 @@ workload_identity_provider = "projects/xxx/locations/global/workloadIdentityPool
 
 ## Step 4: データベースの初期化
 
-Cloud SQL はプライベート IP のみで構成されているため、**GCP Cloud Shell** から接続してスキーマを適用します。
+### 4.1 自動スクリプトでスキーマを適用（推奨）
 
-> **Note**: ローカルマシンから Cloud SQL Proxy 経由で接続する場合は VPN や IAP トンネルが必要です。初回セットアップでは Cloud Shell の使用を推奨します。
+ローカルマシンから自動でスキーマを適用するスクリプトを用意しています：
 
-### 4.1 Cloud Shell を開く
+```bash
+# プロジェクトルートで実行
+./scripts/apply-schema.sh dev
+```
+
+このスクリプトは以下を自動的に行います：
+1. Cloud SQL インスタンスのパブリック IP を一時的に有効化
+2. 現在の IP アドレスを許可リストに追加
+3. Secret Manager からパスワードを取得
+4. スキーマを適用
+5. テーブル作成を確認
+6. パブリック IP を無効化（セキュリティのため）
+
+> **Note**: psql がインストールされている必要があります（`brew install postgresql` など）
+
+### 4.2 手動でスキーマを適用（Cloud Shell 経由）
+
+自動スクリプトが使えない場合は、GCP Cloud Shell から手動で適用できます。
+
+#### 4.2.1 Cloud Shell を開く
 
 1. [GCP Console](https://console.cloud.google.com/) にアクセス
 2. 右上の Cloud Shell アイコン（`>_`）をクリック
@@ -303,88 +322,66 @@ Cloud SQL はプライベート IP のみで構成されているため、**GCP 
 https://console.cloud.google.com/?cloudshell=true&project=YOUR_PROJECT_ID
 ```
 
-### 4.2 プロジェクトの設定
+#### 4.2.2 パブリック IP を有効化
 
-Cloud Shell 内で以下を実行：
+Cloud SQL はプライベート IP のみで構成されているため、一時的にパブリック IP を有効化します：
 
 ```bash
 # プロジェクトを設定
-gcloud config set project YOUR_PROJECT_ID
-
-# 例:
 gcloud config set project etude-rag2
+
+# パブリック IP を有効化（数分かかります）
+gcloud sql instances patch etude-rag2-db-dev --assign-ip
 ```
 
-### 4.3 リポジトリのクローンとパスワード取得
+#### 4.2.3 リポジトリのクローンとパスワード取得
 
 ```bash
 # リポジトリをクローン
 git clone https://github.com/wagomu-no-sunaba/etude-rag2.git
 cd etude-rag2
 
-# データベースパスワードを取得して環境変数に設定
-export DB_PASSWORD=$(gcloud secrets versions access latest --secret=etude-rag2-db-password-dev)
-
-# パスワードが取得できたか確認（マスク表示）
-echo "Password length: ${#DB_PASSWORD}"
+# データベースパスワードを取得して確認
+gcloud secrets versions access latest --secret=etude-rag2-db-password-dev
+# （この値を後で入力します）
 ```
 
-### 4.4 Cloud SQL Proxy のセットアップと起動
+#### 4.2.4 スキーマの適用
 
 ```bash
-# Cloud SQL Proxy をダウンロード
-curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.linux.amd64
-chmod +x cloud-sql-proxy
-
-# バックグラウンドで起動（プライベート IP モード）
-./cloud-sql-proxy YOUR_PROJECT_ID:us-central1:etude-rag2-db-dev --private-ip --port=5432 &
-
-# 例:
-./cloud-sql-proxy etude-rag2:us-central1:etude-rag2-db-dev --private-ip --port=5432 &
-
-# 起動確認（数秒待つ）
-sleep 3
+# gcloud sql connect で接続
+# パスワードを聞かれたら、上で取得した値を入力
+gcloud sql connect etude-rag2-db-dev --user=raguser --database=rag_db
 ```
 
-出力例：
-```
-Listening on 127.0.0.1:5432
+接続後、psql プロンプトで以下を実行：
+
+```sql
+-- スキーマファイルを読み込み
+\i schemas/schema.sql
+
+-- テーブルが作成されたか確認
+\dt
+
+-- 終了
+\q
 ```
 
-### 4.5 スキーマの適用
+#### 4.2.5 パブリック IP を無効化（重要）
+
+セキュリティのため、パブリック IP を無効化します：
 
 ```bash
-# スキーマを適用
-PGPASSWORD=$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -f schemas/schema.sql
+gcloud sql instances patch etude-rag2-db-dev --no-assign-ip
 ```
 
-### 4.6 スキーマ適用の確認
+#### 4.2.6 クリーンアップ
 
 ```bash
-# テーブルが作成されたか確認
-PGPASSWORD=$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -c "\dt"
-```
-
-期待される出力：
-```
-          List of relations
- Schema |   Name    | Type  | Owner
---------+-----------+-------+--------
- public | documents | table | raguser
-```
-
-### 4.7 クリーンアップ
-
-```bash
-# Cloud SQL Proxy を停止
-pkill -f cloud-sql-proxy
-
 # （任意）クローンしたリポジトリを削除
 cd ~
 rm -rf etude-rag2
 ```
-
-> Cloud Shell セッションは一定時間操作がないと自動終了します。スキーマ適用が完了したら Cloud Shell を閉じても問題ありません。
 
 ### 参考: 接続情報の確認方法
 
@@ -393,11 +390,11 @@ rm -rf etude-rag2
 ```bash
 cd terraform
 
-# 接続文字列（Cloud SQL Proxy で使用）
+# 接続文字列
 terraform output cloud_sql_connection_name
 # 出力例: etude-rag2:us-central1:etude-rag2-db-dev
 
-# データベース接続情報一覧
+# データベース接続情報
 terraform output db_name        # rag_db
 terraform output db_user        # raguser
 terraform output db_private_ip  # 10.x.x.x（VPC 内部 IP）
@@ -405,9 +402,6 @@ terraform output db_private_ip  # 10.x.x.x（VPC 内部 IP）
 # パスワードのシークレット ID
 terraform output db_password_secret_id
 # 出力例: etude-rag2-db-password-dev
-
-# 全ての出力値を確認
-terraform output
 ```
 
 ---
