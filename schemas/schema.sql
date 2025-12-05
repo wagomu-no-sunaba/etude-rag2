@@ -1,20 +1,26 @@
 -- RAG System Database Schema
 -- PostgreSQL 15+ with pgvector and pg_trgm extensions
+-- This schema is idempotent - safe to run multiple times
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Article type enumeration
-CREATE TYPE article_type AS ENUM (
-    'ANNOUNCEMENT',   -- Announcements, releases
-    'EVENT_REPORT',   -- Event reports, study sessions
-    'INTERVIEW',      -- Employee interviews
-    'CULTURE'         -- Company culture, policies
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'article_type') THEN
+        CREATE TYPE article_type AS ENUM (
+            'ANNOUNCEMENT',   -- Announcements, releases
+            'EVENT_REPORT',   -- Event reports, study sessions
+            'INTERVIEW',      -- Employee interviews
+            'CULTURE'         -- Company culture, policies
+        );
+    END IF;
+END$$;
 
 -- Documents table for storing article chunks with embeddings
-CREATE TABLE documents (
+CREATE TABLE IF NOT EXISTS documents (
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
     metadata JSONB DEFAULT '{}',
@@ -29,25 +35,24 @@ CREATE TABLE documents (
 
 -- Vector similarity index (IVFFlat for approximate nearest neighbor)
 -- Note: For production with large datasets, consider HNSW index
-CREATE INDEX idx_embedding ON documents
+CREATE INDEX IF NOT EXISTS idx_embedding ON documents
     USING ivfflat (embedding vector_cosine_ops)
     WITH (lists = 100);
 
 -- Trigram index for full-text similarity search
-CREATE INDEX idx_content_trgm ON documents
+CREATE INDEX IF NOT EXISTS idx_content_trgm ON documents
     USING gin (content gin_trgm_ops);
 
 -- Article type filter index
-CREATE INDEX idx_article_type ON documents (article_type);
+CREATE INDEX IF NOT EXISTS idx_article_type ON documents (article_type);
 
 -- JSONB metadata index for flexible queries
-CREATE INDEX idx_metadata ON documents USING gin (metadata);
+CREATE INDEX IF NOT EXISTS idx_metadata ON documents USING gin (metadata);
 
 -- Source file index for deduplication
-CREATE INDEX idx_source_file ON documents (source_file);
+CREATE INDEX IF NOT EXISTS idx_source_file ON documents (source_file);
 
 -- RRF (Reciprocal Rank Fusion) score calculation function
--- Formula: 1 / (rank + k) where k is typically 50-60
 CREATE OR REPLACE FUNCTION rrf_score(rank bigint, rrf_k int DEFAULT 50)
     RETURNS numeric AS $$
     SELECT COALESCE(1.0 / ($1 + $2), 0.0);
@@ -62,13 +67,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop and recreate trigger to ensure it's up to date
+DROP TRIGGER IF EXISTS update_documents_updated_at ON documents;
 CREATE TRIGGER update_documents_updated_at
     BEFORE UPDATE ON documents
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Useful view for document statistics by article type
-CREATE VIEW document_stats AS
+CREATE OR REPLACE VIEW document_stats AS
 SELECT
     article_type,
     COUNT(*) as document_count,

@@ -68,11 +68,6 @@ output "db_user" {
   value       = var.db_user
 }
 
-output "region" {
-  description = "GCP region"
-  value       = var.region
-}
-
 # =============================================================================
 # Secret Manager
 # =============================================================================
