@@ -76,3 +76,44 @@ resource "google_secret_manager_secret_iam_member" "service_account_key_accessor
   member    = "serviceAccount:${google_service_account.cloud_run.email}"
   project   = var.project_id
 }
+
+# =============================================================================
+# Non-secret configuration stored in Secret Manager for single-source-of-truth
+# This eliminates .env/tfvars duplication
+# =============================================================================
+
+# Application configuration (non-sensitive but centralized)
+resource "google_secret_manager_secret" "app_config" {
+  secret_id = "etude-rag2-app-config-${var.environment}"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_version" "app_config" {
+  secret = google_secret_manager_secret.app_config.id
+  secret_data = jsonencode({
+    # Vertex AI settings
+    embedding_model  = var.embedding_model
+    llm_model        = var.llm_model
+    llm_temperature  = var.llm_temperature
+
+    # Reranker settings
+    reranker_model = var.reranker_model
+
+    # Hybrid search settings
+    hybrid_search_k = var.hybrid_search_k
+    rrf_k           = var.rrf_k
+  })
+}
+
+resource "google_secret_manager_secret_iam_member" "app_config_accessor" {
+  secret_id = google_secret_manager_secret.app_config.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+  project   = var.project_id
+}

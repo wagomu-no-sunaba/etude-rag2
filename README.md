@@ -34,7 +34,8 @@ note記事ドラフト自動生成のためのRAG（Retrieval-Augmented Generati
 etude-rag2/
 ├── src/
 │   ├── main.py                 # データ取り込みCLI
-│   ├── config.py               # 設定管理
+│   ├── config.py               # 設定管理（Secret Manager統合）
+│   ├── secrets.py              # Secret Managerヘルパー
 │   ├── api/                    # FastAPI REST API
 │   │   ├── main.py
 │   │   └── models.py
@@ -61,6 +62,8 @@ etude-rag2/
 │   └── schema.sql              # DBスキーマ
 ├── tests/                      # テストスイート
 ├── terraform/                  # インフラ設定
+├── scripts/
+│   └── sync-env-from-secrets.sh # Secret Manager → .env 生成
 ├── Dockerfile                  # APIサーバー用
 ├── Dockerfile.streamlit        # UI用
 ├── Dockerfile.ingester         # データ取り込み用
@@ -81,7 +84,12 @@ etude-rag2/
 # 1. 依存関係のインストール
 uv sync
 
-# 2. 環境変数の設定
+# 2. 環境変数の設定（2つの方法）
+
+# 方法A: Secret Managerから自動生成（推奨）
+./scripts/sync-env-from-secrets.sh dev
+
+# 方法B: 手動設定
 cp .env.example .env
 # .envファイルを編集
 
@@ -118,25 +126,60 @@ uv run streamlit run src/ui/app.py
 | POST | `/verify` | ハルシネーション・スタイルチェック |
 | GET | `/health` | ヘルスチェック |
 
-## 環境変数
+## 設定管理
+
+本プロジェクトは **Google Cloud Secret Manager** を設定の Single Source of Truth として使用します。
+
+### 設定の優先順位
+
+1. **環境変数**（最高優先、Cloud Run での注入用）
+2. **Secret Manager**（シークレット値）
+3. **.env ファイル**（ローカル開発のフォールバック）
+
+### Secret Manager で管理される設定
+
+| シークレットID | 説明 |
+|---------------|------|
+| `etude-rag2-db-password-{env}` | データベースパスワード |
+| `etude-rag2-drive-folder-id-{env}` | Google Drive フォルダID |
+| `etude-rag2-my-email-{env}` | ACLフィルタリング用メール |
+| `etude-rag2-service-account-key-{env}` | サービスアカウントキー |
+| `etude-rag2-app-config-{env}` | アプリ設定（JSON） |
+
+### ローカル開発での設定
+
+```bash
+# Secret Manager から .env を自動生成（推奨）
+./scripts/sync-env-from-secrets.sh dev
+
+# または最小限の設定で Secret Manager を直接参照
+export GOOGLE_PROJECT_ID=your-project-id
+export ENVIRONMENT=dev
+# → config.py が自動で Secret Manager から取得
+```
+
+### 環境変数一覧
 
 ```env
-# Google Cloud
+# Google Cloud（必須）
 GOOGLE_PROJECT_ID=your-project-id
 GOOGLE_LOCATION=us-central1
-SERVICE_ACCOUNT_FILE=/path/to/service-account.json
-
-# Vertex AI
-EMBEDDING_MODEL=text-embedding-004
-LLM_MODEL=gemini-1.5-pro
-LLM_TEMPERATURE=0.3
+ENVIRONMENT=dev
 
 # Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=rag_db
 DB_USER=postgres
-DB_PASSWORD=your-password
+DB_PASSWORD=  # Secret Manager から自動取得
+
+# Google Drive
+TARGET_FOLDER_ID=  # Secret Manager から自動取得
+
+# Vertex AI（デフォルト値あり）
+EMBEDDING_MODEL=text-embedding-004
+LLM_MODEL=gemini-1.5-pro
+LLM_TEMPERATURE=0.3
 
 # Hybrid Search Parameters
 HYBRID_SEARCH_K=20
@@ -146,13 +189,6 @@ FINAL_K=10
 # Reranker
 RERANKER_MODEL=BAAI/bge-reranker-base
 RERANKER_TOP_K=5
-
-# Google Drive
-TARGET_FOLDER_ID=your-folder-id
-
-# Chunking
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
 ```
 
 ## テスト
@@ -172,12 +208,19 @@ uv run mypy src/
 
 ## クラウドデプロイ
 
-### Terraform
+### 1. GCPプロジェクトの作成
+
+```bash
+# セットアップスクリプトでプロジェクト作成（推奨）
+./scripts/setup-gcp-project.sh YOUR_PROJECT_ID [BILLING_ACCOUNT_ID]
+```
+
+### 2. Terraform
 
 ```bash
 cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvarsを編集
+# setup-gcp-project.sh が terraform.tfvars を生成済み
+# 必要に応じて編集
 
 terraform init
 terraform plan

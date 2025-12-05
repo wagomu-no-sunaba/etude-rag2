@@ -63,12 +63,30 @@ psql rag_db < schemas/schema.sql
 
 FastAPI with endpoints: `/generate`, `/search`, `/verify`, `/health`
 
-### Configuration (src/config.py)
+### Configuration (src/config.py, src/secrets.py)
 
-Pydantic Settings with environment variable support. Key settings:
+Pydantic Settings with **Secret Manager integration**. Configuration priority:
+1. Environment variables (highest priority, for Cloud Run)
+2. Google Cloud Secret Manager (for secrets)
+3. `.env` file (local development fallback)
+
+Key settings:
 - `HYBRID_SEARCH_K`, `RRF_K`, `FINAL_K` - Search tuning parameters
 - `RERANKER_MODEL`, `RERANKER_TOP_K` - Reranker configuration
 - `DB_HOST` starting with `/` triggers Unix socket connection (Cloud SQL)
+- `DB_PASSWORD`, `TARGET_FOLDER_ID`, `MY_EMAIL` - Auto-loaded from Secret Manager
+
+Secret Manager secrets (managed by Terraform):
+- `etude-rag2-db-password-{env}` - Database password
+- `etude-rag2-drive-folder-id-{env}` - Google Drive folder ID
+- `etude-rag2-my-email-{env}` - Email for ACL filtering
+- `etude-rag2-app-config-{env}` - App config (JSON)
+
+Local development:
+```bash
+# Generate .env from Secret Manager
+./scripts/sync-env-from-secrets.sh dev
+```
 
 ## Database
 

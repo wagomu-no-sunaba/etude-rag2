@@ -1,15 +1,45 @@
 """Configuration management using Pydantic Settings.
 
-Environment variables or .env file can be used to configure the application.
+Priority order:
+1. Environment variables (highest priority, for Cloud Run)
+2. Google Cloud Secret Manager (for secrets like DB_PASSWORD)
+3. .env file (for local development fallback)
+
+This approach eliminates .env/tfvars duplication by using Secret Manager
+as the single source of truth.
 """
 
+import os
 from functools import lru_cache
+from typing import Any
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _get_secret_value(key: str) -> str | None:
+    """Lazy import to avoid circular dependency."""
+    # Only try Secret Manager if we have a project ID
+    project_id = os.environ.get("GOOGLE_PROJECT_ID")
+    if not project_id:
+        return None
+
+    try:
+        from src.secrets import get_app_secret
+
+        return get_app_secret(key)
+    except Exception:
+        return None
+
+
 class Settings(BaseSettings):
-    """Application settings with environment variable support."""
+    """Application settings with Secret Manager integration.
+
+    Configuration is loaded from:
+    1. Environment variables (highest priority)
+    2. Secret Manager (for sensitive values)
+    3. .env file (local development fallback)
+    """
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -21,6 +51,7 @@ class Settings(BaseSettings):
     # Google Cloud
     google_project_id: str
     google_location: str = "us-central1"
+    environment: str = "dev"
     service_account_file: str | None = None
 
     # Vertex AI
@@ -48,9 +79,34 @@ class Settings(BaseSettings):
     # Google Drive
     target_folder_id: str | None = None
 
+    # Email for ACL filtering
+    my_email: str | None = None
+
     # Chunking
     chunk_size: int = 1000
     chunk_overlap: int = 200
+
+    @model_validator(mode="before")
+    @classmethod
+    def load_secrets_from_secret_manager(cls, data: dict[str, Any]) -> dict[str, Any]:
+        """Load secret values from Secret Manager if not already set.
+
+        This allows Secret Manager to be the single source of truth while
+        still allowing environment variables to override.
+        """
+        secret_fields = ["db_password", "target_folder_id", "my_email"]
+
+        for field in secret_fields:
+            # Skip if already set via env var or .env
+            if data.get(field):
+                continue
+
+            # Try to load from Secret Manager
+            value = _get_secret_value(field)
+            if value:
+                data[field] = value
+
+        return data
 
     @property
     def db_connection_string(self) -> str:

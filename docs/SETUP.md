@@ -58,6 +58,22 @@ uv sync
 
 ### 3. 環境変数の設定
 
+本プロジェクトは **Secret Manager** を設定の Single Source of Truth として使用します。
+
+#### 方法A: Secret Manager から自動生成（推奨）
+
+Terraform で環境を構築済みの場合：
+
+```bash
+# gcloud で認証済みであることを確認
+gcloud auth application-default login
+
+# Secret Manager から .env を生成
+./scripts/sync-env-from-secrets.sh dev
+```
+
+#### 方法B: 手動設定
+
 ```bash
 cp .env.example .env
 ```
@@ -65,40 +81,75 @@ cp .env.example .env
 `.env` ファイルを編集：
 
 ```bash
-# Google Cloud
+# Google Cloud（必須）
 GOOGLE_PROJECT_ID=your-project-id
 GOOGLE_LOCATION=us-central1
-SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+ENVIRONMENT=dev
 
 # Database (ローカル開発時)
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=rag_db
 DB_USER=postgres
-DB_PASSWORD=your-password
+DB_PASSWORD=your-password  # または Secret Manager から自動取得
 
 # Google Drive
-TARGET_FOLDER_ID=your-folder-id
+TARGET_FOLDER_ID=your-folder-id  # または Secret Manager から自動取得
 ```
+
+> **Note**: `GOOGLE_PROJECT_ID` と `ENVIRONMENT` を設定すれば、`DB_PASSWORD`、`TARGET_FOLDER_ID`、`MY_EMAIL` は Secret Manager から自動取得されます。
 
 ---
 
 ## GCPプロジェクトのセットアップ
 
-### 1. gcloud CLIの認証
+### 方法A: セットアップスクリプトを使用（推奨）
+
+プロジェクトの作成から初期設定までを自動化するスクリプトを用意しています。
+
+```bash
+# gcloud CLI をインストール済みであることを確認
+gcloud --version
+
+# ログイン
+gcloud auth login
+
+# プロジェクトを作成（billing-account-id はオプション）
+./scripts/setup-gcp-project.sh YOUR_PROJECT_ID [BILLING_ACCOUNT_ID]
+
+# 例:
+./scripts/setup-gcp-project.sh etude-rag2-dev 012345-ABCDEF-GHIJKL
+```
+
+スクリプトが行うこと：
+- GCPプロジェクトの作成
+- 請求先アカウントのリンク（指定時）
+- 必須APIの有効化
+- Application Default Credentials の設定
+- `terraform.tfvars` テンプレートの生成
+
+### 方法B: 手動セットアップ
+
+#### 1. gcloud CLIの認証
 
 ```bash
 # ログイン
 gcloud auth login
 
+# プロジェクトの作成
+gcloud projects create YOUR_PROJECT_ID --name="etude-rag2"
+
 # プロジェクトの設定
 gcloud config set project YOUR_PROJECT_ID
+
+# 請求先アカウントのリンク
+gcloud billing projects link YOUR_PROJECT_ID --billing-account=BILLING_ACCOUNT_ID
 
 # Application Default Credentials の設定
 gcloud auth application-default login
 ```
 
-### 2. 必要なAPIの有効化
+#### 2. 必要なAPIの有効化
 
 Terraformで自動的に有効化されますが、事前に確認する場合：
 
@@ -143,6 +194,8 @@ my_email         = "your-email@example.com"
 # db_tier     = "db-f1-micro"
 ```
 
+> **Note**: `target_folder_id` と `my_email` は Terraform によって Secret Manager に登録され、アプリケーションから参照されます。これにより `.env` と `terraform.tfvars` の二重管理が不要になります。
+
 ### 2. Terraformの初期化と適用
 
 ```bash
@@ -167,6 +220,7 @@ terraform output
 - `streamlit_service_url` - Streamlit UIのURL
 - `cloud_sql_connection_name` - Cloud SQL接続名
 - `workload_identity_provider` - GitHub Actions用
+- `db_private_ip`, `db_name`, `db_user`, `region` - ローカル開発用（sync-env-from-secrets.sh で使用）
 
 ---
 
@@ -390,6 +444,59 @@ terraform import google_xxx.yyy RESOURCE_ID
 2. API有効化の待機：
    - 一部のAPIは有効化に時間がかかる
    - 数分待ってから再実行
+
+---
+
+## 設定管理アーキテクチャ
+
+本プロジェクトは Secret Manager を Single Source of Truth として使用し、`.env` と `terraform.tfvars` の二重管理を回避しています。
+
+### 設定フロー
+
+```
+┌─────────────────┐
+│ terraform.tfvars│  ─────────┐
+└─────────────────┘           │
+                              ▼
+                    ┌──────────────────┐
+                    │  Secret Manager  │
+                    │  (単一の真実源)   │
+                    └────────┬─────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         ▼                   ▼                   ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│   Cloud Run     │  │  sync-env-from  │  │   config.py     │
+│  (本番環境)      │  │  -secrets.sh    │  │  (直接参照)      │
+└─────────────────┘  └────────┬────────┘  └─────────────────┘
+                              ▼
+                    ┌─────────────────┐
+                    │     .env        │
+                    │ (ローカル開発)   │
+                    └─────────────────┘
+```
+
+### Secret Manager に格納されるシークレット
+
+| シークレットID | 管理方法 | 説明 |
+|---------------|---------|------|
+| `etude-rag2-db-password-{env}` | Terraform (自動生成) | DBパスワード |
+| `etude-rag2-drive-folder-id-{env}` | Terraform | Drive フォルダID |
+| `etude-rag2-my-email-{env}` | Terraform | ACL用メール |
+| `etude-rag2-service-account-key-{env}` | 手動アップロード | SAキー |
+| `etude-rag2-app-config-{env}` | Terraform | アプリ設定(JSON) |
+
+### ローカル開発時の設定取得
+
+```bash
+# Terraform apply 後に実行
+./scripts/sync-env-from-secrets.sh dev
+
+# または最小限の環境変数だけ設定し、残りは自動取得
+export GOOGLE_PROJECT_ID=your-project
+export ENVIRONMENT=dev
+uv run uvicorn src.api.main:app --reload
+```
 
 ---
 

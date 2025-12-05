@@ -38,6 +38,27 @@ output "cloud_sql_private_ip" {
   value       = google_sql_database_instance.postgres.private_ip_address
 }
 
+# For sync-env-from-secrets.sh script
+output "db_private_ip" {
+  description = "Database private IP (alias for scripts)"
+  value       = google_sql_database_instance.postgres.private_ip_address
+}
+
+output "db_name" {
+  description = "Database name"
+  value       = var.db_name
+}
+
+output "db_user" {
+  description = "Database user"
+  value       = var.db_user
+}
+
+output "region" {
+  description = "GCP region"
+  value       = var.region
+}
+
 # =============================================================================
 # Secret Manager
 # =============================================================================
