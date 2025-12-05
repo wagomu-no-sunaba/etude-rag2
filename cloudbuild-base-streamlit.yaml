@@ -1,0 +1,27 @@
+# ============================================
+# Cloud Build設定 - Streamlit用ベースイメージ
+# BGEリランカーモデルを含む
+# pyproject.toml または uv.lock を変更した場合に実行
+# ============================================
+
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: etude-rag2-repo
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/base-streamlit:latest'
+      - '-f'
+      - 'Dockerfile.base-streamlit'
+      - '.'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/base-streamlit:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '2400s'

@@ -1,0 +1,43 @@
+# ============================================
+# Cloud Build設定 - Drive Ingester
+# キャッシュを利用してビルド時間を短縮
+# ============================================
+
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: etude-rag2-repo
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: 100
+
+steps:
+  # キャッシュイメージをプル（存在しない場合は無視）
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'docker pull ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache || true'
+
+  # キャッシュを利用してビルド
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--cache-from'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:$COMMIT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache'
+      - '-f'
+      - 'Dockerfile.ingester'
+      - '.'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:$COMMIT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache'
+
+timeout: '1200s'
