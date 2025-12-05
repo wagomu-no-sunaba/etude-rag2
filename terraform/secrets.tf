@@ -34,20 +34,6 @@ resource "google_secret_manager_secret_version" "my_email" {
   secret_data = var.my_email
 }
 
-# Service account key secret (placeholder - key should be uploaded manually)
-# NOTE: For security, the actual key file should be uploaded manually to Secret Manager
-# This resource creates the secret placeholder
-resource "google_secret_manager_secret" "service_account_key" {
-  secret_id = "etude-rag2-service-account-key-${var.environment}"
-  project   = var.project_id
-
-  replication {
-    auto {}
-  }
-
-  depends_on = [google_project_service.services]
-}
-
 # IAM bindings for secrets
 resource "google_secret_manager_secret_iam_member" "db_password_accessor" {
   secret_id = google_secret_manager_secret.db_password.secret_id
@@ -70,12 +56,6 @@ resource "google_secret_manager_secret_iam_member" "my_email_accessor" {
   project   = var.project_id
 }
 
-resource "google_secret_manager_secret_iam_member" "service_account_key_accessor" {
-  secret_id = google_secret_manager_secret.service_account_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run.email}"
-  project   = var.project_id
-}
 
 # =============================================================================
 # Non-secret configuration stored in Secret Manager for single-source-of-truth

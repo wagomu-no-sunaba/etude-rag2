@@ -1,6 +1,20 @@
 # Terraform outputs
 
 # =============================================================================
+# Project Info
+# =============================================================================
+
+output "project_id" {
+  description = "GCP Project ID"
+  value       = var.project_id
+}
+
+output "region" {
+  description = "GCP Region"
+  value       = var.region
+}
+
+# =============================================================================
 # Cloud Run Service URLs
 # =============================================================================
 
@@ -66,11 +80,6 @@ output "region" {
 output "db_password_secret_id" {
   description = "Secret Manager secret ID for database password"
   value       = google_secret_manager_secret.db_password.secret_id
-}
-
-output "service_account_key_secret_id" {
-  description = "Secret Manager secret ID for service account key (upload manually)"
-  value       = google_secret_manager_secret.service_account_key.secret_id
 }
 
 # =============================================================================
