@@ -288,30 +288,62 @@ workload_identity_provider = "projects/xxx/locations/global/workloadIdentityPool
 
 ## Step 4: データベースの初期化
 
-### 4.1 Cloud SQL Proxy のインストール
+Cloud SQL はプライベート IP のみで構成されているため、**GCP Cloud Shell** から接続してスキーマを適用します。
 
-```bash
-# macOS (Apple Silicon)
-curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.darwin.arm64
-chmod +x cloud-sql-proxy
+> **Note**: ローカルマシンから Cloud SQL Proxy 経由で接続する場合は VPN や IAP トンネルが必要です。初回セットアップでは Cloud Shell の使用を推奨します。
 
-# macOS (Intel)
-curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.darwin.amd64
-chmod +x cloud-sql-proxy
+### 4.1 Cloud Shell を開く
 
-# Linux
-curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.linux.amd64
-chmod +x cloud-sql-proxy
+1. [GCP Console](https://console.cloud.google.com/) にアクセス
+2. 右上の Cloud Shell アイコン（`>_`）をクリック
+3. Cloud Shell ターミナルが起動するのを待つ
+
+または、直接 URL でアクセス：
+```
+https://console.cloud.google.com/?cloudshell=true&project=YOUR_PROJECT_ID
 ```
 
-### 4.2 プロキシの起動
+### 4.2 プロジェクトの設定
+
+Cloud Shell 内で以下を実行：
 
 ```bash
-# 別のターミナルで実行（接続を維持するため）
-./cloud-sql-proxy YOUR_PROJECT_ID:us-central1:etude-rag2-db-dev
+# プロジェクトを設定
+gcloud config set project YOUR_PROJECT_ID
 
 # 例:
-./cloud-sql-proxy etude-rag2-dev:us-central1:etude-rag2-db-dev
+gcloud config set project etude-rag2
+```
+
+### 4.3 リポジトリのクローンとパスワード取得
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/wagomu-no-sunaba/etude-rag2.git
+cd etude-rag2
+
+# データベースパスワードを取得して環境変数に設定
+export DB_PASSWORD=$(gcloud secrets versions access latest --secret=etude-rag2-db-password-dev)
+
+# パスワードが取得できたか確認（マスク表示）
+echo "Password length: ${#DB_PASSWORD}"
+```
+
+### 4.4 Cloud SQL Proxy のセットアップと起動
+
+```bash
+# Cloud SQL Proxy をダウンロード
+curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.linux.amd64
+chmod +x cloud-sql-proxy
+
+# バックグラウンドで起動（プライベート IP モード）
+./cloud-sql-proxy YOUR_PROJECT_ID:us-central1:etude-rag2-db-dev --private-ip --port=5432 &
+
+# 例:
+./cloud-sql-proxy etude-rag2:us-central1:etude-rag2-db-dev --private-ip --port=5432 &
+
+# 起動確認（数秒待つ）
+sleep 3
 ```
 
 出力例：
@@ -319,47 +351,63 @@ chmod +x cloud-sql-proxy
 Listening on 127.0.0.1:5432
 ```
 
-### 4.3 データベースパスワードの取得
+### 4.5 スキーマの適用
 
 ```bash
-# Secret Manager からパスワードを取得
-gcloud secrets versions access latest \
-    --secret="etude-rag2-db-password-dev" \
-    --project=YOUR_PROJECT_ID
+# スキーマを適用
+PGPASSWORD=$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -f schemas/schema.sql
 ```
 
-### 4.4 スキーマの適用
-
-```bash
-# Cloud SQL Proxy 経由で接続してスキーマを適用
-PGPASSWORD="取得したパスワード" psql \
-    -h 127.0.0.1 \
-    -p 5432 \
-    -U raguser \
-    -d rag_db \
-    -f schemas/schema.sql
-```
-
-または、ワンライナーで：
-
-```bash
-PGPASSWORD=$(gcloud secrets versions access latest --secret="etude-rag2-db-password-dev" --project=YOUR_PROJECT_ID) \
-    psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -f schemas/schema.sql
-```
-
-### 4.5 スキーマ適用の確認
+### 4.6 スキーマ適用の確認
 
 ```bash
 # テーブルが作成されたか確認
-PGPASSWORD="パスワード" psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -c "\dt"
+PGPASSWORD=$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db -c "\dt"
 ```
 
-出力例：
+期待される出力：
 ```
           List of relations
  Schema |   Name    | Type  | Owner
 --------+-----------+-------+--------
  public | documents | table | raguser
+```
+
+### 4.7 クリーンアップ
+
+```bash
+# Cloud SQL Proxy を停止
+pkill -f cloud-sql-proxy
+
+# （任意）クローンしたリポジトリを削除
+cd ~
+rm -rf etude-rag2
+```
+
+> Cloud Shell セッションは一定時間操作がないと自動終了します。スキーマ適用が完了したら Cloud Shell を閉じても問題ありません。
+
+### 参考: 接続情報の確認方法
+
+ローカルの terraform ディレクトリで接続情報を確認できます：
+
+```bash
+cd terraform
+
+# 接続文字列（Cloud SQL Proxy で使用）
+terraform output cloud_sql_connection_name
+# 出力例: etude-rag2:us-central1:etude-rag2-db-dev
+
+# データベース接続情報一覧
+terraform output db_name        # rag_db
+terraform output db_user        # raguser
+terraform output db_private_ip  # 10.x.x.x（VPC 内部 IP）
+
+# パスワードのシークレット ID
+terraform output db_password_secret_id
+# 出力例: etude-rag2-db-password-dev
+
+# 全ての出力値を確認
+terraform output
 ```
 
 ---
@@ -521,10 +569,49 @@ gcloud run services logs read etude-rag2-api-dev --region=us-central1 --limit=50
 
 # Ingester ジョブの手動実行
 gcloud run jobs execute etude-rag2-ingester-dev --region=us-central1
+```
 
-# データベース接続（Cloud SQL Proxy 経由）
-./cloud-sql-proxy YOUR_PROJECT_ID:us-central1:etude-rag2-db-dev
-PGPASSWORD="xxx" psql -h 127.0.0.1 -U raguser -d rag_db
+### データベース接続（Cloud Shell 経由・推奨）
+
+Cloud SQL はプライベート IP のみで構成されているため、**Cloud Shell** からの接続を推奨します。
+
+```bash
+# 1. Cloud Shell を開く
+# https://console.cloud.google.com/?cloudshell=true&project=etude-rag2
+
+# 2. Cloud Shell 内で実行
+gcloud config set project etude-rag2
+
+# 3. パスワードを環境変数に設定
+export DB_PASSWORD=$(gcloud secrets versions access latest --secret=etude-rag2-db-password-dev)
+
+# 4. Cloud SQL Proxy を起動（バックグラウンド）
+curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.8.0/cloud-sql-proxy.linux.amd64
+chmod +x cloud-sql-proxy
+./cloud-sql-proxy etude-rag2:us-central1:etude-rag2-db-dev --private-ip --port=5432 &
+sleep 3
+
+# 5. 接続
+PGPASSWORD=$DB_PASSWORD psql -h 127.0.0.1 -p 5432 -U raguser -d rag_db
+```
+
+### 接続情報の確認（ローカル）
+
+```bash
+cd terraform
+terraform output cloud_sql_connection_name  # 接続文字列
+terraform output db_name                     # データベース名
+terraform output db_user                     # ユーザー名
+terraform output db_password_secret_id       # パスワードシークレット ID
+```
+
+### 代替: gcloud sql connect
+
+IAM 認証経由で直接接続する方法（パブリック IP が有効な場合のみ）：
+
+```bash
+gcloud sql connect etude-rag2-db-dev --user=raguser --database=rag_db --project=etude-rag2
+# パスワードを聞かれたら Secret Manager から取得した値を入力
 ```
 
 ### コスト削減
