@@ -18,11 +18,6 @@ resource "google_sql_database_instance" "postgres" {
     }
 
     database_flags {
-      name  = "cloudsql.enable_pgvector"
-      value = "on"
-    }
-
-    database_flags {
       name  = "max_connections"
       value = "100"
     }
