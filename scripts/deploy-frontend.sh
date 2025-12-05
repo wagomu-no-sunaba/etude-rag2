@@ -46,10 +46,17 @@ fi
 # Deploy to Cloud Run
 echo ""
 echo "[2/2] Deploying to Cloud Run..."
-if gcloud run services update "${SERVICE_NAME}" \
-    --region "${REGION}" \
-    --image "${IMAGE}"; then
 
+# Check if service exists and deploy accordingly
+if gcloud run services describe "${SERVICE_NAME}" --region "${REGION}" &>/dev/null; then
+    echo "Updating existing service..."
+    DEPLOY_CMD="gcloud run services update ${SERVICE_NAME} --region ${REGION} --image ${IMAGE}"
+else
+    echo "Creating new service..."
+    DEPLOY_CMD="gcloud run deploy ${SERVICE_NAME} --region ${REGION} --image ${IMAGE} --platform managed --no-allow-unauthenticated"
+fi
+
+if ${DEPLOY_CMD}; then
     # Get service URL
     SERVICE_URL=$(gcloud run services describe "${SERVICE_NAME}" \
         --region "${REGION}" \

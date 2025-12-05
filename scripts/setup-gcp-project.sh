@@ -115,6 +115,7 @@ ESSENTIAL_APIS=(
     "cloudresourcemanager.googleapis.com"
     "serviceusage.googleapis.com"
     "iam.googleapis.com"
+    "servicenetworking.googleapis.com"
 )
 
 for api in "${ESSENTIAL_APIS[@]}"; do

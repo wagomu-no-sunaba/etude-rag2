@@ -43,13 +43,20 @@ else
     exit 1
 fi
 
-# Update Cloud Run Job
+# Deploy Cloud Run Job
 echo ""
-echo "[2/2] Updating Cloud Run Job..."
-if gcloud run jobs update "${JOB_NAME}" \
-    --region "${REGION}" \
-    --image "${IMAGE}"; then
+echo "[2/2] Deploying Cloud Run Job..."
 
+# Check if job exists and deploy accordingly
+if gcloud run jobs describe "${JOB_NAME}" --region "${REGION}" &>/dev/null; then
+    echo "Updating existing job..."
+    DEPLOY_CMD="gcloud run jobs update ${JOB_NAME} --region ${REGION} --image ${IMAGE}"
+else
+    echo "Creating new job..."
+    DEPLOY_CMD="gcloud run jobs create ${JOB_NAME} --region ${REGION} --image ${IMAGE}"
+fi
+
+if ${DEPLOY_CMD}; then
     echo ""
     echo "=========================================="
     echo "Deployment completed successfully!"
@@ -69,9 +76,9 @@ if gcloud run jobs update "${JOB_NAME}" \
     echo "Elapsed time: ${MINUTES}m ${SECONDS}s"
     echo "=========================================="
 
-    notify "Ingester Deploy Success" "Ingester job updated successfully!" "Glass"
+    notify "Ingester Deploy Success" "Ingester job deployed successfully!" "Glass"
 else
-    notify "Ingester Deploy Failed" "Cloud Run Job update failed" "Basso"
-    echo "ERROR: Cloud Run Job update failed!"
+    notify "Ingester Deploy Failed" "Cloud Run Job deployment failed" "Basso"
+    echo "ERROR: Cloud Run Job deployment failed!"
     exit 1
 fi
