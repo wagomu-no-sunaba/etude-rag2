@@ -19,9 +19,7 @@ class OutlineHeading(BaseModel):
 
     title: str = Field(description="見出しテキスト")
     summary: str = Field(description="このセクションで書く内容の概要")
-    key_content: list[str] = Field(
-        default_factory=list, description="含めるべき素材からの情報"
-    )
+    key_content: list[str] = Field(default_factory=list, description="含めるべき素材からの情報")
     target_length: int = Field(default=300, description="目標文字数")
 
 

@@ -95,7 +95,7 @@ class DriveIngester:
 
         # Initialize embeddings
         self.embeddings = embeddings or VertexAIEmbeddings(
-            model_name=settings.embedding_model,
+            model=settings.embedding_model,
             project=settings.google_project_id,
             location=settings.google_location,
         )
@@ -179,9 +179,7 @@ class DriveIngester:
         total_count = 0
 
         # Get folder name
-        folder_meta = self.drive_service.files().get(
-            fileId=folder_id, fields="name"
-        ).execute()
+        folder_meta = self.drive_service.files().get(fileId=folder_id, fields="name").execute()
         folder_name = folder_meta.get("name", "")
         current_path = f"{parent_path}/{folder_name}" if parent_path else folder_name
 
@@ -206,9 +204,7 @@ class DriveIngester:
                 if mime_type == "application/vnd.google-apps.folder":
                     # Process subfolder
                     if recursive:
-                        total_count += self._process_folder(
-                            item["id"], current_path, recursive
-                        )
+                        total_count += self._process_folder(item["id"], current_path, recursive)
                 else:
                     # Process file
                     count = self.process_file(item, current_path)
@@ -338,7 +334,7 @@ class DriveIngester:
     ) -> None:
         """Insert document chunks into the database."""
         with self.conn.cursor() as cur:
-            for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
+            for i, (chunk, vector) in enumerate(zip(chunks, vectors, strict=True)):
                 metadata = {
                     "source": file_name,
                     "file_id": file_id,
@@ -346,7 +342,8 @@ class DriveIngester:
                 cur.execute(
                     """
                     INSERT INTO documents
-                    (content, embedding, article_type, source_file, chunk_index, total_chunks, metadata)
+                    (content, embedding, article_type, source_file, chunk_index,
+                     total_chunks, metadata)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
                     (

@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 
 from src.chains.input_parser import ParsedInput
 from src.chains.outline_generator import Outline, OutlineHeading
-from src.chains.style_analyzer import StyleAnalysis
 from src.chains.structure_analyzer import StructureAnalysis
+from src.chains.style_analyzer import StyleAnalysis
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 class TitleGeneratorOutput(BaseModel):
     """Output of title generation."""
 
-    titles: list[str] = Field(
-        min_length=3, max_length=3, description="タイトル案（3つ）"
-    )
+    titles: list[str] = Field(min_length=3, max_length=3, description="タイトル案（3つ）")
 
 
 class SectionContent(BaseModel):
@@ -164,9 +162,7 @@ class LeadGeneratorChain:
                 "outline_summary": ", ".join(h.title for h in outline.headings),
                 "tone": style_analysis.tone,
                 "sentence_endings": ", ".join(style_analysis.sentence_endings),
-                "characteristic_phrases": ", ".join(
-                    style_analysis.characteristic_phrases
-                ),
+                "characteristic_phrases": ", ".join(style_analysis.characteristic_phrases),
                 "intro_pattern": structure_analysis.intro_pattern,
             }
         )
@@ -254,16 +250,12 @@ class SectionGeneratorChain:
                     f"{q.speaker}: 「{q.quote}」" for q in parsed_input.interview_quotes
                 ),
                 "data_facts": ", ".join(parsed_input.data_facts),
-                "people": ", ".join(
-                    f"{p.name}({p.role})" for p in parsed_input.people
-                ),
+                "people": ", ".join(f"{p.name}({p.role})" for p in parsed_input.people),
                 "tone": style_analysis.tone,
                 "sentence_endings": ", ".join(style_analysis.sentence_endings),
                 "first_person": style_analysis.first_person,
                 "reader_address": style_analysis.reader_address,
-                "characteristic_phrases": ", ".join(
-                    style_analysis.characteristic_phrases
-                ),
+                "characteristic_phrases": ", ".join(style_analysis.characteristic_phrases),
             }
         )
         return SectionContent(heading=heading.title, body=body)

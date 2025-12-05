@@ -45,7 +45,8 @@ def main():
         help="Do not process subfolders recursively",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose logging",
     )

@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 from langchain_core.documents import Document
 
@@ -80,7 +80,7 @@ class BGEReranker:
 
         # Pair scores with documents and sort by score descending
         scored_docs = sorted(
-            zip(scores, normalized_scores, documents),
+            zip(scores, normalized_scores, documents, strict=True),
             key=lambda x: x[0],
             reverse=True,
         )
@@ -129,7 +129,7 @@ class BGEReranker:
 
         return [
             (doc, float(score), self._sigmoid(score))
-            for doc, score in zip(documents, scores)
+            for doc, score in zip(documents, scores, strict=True)
         ]
 
     @staticmethod

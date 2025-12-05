@@ -19,9 +19,7 @@ class StyleAnalysis(BaseModel):
     sentence_endings: list[str] = Field(
         description="よく使われる語尾パターン（例: 〜です、〜ですね、〜なんです）"
     )
-    tone: str = Field(
-        description="全体的なトーン（カジュアル/フォーマル/その中間）"
-    )
+    tone: str = Field(description="全体的なトーン（カジュアル/フォーマル/その中間）")
     first_person: str = Field(default="私", description="使われている一人称")
     reader_address: str = Field(default="", description="読者への呼びかけ方")
     paragraph_style: str = Field(default="", description="段落の長さや区切り方の傾向")

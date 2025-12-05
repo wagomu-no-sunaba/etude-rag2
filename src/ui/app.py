@@ -5,7 +5,6 @@ import streamlit as st
 from src.ui.api_client import APIClient
 from src.ui.utils import (
     create_download_markdown,
-    format_article_type_ja,
     parse_sections_to_body,
 )
 

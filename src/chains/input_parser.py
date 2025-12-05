@@ -31,19 +31,13 @@ class ParsedInput(BaseModel):
     """Structured representation of input material."""
 
     theme: str = Field(description="記事のテーマ・主旨（1文で要約）")
-    key_points: list[str] = Field(
-        default_factory=list, description="記事に含めるべき重要ポイント"
-    )
+    key_points: list[str] = Field(default_factory=list, description="記事に含めるべき重要ポイント")
     interview_quotes: list[InterviewQuote] = Field(
         default_factory=list, description="引用可能なインタビュー発言"
     )
-    data_facts: list[str] = Field(
-        default_factory=list, description="具体的な数値やデータ"
-    )
+    data_facts: list[str] = Field(default_factory=list, description="具体的な数値やデータ")
     people: list[Person] = Field(default_factory=list, description="登場人物")
-    keywords: list[str] = Field(
-        default_factory=list, description="検索用キーワード（5-10個）"
-    )
+    keywords: list[str] = Field(default_factory=list, description="検索用キーワード（5-10個）")
     missing_info: list[str] = Field(
         default_factory=list, description="記事作成に不足していそうな情報"
     )

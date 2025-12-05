@@ -1,9 +1,6 @@
 """Tests for the chains module."""
 
-import pytest
-from unittest.mock import Mock, patch
-
-from src.chains.input_parser import ParsedInput, InterviewQuote, Person
+from src.chains.input_parser import InterviewQuote, ParsedInput, Person
 
 
 class TestParsedInputModel:
@@ -14,9 +11,7 @@ class TestParsedInputModel:
         parsed = ParsedInput(
             theme="新入社員インタビュー記事",
             key_points=["入社の経緯", "現在の仕事内容", "今後の目標"],
-            interview_quotes=[
-                InterviewQuote(speaker="田中太郎", quote="とても働きやすい環境です")
-            ],
+            interview_quotes=[InterviewQuote(speaker="田中太郎", quote="とても働きやすい環境です")],
             data_facts=["入社3ヶ月目", "チームメンバー5名"],
             people=[Person(name="田中太郎", role="エンジニア")],
             keywords=["入社", "エンジニア", "インタビュー"],
@@ -136,7 +131,7 @@ class TestOutlineGeneratorOutput:
 
     def test_outline_heading_model(self):
         """Test OutlineHeading model."""
-        from src.chains.outline_generator import OutlineHeading, Outline
+        from src.chains.outline_generator import OutlineHeading
 
         heading = OutlineHeading(
             title="入社のきっかけ",
@@ -150,7 +145,7 @@ class TestOutlineGeneratorOutput:
 
     def test_outline_model(self):
         """Test Outline model."""
-        from src.chains.outline_generator import OutlineHeading, Outline
+        from src.chains.outline_generator import Outline, OutlineHeading
 
         outline = Outline(
             headings=[

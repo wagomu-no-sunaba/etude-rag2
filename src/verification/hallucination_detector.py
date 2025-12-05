@@ -26,15 +26,11 @@ class HallucinationCheckResult(BaseModel):
 
     has_hallucination: bool = Field(description="ハルシネーションがあるか")
     confidence: float = Field(ge=0, le=1, description="検証の信頼度（0-1）")
-    verified_facts: list[str] = Field(
-        default_factory=list, description="入力素材で確認できた事実"
-    )
+    verified_facts: list[str] = Field(default_factory=list, description="入力素材で確認できた事実")
     unverified_claims: list[UnverifiedClaim] = Field(
         default_factory=list, description="入力素材で確認できなかった主張"
     )
-    missing_citations: list[str] = Field(
-        default_factory=list, description="引用元が不明な発言"
-    )
+    missing_citations: list[str] = Field(default_factory=list, description="引用元が不明な発言")
 
 
 SYSTEM_PROMPT = """あなたは事実確認の専門家です。
@@ -131,9 +127,7 @@ class HallucinationDetectorChain:
                     f"{q.speaker}: 「{q.quote}」" for q in parsed_input.interview_quotes
                 ),
                 "data_facts": ", ".join(parsed_input.data_facts),
-                "people": ", ".join(
-                    f"{p.name}({p.role})" for p in parsed_input.people
-                ),
+                "people": ", ".join(f"{p.name}({p.role})" for p in parsed_input.people),
                 "format_instructions": self.parser.get_format_instructions(),
             }
         )
@@ -158,9 +152,7 @@ class HallucinationDetectorChain:
                     f"{q.speaker}: 「{q.quote}」" for q in parsed_input.interview_quotes
                 ),
                 "data_facts": ", ".join(parsed_input.data_facts),
-                "people": ", ".join(
-                    f"{p.name}({p.role})" for p in parsed_input.people
-                ),
+                "people": ", ".join(f"{p.name}({p.role})" for p in parsed_input.people),
                 "format_instructions": self.parser.get_format_instructions(),
             }
         )

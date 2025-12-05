@@ -1,7 +1,5 @@
 """Tests for the verification module."""
 
-import pytest
-
 
 class TestStyleCheckResult:
     """Test StyleCheckResult model."""
@@ -20,9 +18,7 @@ class TestStyleCheckResult:
                     suggestion="「ですね」に変更",
                 )
             ],
-            corrected_sections=[
-                {"original": "これは良いです", "corrected": "これは良いですね"}
-            ],
+            corrected_sections=[{"original": "これは良いです", "corrected": "これは良いですね"}],
         )
 
         assert result.is_consistent is True

@@ -6,8 +6,8 @@ from src.verification.hallucination_detector import (
     UnverifiedClaim,
 )
 from src.verification.style_checker import (
-    StyleCheckResult,
     StyleCheckerChain,
+    StyleCheckResult,
     StyleIssue,
 )
 

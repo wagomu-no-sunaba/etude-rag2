@@ -10,7 +10,6 @@ from src.chains.article_classifier import ArticleClassifierChain, Classification
 from src.chains.content_generators import (
     ClosingGeneratorChain,
     LeadGeneratorChain,
-    SectionContent,
     SectionGeneratorChain,
     TitleGeneratorChain,
 )
@@ -64,9 +63,9 @@ class ArticleDraft(BaseModel):
         # Metadata
         lines.append("---\n")
         lines.append(f"**記事タイプ**: {self.article_type_ja}")
-        total_length = len(self.lead) + sum(
-            len(s["body"]) for s in self.sections
-        ) + len(self.closing)
+        total_length = (
+            len(self.lead) + sum(len(s["body"]) for s in self.sections) + len(self.closing)
+        )
         lines.append(f"**総文字数**: 約{total_length}字")
 
         return "\n".join(lines)
@@ -135,9 +134,7 @@ class ArticleGenerationPipeline:
         # Step 3: Retrieve reference articles if not provided
         if reference_articles is None and self.retriever:
             logger.info("Step 3: Retrieving reference articles")
-            reference_articles = self._retrieve_references(
-                parsed_input, classification
-            )
+            reference_articles = self._retrieve_references(parsed_input, classification)
         elif reference_articles is None:
             reference_articles = []
 

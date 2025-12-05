@@ -1,7 +1,6 @@
 """Style consistency checker for generated articles."""
 
 import logging
-from typing import Any
 
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -33,12 +32,8 @@ class StyleCheckResult(BaseModel):
     """Result of style consistency check."""
 
     is_consistent: bool = Field(description="文体が一貫しているか")
-    consistency_score: float = Field(
-        ge=0, le=1, description="一貫性スコア（0-1）"
-    )
-    issues: list[StyleIssue] = Field(
-        default_factory=list, description="不一致箇所"
-    )
+    consistency_score: float = Field(ge=0, le=1, description="一貫性スコア（0-1）")
+    issues: list[StyleIssue] = Field(default_factory=list, description="不一致箇所")
     corrected_sections: list[dict[str, str]] = Field(
         default_factory=list, description="修正が必要な箇所の修正案"
     )
@@ -129,9 +124,7 @@ class StyleCheckerChain:
                 "sentence_endings": ", ".join(style_analysis.sentence_endings),
                 "tone": style_analysis.tone,
                 "first_person": style_analysis.first_person,
-                "characteristic_phrases": ", ".join(
-                    style_analysis.characteristic_phrases
-                ),
+                "characteristic_phrases": ", ".join(style_analysis.characteristic_phrases),
                 "format_instructions": self.parser.get_format_instructions(),
             }
         )
@@ -153,9 +146,7 @@ class StyleCheckerChain:
                 "sentence_endings": ", ".join(style_analysis.sentence_endings),
                 "tone": style_analysis.tone,
                 "first_person": style_analysis.first_person,
-                "characteristic_phrases": ", ".join(
-                    style_analysis.characteristic_phrases
-                ),
+                "characteristic_phrases": ", ".join(style_analysis.characteristic_phrases),
                 "format_instructions": self.parser.get_format_instructions(),
             }
         )
@@ -175,7 +166,5 @@ class StyleCheckerChain:
         result = text
         for correction in corrections:
             if correction.get("original") and correction.get("corrected"):
-                result = result.replace(
-                    correction["original"], correction["corrected"]
-                )
+                result = result.replace(correction["original"], correction["corrected"])
         return result

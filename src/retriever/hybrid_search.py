@@ -36,7 +36,7 @@ class HybridSearcher:
             connection_string: Optional database connection string.
         """
         self.embeddings = embeddings or VertexAIEmbeddings(
-            model_name=settings.embedding_model,
+            model=settings.embedding_model,
             project=settings.google_project_id,
             location=settings.google_location,
         )
@@ -171,10 +171,9 @@ class HybridSearcher:
             final_k,
         )
 
-        with self._get_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(sql, params)
-                results = cur.fetchall()
+        with self._get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql, params)
+            results = cur.fetchall()
 
         return self._to_documents(results)
 
@@ -213,10 +212,9 @@ class HybridSearcher:
         LIMIT %s
         """
 
-        with self._get_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(sql, (query_vector, article_type, article_type, query_vector, k))
-                results = cur.fetchall()
+        with self._get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql, (query_vector, article_type, article_type, query_vector, k))
+            results = cur.fetchall()
 
         return self._to_documents(results, score_key="similarity_score")
 
@@ -257,12 +255,9 @@ class HybridSearcher:
         LIMIT %s
         """
 
-        with self._get_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(
-                    sql, (query, article_type, article_type, query, threshold, query, k)
-                )
-                results = cur.fetchall()
+        with self._get_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql, (query, article_type, article_type, query, threshold, query, k))
+            results = cur.fetchall()
 
         return self._to_documents(results, score_key="similarity_score")
 

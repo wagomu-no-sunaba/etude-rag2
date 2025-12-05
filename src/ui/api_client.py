@@ -1,7 +1,8 @@
 """API client for communicating with the FastAPI backend."""
 
-import httpx
 from typing import Any
+
+import httpx
 
 
 class APIClient:

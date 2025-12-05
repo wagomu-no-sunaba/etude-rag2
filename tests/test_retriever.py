@@ -30,10 +30,7 @@ class TestNoOpReranker:
         from langchain_core.documents import Document
 
         reranker = NoOpReranker()
-        docs = [
-            Document(page_content=f"Doc {i}", metadata={"id": i})
-            for i in range(10)
-        ]
+        docs = [Document(page_content=f"Doc {i}", metadata={"id": i}) for i in range(10)]
 
         result = reranker.rerank("test query", docs, top_k=5)
 

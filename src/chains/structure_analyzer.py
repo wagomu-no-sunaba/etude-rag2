@@ -16,13 +16,9 @@ logger = logging.getLogger(__name__)
 class StructureAnalysis(BaseModel):
     """Extracted structure patterns from reference articles."""
 
-    typical_headings: list[str] = Field(
-        description="よく使われる見出しパターン"
-    )
+    typical_headings: list[str] = Field(description="よく使われる見出しパターン")
     intro_pattern: str = Field(description="リード文の書き方パターン")
-    section_flow: str = Field(
-        default="", description="セクションの流れ（導入→展開→まとめ等）"
-    )
+    section_flow: str = Field(default="", description="セクションの流れ（導入→展開→まとめ等）")
     closing_pattern: str = Field(description="締めの文章パターン")
     average_length: str = Field(default="", description="平均的な文字数の目安")
 

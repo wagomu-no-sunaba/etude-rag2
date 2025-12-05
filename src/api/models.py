@@ -17,7 +17,9 @@ class ArticleType(str, Enum):
 class GenerateRequest(BaseModel):
     """Request model for article generation."""
 
-    input_material: str = Field(description="入力素材（テーマ、キーポイント、インタビュー引用など）")
+    input_material: str = Field(
+        description="入力素材（テーマ、キーポイント、インタビュー引用など）"
+    )
     article_type: str | None = Field(
         default=None, description="記事タイプ（指定しない場合は自動分類）"
     )

@@ -1,7 +1,5 @@
 """Tests for the Streamlit UI components."""
 
-import pytest
-
 
 class TestUIComponents:
     """Test UI helper components and functions."""

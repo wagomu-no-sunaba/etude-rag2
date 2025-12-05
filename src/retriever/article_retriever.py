@@ -1,8 +1,8 @@
 """Article-type aware retriever combining hybrid search and reranking."""
 
 import logging
+from collections.abc import Sequence
 from enum import Enum
-from typing import Sequence
 
 from langchain_core.documents import Document
 

@@ -23,7 +23,7 @@ class ClassificationResult(BaseModel):
         description="記事タイプ（ANNOUNCEMENT, EVENT_REPORT, INTERVIEW, CULTURE）"
     )
     article_type_ja: str = Field(
-        description="日本語での記事タイプ名（アナウンスメント, イベントレポート, インタビュー, カルチャー）"
+        description="日本語での記事タイプ名（アナウンスメント, イベントレポート, インタビュー, カルチャー）"  # noqa: E501
     )
     confidence: float = Field(ge=0, le=1, description="判定の確信度（0-1）")
     reason: str = Field(description="判定理由")
@@ -118,9 +118,7 @@ class ArticleClassifierChain:
             {
                 "theme": parsed_input.theme,
                 "key_points": ", ".join(parsed_input.key_points),
-                "people": ", ".join(
-                    f"{p.name}({p.role})" for p in parsed_input.people
-                ),
+                "people": ", ".join(f"{p.name}({p.role})" for p in parsed_input.people),
                 "keywords": ", ".join(parsed_input.keywords),
                 "interview_quotes": ", ".join(
                     f"{q.speaker}: {q.quote}" for q in parsed_input.interview_quotes
@@ -143,9 +141,7 @@ class ArticleClassifierChain:
             {
                 "theme": parsed_input.theme,
                 "key_points": ", ".join(parsed_input.key_points),
-                "people": ", ".join(
-                    f"{p.name}({p.role})" for p in parsed_input.people
-                ),
+                "people": ", ".join(f"{p.name}({p.role})" for p in parsed_input.people),
                 "keywords": ", ".join(parsed_input.keywords),
                 "interview_quotes": ", ".join(
                     f"{q.speaker}: {q.quote}" for q in parsed_input.interview_quotes

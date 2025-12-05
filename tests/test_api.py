@@ -1,6 +1,5 @@
 """Tests for the FastAPI REST API."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -81,7 +80,7 @@ class TestVerifyEndpoint:
 
     def test_verify_response_model(self):
         """Test VerifyResponse model."""
-        from src.api.models import VerifyResponse, HallucinationResult, StyleResult
+        from src.api.models import HallucinationResult, StyleResult, VerifyResponse
 
         response = VerifyResponse(
             hallucination=HallucinationResult(
