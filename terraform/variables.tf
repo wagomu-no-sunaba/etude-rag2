@@ -1,3 +1,5 @@
+# Variables for etude-rag2 Terraform configuration
+
 variable "project_id" {
   description = "GCP project ID"
   type        = string
@@ -15,7 +17,15 @@ variable "environment" {
   default     = "dev"
 }
 
-# Cloud SQL
+variable "github_repo" {
+  description = "GitHub repository in owner/repo format (e.g., wagomu-no-sunaba/etude-rag2)"
+  type        = string
+}
+
+# =============================================================================
+# Cloud SQL settings
+# =============================================================================
+
 variable "db_tier" {
   description = "Cloud SQL instance tier"
   type        = string
@@ -34,40 +44,152 @@ variable "db_user" {
   default     = "raguser"
 }
 
-# Cloud Run
+# =============================================================================
+# Application settings
+# =============================================================================
+
+variable "target_folder_id" {
+  description = "Google Drive folder ID for RAG documents"
+  type        = string
+}
+
+variable "my_email" {
+  description = "Email address for ACL filtering"
+  type        = string
+}
+
+# =============================================================================
+# Cloud Run API settings
+# =============================================================================
+
 variable "cloud_run_cpu" {
-  description = "CPU allocation for Cloud Run"
+  description = "CPU allocation for API Cloud Run"
   type        = string
   default     = "2"
 }
 
 variable "cloud_run_memory" {
-  description = "Memory allocation for Cloud Run"
+  description = "Memory allocation for API Cloud Run"
   type        = string
   default     = "4Gi"
 }
 
 variable "cloud_run_min_instances" {
-  description = "Minimum number of Cloud Run instances"
+  description = "Minimum number of API Cloud Run instances"
   type        = number
   default     = 0
 }
 
 variable "cloud_run_max_instances" {
-  description = "Maximum number of Cloud Run instances"
+  description = "Maximum number of API Cloud Run instances"
   type        = number
   default     = 10
 }
 
 variable "cloud_run_concurrency" {
-  description = "Maximum concurrent requests per instance"
+  description = "Maximum concurrent requests per API instance"
   type        = number
   default     = 80
 }
 
-# Container image
+# =============================================================================
+# Cloud Run Streamlit settings
+# =============================================================================
+
+variable "streamlit_memory" {
+  description = "Memory limit for Streamlit Cloud Run service"
+  type        = string
+  default     = "4Gi"
+}
+
+variable "streamlit_cpu" {
+  description = "CPU limit for Streamlit Cloud Run service"
+  type        = string
+  default     = "2"
+}
+
+variable "streamlit_max_instances" {
+  description = "Maximum instances for Streamlit Cloud Run service"
+  type        = number
+  default     = 5
+}
+
+# =============================================================================
+# Ingester Job settings
+# =============================================================================
+
+variable "ingester_memory" {
+  description = "Memory limit for Ingester Cloud Run Job"
+  type        = string
+  default     = "2Gi"
+}
+
+variable "ingester_cpu" {
+  description = "CPU limit for Ingester Cloud Run Job"
+  type        = string
+  default     = "2"
+}
+
+variable "ingester_timeout" {
+  description = "Timeout in seconds for Ingester Cloud Run Job"
+  type        = number
+  default     = 3600
+}
+
+# =============================================================================
+# Vertex AI / LLM settings
+# =============================================================================
+
+variable "embedding_model" {
+  description = "Vertex AI embedding model name"
+  type        = string
+  default     = "text-embedding-004"
+}
+
+variable "llm_model" {
+  description = "LLM model name"
+  type        = string
+  default     = "gemini-1.5-pro"
+}
+
+variable "llm_temperature" {
+  description = "LLM temperature for generation"
+  type        = string
+  default     = "0.3"
+}
+
+# =============================================================================
+# Reranker settings
+# =============================================================================
+
+variable "reranker_model" {
+  description = "BGE reranker model name"
+  type        = string
+  default     = "BAAI/bge-reranker-base"
+}
+
+# =============================================================================
+# Hybrid search settings
+# =============================================================================
+
+variable "hybrid_search_k" {
+  description = "Number of results for hybrid search"
+  type        = string
+  default     = "20"
+}
+
+variable "rrf_k" {
+  description = "RRF fusion parameter"
+  type        = string
+  default     = "60"
+}
+
+# =============================================================================
+# Container image (optional - for manual override)
+# =============================================================================
+
 variable "container_image" {
-  description = "Container image URL (e.g., gcr.io/project/image:tag)"
+  description = "Container image URL (e.g., gcr.io/project/image:tag) - optional override"
   type        = string
   default     = ""
 }

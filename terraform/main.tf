@@ -7,6 +7,11 @@ resource "google_project_service" "services" {
     "cloudbuild.googleapis.com",
     "secretmanager.googleapis.com",
     "vpcaccess.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "drive.googleapis.com",
+    "iam.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
   ])
 
   service            = each.value
@@ -17,6 +22,8 @@ resource "google_project_service" "services" {
 resource "google_service_account" "cloud_run" {
   account_id   = "etude-rag2-${var.environment}"
   display_name = "etude-rag2 Cloud Run Service Account (${var.environment})"
+
+  depends_on = [google_project_service.services]
 }
 
 # IAM: Allow Cloud Run service account to access Vertex AI
@@ -37,6 +44,13 @@ resource "google_project_iam_member" "cloudsql_client" {
 resource "google_project_iam_member" "secret_accessor" {
   project = var.project_id
   role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.cloud_run.email}"
+}
+
+# IAM: Allow Cloud Run service account to access Storage
+resource "google_project_iam_member" "storage_viewer" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
   member  = "serviceAccount:${google_service_account.cloud_run.email}"
 }
 
