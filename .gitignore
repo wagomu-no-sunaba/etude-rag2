@@ -2,4 +2,28 @@
 .envrc
 .direnv/
 
+# Python
 **/__pycache__/*
+*.pyc
+*.pyo
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+*.tfvars.json
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
