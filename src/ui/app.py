@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from src.ui.api_client import APIClient
+from src.ui.api_client import APIClient, ProgressUpdate, StreamResult
 from src.ui.utils import (
     create_download_markdown,
     parse_sections_to_body,
@@ -99,17 +99,35 @@ def render_input_section():
 
 
 def generate_article():
-    """Generate article using API."""
-    with st.spinner("記事を生成中..."):
-        try:
-            result = api_client.generate(
-                input_material=st.session_state.input_material,
-                article_type=st.session_state.selected_article_type,
-            )
-            st.session_state.generated_draft = result
-            st.success("✅ 記事生成完了!")
-        except Exception as e:
-            st.error(f"❌ エラーが発生しました: {e}")
+    """Generate article using streaming API with progress bar."""
+    progress_container = st.empty()
+    status_container = st.empty()
+
+    try:
+        for update in api_client.generate_stream(
+            input_material=st.session_state.input_material,
+            article_type=st.session_state.selected_article_type,
+        ):
+            if isinstance(update, ProgressUpdate):
+                progress_container.progress(
+                    update.percentage / 100,
+                    text=f"ステップ {update.step_number}/{update.total_steps}: {update.step_name}",
+                )
+            elif isinstance(update, StreamResult):
+                progress_container.empty()
+                status_container.empty()
+
+                if update.success:
+                    st.session_state.generated_draft = update.result
+                    st.success("✅ 記事生成完了!")
+                else:
+                    st.error(f"❌ エラーが発生しました: {update.error}")
+                return
+
+    except Exception as e:
+        progress_container.empty()
+        status_container.empty()
+        st.error(f"❌ エラーが発生しました: {e}")
 
 
 def render_output_section():

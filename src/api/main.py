@@ -1,11 +1,15 @@
 """FastAPI application for article generation API."""
 
+import asyncio
+import concurrent.futures
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sse_starlette.sse import EventSourceResponse
 
 from src.api.models import (
     ErrorResponse,
@@ -17,6 +21,14 @@ from src.api.models import (
     StyleResult,
     VerifyRequest,
     VerifyResponse,
+)
+from src.api.sse_models import (
+    STEP_METADATA,
+    CompleteEvent,
+    ErrorEvent,
+    GenerationStep,
+    ProgressEvent,
+    SSEEventType,
 )
 from src.chains.article_chain import ArticleGenerationPipeline
 from src.chains.input_parser import InputParserChain
@@ -199,3 +211,130 @@ async def search_articles(request: SearchRequest) -> list[SearchResult]:
     # For now, return empty list as retriever setup needs database connection
     logger.warning("Search endpoint called but retriever not configured")
     return []
+
+
+@app.post("/generate/stream")
+async def generate_article_stream(
+    request: Request,
+    generate_request: GenerateRequest,
+) -> EventSourceResponse:
+    """Generate an article draft with SSE streaming progress updates.
+
+    Sends progress events as each step completes, then a complete event
+    with the final result.
+
+    Args:
+        request: FastAPI request for disconnect detection.
+        generate_request: Generation request with input material.
+
+    Returns:
+        EventSourceResponse streaming progress and result events.
+    """
+    if pipeline is None:
+        raise HTTPException(status_code=500, detail="Pipeline not initialized")
+
+    async def event_generator() -> AsyncGenerator[dict[str, Any], None]:
+        progress_queue: asyncio.Queue[ProgressEvent | None] = asyncio.Queue()
+        result_holder: dict[str, Any] = {}
+        error_holder: dict[str, Exception | None] = {"error": None}
+        current_step_holder: dict[str, str | None] = {"step": None}
+
+        def progress_callback(step: str) -> None:
+            """Callback to emit progress events from sync thread."""
+            current_step_holder["step"] = step
+            step_enum = GenerationStep(step)
+            metadata = STEP_METADATA[step_enum]
+            event = ProgressEvent(
+                step=step_enum,
+                step_name=metadata["name_ja"],
+                step_number=metadata["order"],
+                percentage=metadata["percentage"],
+            )
+            # Thread-safe queue put
+            asyncio.get_event_loop().call_soon_threadsafe(
+                progress_queue.put_nowait, event
+            )
+
+        def run_generation() -> None:
+            """Run generation in a thread."""
+            try:
+                draft = pipeline.generate_with_progress(
+                    generate_request.input_material,
+                    progress_callback=progress_callback,
+                )
+                result_holder["draft"] = draft
+            except Exception as e:
+                logger.exception("Error in streaming generation")
+                error_holder["error"] = e
+            finally:
+                # Signal completion
+                asyncio.get_event_loop().call_soon_threadsafe(
+                    progress_queue.put_nowait, None
+                )
+
+        # Start generation in background thread
+        loop = asyncio.get_event_loop()
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        loop.run_in_executor(executor, run_generation)
+
+        try:
+            # Stream progress events
+            while True:
+                # Check for client disconnect
+                if await request.is_disconnected():
+                    logger.info("Client disconnected, stopping generation stream")
+                    break
+
+                try:
+                    event = await asyncio.wait_for(
+                        progress_queue.get(),
+                        timeout=1.0,
+                    )
+                except TimeoutError:
+                    continue
+
+                if event is None:
+                    # Generation complete
+                    break
+
+                yield {
+                    "event": SSEEventType.PROGRESS.value,
+                    "data": event.model_dump_json(),
+                }
+
+            # Check for errors
+            if error_holder["error"]:
+                error_event = ErrorEvent(
+                    error=str(error_holder["error"]),
+                    step=GenerationStep(current_step_holder["step"])
+                    if current_step_holder["step"]
+                    else None,
+                )
+                yield {
+                    "event": SSEEventType.ERROR.value,
+                    "data": error_event.model_dump_json(),
+                }
+                return
+
+            # Send complete event with result
+            if "draft" in result_holder:
+                draft = result_holder["draft"]
+                complete_event = CompleteEvent(
+                    result={
+                        "titles": draft.titles,
+                        "lead": draft.lead,
+                        "sections": draft.sections,
+                        "closing": draft.closing,
+                        "article_type": draft.article_type,
+                        "article_type_ja": draft.article_type_ja,
+                        "markdown": draft.to_markdown(),
+                    }
+                )
+                yield {
+                    "event": SSEEventType.COMPLETE.value,
+                    "data": complete_event.model_dump_json(),
+                }
+        finally:
+            executor.shutdown(wait=False)
+
+    return EventSourceResponse(event_generator())

@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     # Vertex AI
     embedding_model: str = "text-embedding-004"
-    llm_model: str = "gemini-1.5-pro"
+    llm_model: str = "gemini-2.0-flash"
     llm_temperature: float = 0.3
 
     # Database

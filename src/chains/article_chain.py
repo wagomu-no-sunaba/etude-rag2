@@ -1,6 +1,7 @@
 """Article generation orchestration chain."""
 
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from langchain_core.documents import Document
@@ -159,6 +160,74 @@ class ArticleGenerationPipeline:
             style_analysis,
             structure_analysis,
         )
+
+        return draft
+
+    def generate_with_progress(
+        self,
+        input_material: str,
+        progress_callback: Callable[[str], None] | None = None,
+        reference_articles: list[Document] | None = None,
+    ) -> ArticleDraft:
+        """Generate a complete article draft with progress callbacks.
+
+        Args:
+            input_material: Raw input material from user.
+            progress_callback: Optional callback for progress updates.
+                Called with step name (str) after each step completes.
+            reference_articles: Optional pre-fetched reference articles.
+                If None and retriever is configured, articles will be retrieved.
+
+        Returns:
+            ArticleDraft with all generated content.
+        """
+
+        def emit_progress(step: str) -> None:
+            if progress_callback:
+                progress_callback(step)
+
+        # Step 1: Parse input material
+        logger.info("Step 1: Parsing input material")
+        parsed_input = self.input_parser.parse(input_material)
+        emit_progress("input_parsing")
+
+        # Step 2: Classify article type
+        logger.info("Step 2: Classifying article type")
+        classification = self.classifier.classify(parsed_input)
+        emit_progress("classification")
+
+        # Step 3: Retrieve reference articles if not provided
+        if reference_articles is None and self.retriever:
+            logger.info("Step 3: Retrieving reference articles")
+            reference_articles = self._retrieve_references(parsed_input, classification)
+        elif reference_articles is None:
+            reference_articles = []
+        emit_progress("retrieval")
+
+        # Step 4: Analyze style and structure
+        logger.info("Step 4: Analyzing style and structure")
+        style_analysis, structure_analysis = self._analyze_references(
+            reference_articles, classification.article_type_ja
+        )
+        emit_progress("analysis")
+
+        # Step 5: Generate outline
+        logger.info("Step 5: Generating outline")
+        outline = self.outline_generator.generate(
+            parsed_input, classification.article_type_ja, structure_analysis
+        )
+        emit_progress("outline")
+
+        # Step 6: Generate content
+        logger.info("Step 6: Generating content")
+        draft = self._generate_content(
+            parsed_input,
+            classification,
+            outline,
+            style_analysis,
+            structure_analysis,
+        )
+        emit_progress("content")
 
         return draft
 
