@@ -251,9 +251,7 @@ async def generate_article_stream(
                 percentage=metadata["percentage"],
             )
             # Thread-safe queue put
-            asyncio.get_event_loop().call_soon_threadsafe(
-                progress_queue.put_nowait, event
-            )
+            asyncio.get_event_loop().call_soon_threadsafe(progress_queue.put_nowait, event)
 
         def run_generation() -> None:
             """Run generation in a thread."""
@@ -268,9 +266,7 @@ async def generate_article_stream(
                 error_holder["error"] = e
             finally:
                 # Signal completion
-                asyncio.get_event_loop().call_soon_threadsafe(
-                    progress_queue.put_nowait, None
-                )
+                asyncio.get_event_loop().call_soon_threadsafe(progress_queue.put_nowait, None)
 
         # Start generation in background thread
         loop = asyncio.get_event_loop()

@@ -11,7 +11,7 @@ from src.chains.input_parser import ParsedInput
 from src.chains.outline_generator import Outline, OutlineHeading
 from src.chains.structure_analyzer import StructureAnalysis
 from src.chains.style_analyzer import StyleAnalysis
-from src.config import settings
+from src.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +67,8 @@ class TitleGeneratorChain:
     """Chain for generating article title options."""
 
     def __init__(self, llm: ChatVertexAI | None = None):
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.7,  # Higher temperature for creative titles
-        )
+        # Use high quality model for creative title generation
+        self.llm = llm or get_llm(quality="high", temperature=0.7)
         self.parser = JsonOutputParser(pydantic_object=TitleGeneratorOutput)
         self.prompt = ChatPromptTemplate.from_messages(
             [
@@ -133,12 +129,8 @@ class LeadGeneratorChain:
     """Chain for generating article lead paragraph."""
 
     def __init__(self, llm: ChatVertexAI | None = None):
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.5,
-        )
+        # Use high quality model for lead paragraph generation
+        self.llm = llm or get_llm(quality="high", temperature=0.5)
         self.prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", LEAD_SYSTEM_PROMPT),
@@ -216,12 +208,8 @@ class SectionGeneratorChain:
     """Chain for generating section content."""
 
     def __init__(self, llm: ChatVertexAI | None = None):
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.5,
-        )
+        # Use high quality model for section content generation
+        self.llm = llm or get_llm(quality="high", temperature=0.5)
         self.prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", SECTION_SYSTEM_PROMPT),
@@ -312,12 +300,8 @@ class ClosingGeneratorChain:
     """Chain for generating article closing."""
 
     def __init__(self, llm: ChatVertexAI | None = None):
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.5,
-        )
+        # Use high quality model for closing paragraph generation
+        self.llm = llm or get_llm(quality="high", temperature=0.5)
         self.prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", CLOSING_SYSTEM_PROMPT),

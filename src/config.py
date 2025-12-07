@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     # Vertex AI
     embedding_model: str = "text-embedding-004"
     llm_model: str = "gemini-2.0-flash"
+    llm_model_lite: str = "gemini-2.0-flash-lite"
     llm_temperature: float = 0.3
 
     # Database
@@ -72,9 +73,15 @@ class Settings(BaseSettings):
     final_k: int = 10  # Final number of results after fusion
 
     # Reranker
-    reranker_model: str = "BAAI/bge-reranker-base"
+    reranker_model: str = "BAAI/bge-reranker-v2-m3"  # Upgraded for better multilingual support
     reranker_top_k: int = 5  # Number of results after reranking
     use_fp16: bool = True  # Use FP16 for reranker inference
+
+    # Feature flags (for gradual rollout and rollback)
+    use_lite_model: bool = True  # Use flash-lite for lightweight tasks
+    use_query_generator: bool = True  # Enable query generation chain
+    use_style_profile_kb: bool = True  # Enable style profile knowledge base
+    use_auto_rewrite: bool = True  # Enable automatic rewriting
 
     # Google Drive
     target_folder_id: str | None = None

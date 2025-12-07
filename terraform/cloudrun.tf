@@ -95,6 +95,10 @@ resource "google_cloud_run_v2_service" "api" {
         value = var.llm_model
       }
       env {
+        name  = "LLM_MODEL_LITE"
+        value = var.llm_model_lite
+      }
+      env {
         name  = "LLM_TEMPERATURE"
         value = var.llm_temperature
       }
@@ -109,6 +113,24 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "RRF_K"
         value = var.rrf_k
+      }
+
+      # Feature Flags
+      env {
+        name  = "USE_LITE_MODEL"
+        value = var.use_lite_model
+      }
+      env {
+        name  = "USE_QUERY_GENERATOR"
+        value = var.use_query_generator
+      }
+      env {
+        name  = "USE_STYLE_PROFILE_KB"
+        value = var.use_style_profile_kb
+      }
+      env {
+        name  = "USE_AUTO_REWRITE"
+        value = var.use_auto_rewrite
       }
 
       # Secrets
@@ -259,6 +281,10 @@ resource "google_cloud_run_v2_service" "streamlit" {
         value = var.llm_model
       }
       env {
+        name  = "LLM_MODEL_LITE"
+        value = var.llm_model_lite
+      }
+      env {
         name  = "LLM_TEMPERATURE"
         value = var.llm_temperature
       }
@@ -274,6 +300,25 @@ resource "google_cloud_run_v2_service" "streamlit" {
         name  = "RRF_K"
         value = var.rrf_k
       }
+
+      # Feature Flags
+      env {
+        name  = "USE_LITE_MODEL"
+        value = var.use_lite_model
+      }
+      env {
+        name  = "USE_QUERY_GENERATOR"
+        value = var.use_query_generator
+      }
+      env {
+        name  = "USE_STYLE_PROFILE_KB"
+        value = var.use_style_profile_kb
+      }
+      env {
+        name  = "USE_AUTO_REWRITE"
+        value = var.use_auto_rewrite
+      }
+
       env {
         name  = "API_URL"
         value = google_cloud_run_v2_service.api.uri

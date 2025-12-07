@@ -92,3 +92,46 @@ COMMENT ON COLUMN documents.article_type IS 'Category of the article for type-sp
 COMMENT ON COLUMN documents.chunk_index IS 'Position of this chunk within the original document';
 COMMENT ON COLUMN documents.total_chunks IS 'Total number of chunks the original document was split into';
 COMMENT ON FUNCTION rrf_score IS 'Calculates Reciprocal Rank Fusion score for hybrid search';
+
+-- =============================================================================
+-- Style Profiles Table (Dify v3 compatible)
+-- =============================================================================
+-- Stores style profiles and excerpts for each article category
+-- Profile type 'profile' contains the writing style rules
+-- Profile type 'excerpt' contains sample excerpts for style reference
+
+CREATE TABLE IF NOT EXISTS style_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    article_type article_type NOT NULL,
+    profile_type VARCHAR(20) NOT NULL CHECK (profile_type IN ('profile', 'excerpt')),
+    content TEXT NOT NULL,
+    embedding vector(768),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ensure only one 'profile' per article_type (excerpts can have multiple)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_style_profile_unique
+    ON style_profiles(article_type)
+    WHERE profile_type = 'profile';
+
+-- Search index for article_type and profile_type filtering
+CREATE INDEX IF NOT EXISTS idx_style_profiles_type
+    ON style_profiles(article_type, profile_type);
+
+-- Vector similarity index for excerpt search
+CREATE INDEX IF NOT EXISTS idx_style_profiles_embedding
+    ON style_profiles USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 10);
+
+-- Trigger to update updated_at timestamp for style_profiles
+DROP TRIGGER IF EXISTS update_style_profiles_updated_at ON style_profiles;
+CREATE TRIGGER update_style_profiles_updated_at
+    BEFORE UPDATE ON style_profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Comment on style_profiles table
+COMMENT ON TABLE style_profiles IS 'Stores writing style profiles and excerpts for each article category';
+COMMENT ON COLUMN style_profiles.profile_type IS 'Type of profile: "profile" for style rules, "excerpt" for sample text';
+COMMENT ON COLUMN style_profiles.embedding IS 'Vector embedding for excerpt similarity search';

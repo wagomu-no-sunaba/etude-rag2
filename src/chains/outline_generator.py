@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 from src.chains.input_parser import ParsedInput
 from src.chains.structure_analyzer import StructureAnalysis
-from src.config import settings
+from src.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +74,8 @@ class OutlineGeneratorChain:
         Args:
             llm: Optional ChatVertexAI instance. Creates one if not provided.
         """
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.5,  # Moderate temperature for creative outline
-        )
+        # Use high quality model for creative outline generation
+        self.llm = llm or get_llm(quality="high", temperature=0.5)
         self.parser = JsonOutputParser(pydantic_object=Outline)
         self.prompt = ChatPromptTemplate.from_messages(
             [

@@ -78,9 +78,9 @@ resource "google_secret_manager_secret_version" "app_config" {
   secret = google_secret_manager_secret.app_config.id
   secret_data = jsonencode({
     # Vertex AI settings
-    embedding_model  = var.embedding_model
-    llm_model        = var.llm_model
-    llm_temperature  = var.llm_temperature
+    embedding_model = var.embedding_model
+    llm_model       = var.llm_model
+    llm_temperature = var.llm_temperature
 
     # Reranker settings
     reranker_model = var.reranker_model
