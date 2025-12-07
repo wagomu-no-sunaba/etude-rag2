@@ -28,8 +28,6 @@ steps:
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:latest'
       - '-t'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:$COMMIT_SHA'
-      - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache'
       - '-f'
       - 'Dockerfile.ingester'
@@ -37,7 +35,6 @@ steps:
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:latest'
-  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:$COMMIT_SHA'
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/ingester:cache'
 
 timeout: '1200s'
