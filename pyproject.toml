@@ -30,6 +30,7 @@ dependencies = [
     # API Server
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.31.0",
+    "sse-starlette>=2.0.0",
     "pydantic>=2.9.0",
     "pydantic-settings>=2.5.0",
 
