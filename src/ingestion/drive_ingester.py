@@ -7,6 +7,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import google.auth
 import psycopg2
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -105,17 +106,21 @@ class DriveIngester:
             connection_string: Database connection string.
         """
         sa_file = service_account_file or settings.service_account_file
-        if not sa_file:
-            raise ValueError(
-                "Service account file is required. "
-                "Set SERVICE_ACCOUNT_FILE environment variable or pass it directly."
-            )
 
-        # Initialize Google Drive API
-        creds = service_account.Credentials.from_service_account_file(
-            sa_file,
-            scopes=["https://www.googleapis.com/auth/drive.readonly"],
-        )
+        # Initialize Google Drive API credentials
+        scopes = ["https://www.googleapis.com/auth/drive.readonly"]
+        if sa_file:
+            # Use service account file if provided (local development)
+            creds = service_account.Credentials.from_service_account_file(
+                sa_file,
+                scopes=scopes,
+            )
+            logger.info("Using service account file for authentication")
+        else:
+            # Use Application Default Credentials (Cloud Run)
+            creds, project = google.auth.default(scopes=scopes)
+            logger.info(f"Using ADC for authentication (project: {project})")
+
         self.drive_service = build("drive", "v3", credentials=creds)
 
         # Initialize embeddings
@@ -646,7 +651,7 @@ class DriveIngester:
 
     def close(self):
         """Close database connection."""
-        if self.conn and not self.conn.closed:
+        if hasattr(self, "conn") and self.conn and not self.conn.closed:
             self.conn.close()
 
     def __del__(self):
