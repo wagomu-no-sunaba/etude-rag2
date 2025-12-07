@@ -31,7 +31,10 @@ uv run mypy src/
 uv run python src/main.py --folder-id FOLDER_ID
 uv run python src/main.py --local-file input.md --article-type ANNOUNCEMENT
 
-# Database setup
+# Database setup (Cloud SQL)
+./scripts/apply-schema.sh dev  # Applies schema with auto public IP enable/disable
+
+# Local database setup
 psql rag_db < schemas/schema.sql
 ```
 
