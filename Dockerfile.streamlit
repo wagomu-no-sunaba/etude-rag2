@@ -8,12 +8,17 @@ FROM ${BASE_IMAGE}
 
 WORKDIR /app
 
-# アプリケーションコードをコピー
+# アプリケーションコードとpyproject.tomlをコピー
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
 COPY schemas/ ./schemas/
 
+# srcパッケージをインストール（依存関係は既にベースイメージに存在）
+RUN pip install --no-deps -e .
+
 # 環境変数の設定
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 ENV PORT=8501
 
 # ヘルスチェック（Streamlit用）
