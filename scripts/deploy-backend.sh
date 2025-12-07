@@ -10,7 +10,7 @@ START_TIME=$(date +%s)
 PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
 REGION="us-central1"
 ENVIRONMENT="${ENVIRONMENT:-dev}"
-IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/etude-rag2/api-server:latest"
+IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/etude-rag2-repo/api-server:latest"
 SERVICE_NAME="etude-rag2-api-${ENVIRONMENT}"
 
 echo "=========================================="
