@@ -1,6 +1,8 @@
-# Dify v3ワークフロー実装差分分析・実装計画
+# Dify v3ワークフロー実装対応表
 
-Difyワークフロー（note記事ドラフト生成_v3.yml）と現在のPython実装の差分を分析し、同等の処理を実現するための実装計画を記載する。
+Difyワークフロー（note記事ドラフト生成_v3.yml）とPython実装の対応関係を記載する。
+
+> **ステータス**: 全機能実装完了 ✅
 
 ---
 
@@ -10,26 +12,26 @@ Difyワークフロー（note記事ドラフト生成_v3.yml）と現在のPytho
 
 | フェーズ | Dify v3 ノード | 現在の実装 | 差分状況 |
 |---------|---------------|-----------|---------|
-| 入力処理 | node_collect_inputs | InputParserChain | **部分的差分あり** |
+| 入力処理 | node_collect_inputs | InputParserChain | **実装済み** |
 | カテゴリ分岐 | node_category_switch | ArticleClassifierChain | **実装済み** |
-| クエリ生成 | node_query_gen_* (4個) | (keywords利用) | **未実装** |
-| コンテンツ検索 | node_content_kb_* (4個) | ArticleRetriever | **部分的差分あり** |
-| 文体プロファイル | node_style_profile_* (4個) | (参照記事から抽出) | **未実装** |
-| 文体抜粋 | node_style_excerpts_* (4個) | StyleAnalyzerChain | **部分的差分あり** |
+| クエリ生成 | node_query_gen_* (4個) | QueryGeneratorChain | **実装済み** |
+| コンテンツ検索 | node_content_kb_* (4個) | ArticleRetriever | **実装済み** |
+| 文体プロファイル | node_style_profile_* (4個) | StyleProfileRetriever | **実装済み** |
+| 文体抜粋 | node_style_excerpts_* (4個) | StyleProfileRetriever | **実装済み** |
 | 結果マージ | node_merge_results | (パイプライン処理) | **実装済み** |
 | アウトライン生成 | node_generate_outline | OutlineGeneratorChain | **実装済み** |
 | 本文生成 | node_generate_article | SectionGeneratorChain等 | **実装済み** |
 | 文体チェック | node_style_check | StyleCheckerChain | **実装済み** |
-| 自動リライト | node_auto_rewrite | (提案のみ) | **未実装** |
+| 自動リライト | node_auto_rewrite | AutoRewriteChain | **実装済み** |
 | ハルシネーション検知 | node_hallucination_detect | HallucinationDetectorChain | **実装済み** |
 | タグ挿入 | node_tag_inserter | apply_tags() | **実装済み** |
-| 最終整形 | node_final_format | to_markdown() | **部分的差分あり** |
+| 最終整形 | node_final_format | to_markdown() | **実装済み** |
 
 ---
 
 ## 2. 詳細差分分析
 
-### 2.1 入力処理（node_collect_inputs vs InputParserChain）
+### 2.1 入力処理（node_collect_inputs vs InputParserChain - 実装済み）
 
 #### Dify v3の抽出項目
 ```
@@ -37,23 +39,24 @@ category, theme, audience, goal, desired_length,
 key_points, interview_quotes, data_facts, keywords
 ```
 
-#### 現在の実装（ParsedInput）
+#### 現在の実装（ParsedInput - Dify v3互換済み）
 ```python
-theme, key_points, interview_quotes, data_facts,
+category, theme, audience, goal, desired_length,
+key_points, interview_quotes, data_facts,
 people, keywords, missing_info
 ```
 
-#### 差分
-| 項目 | Dify | Python | 対応 |
+#### 対応状況（全項目実装済み）
+| 項目 | Dify | Python | 状況 |
 |------|------|--------|------|
-| `category` | 入力時に抽出 | 別チェーンで判定 | 統合が必要 |
-| `audience` | あり | **なし** | 追加が必要 |
-| `goal` | あり | **なし** | 追加が必要 |
-| `desired_length` | あり（デフォ2000） | **なし** | 追加が必要 |
-| `people` | なし | あり | Dify互換では不要 |
-| `missing_info` | なし | あり | 維持（便利機能） |
+| `category` | 入力時に抽出 | ParsedInputで抽出 | **実装済み** |
+| `audience` | あり | あり | **実装済み** |
+| `goal` | あり | あり | **実装済み** |
+| `desired_length` | あり（デフォ2000） | あり（デフォ2000） | **実装済み** |
+| `people` | なし | あり | 追加機能 |
+| `missing_info` | なし | あり | 追加機能（便利機能） |
 
-### 2.2 クエリ生成（node_query_gen_* - 未実装）
+### 2.2 クエリ生成（node_query_gen_* - 実装済み）
 
 #### Dify v3の処理
 - カテゴリ別に専用LLMでクエリを生成
@@ -61,19 +64,19 @@ people, keywords, missing_info
 - 出力: search_query（スペース区切り）
 - モデル: gpt-4o-mini (temp: 0.3)
 
-#### 現在の実装
-- InputParserChainで抽出したkeywordsをそのまま使用
-- クエリ最適化なし
+#### 現在の実装（src/chains/query_generator.py）
+- `QueryGeneratorChain` がカテゴリ別検索クエリを生成
+- gemini-2.0-flash-lite を使用（軽量タスク）
+- Dify v3と同等の機能を提供
 
-#### 必要な実装
 ```python
 class QueryGeneratorChain:
-    """カテゴリ別検索クエリを生成"""
-    def generate(self, parsed_input: ParsedInput, category: str) -> str:
+    """カテゴリ別検索クエリを生成（実装済み）"""
+    def generate(self, parsed_input: ParsedInput, category: ArticleType) -> str:
         # theme, audience, goal, keywords からクエリを生成
 ```
 
-### 2.3 ナレッジ検索（3層構造 - 部分的未実装）
+### 2.3 ナレッジ検索（3層構造 - 実装済み）
 
 #### Dify v3のナレッジベース構成
 ```
@@ -96,35 +99,34 @@ class QueryGeneratorChain:
 └─────────────────────────────────────────────────────┘
 ```
 
-#### 現在の実装
+#### 現在の実装（実装済み）
 ```
 ┌─────────────────────────────────────────────────────┐
-│ ArticleRetriever                                    │
-│                                                     │
+│ ArticleRetriever (CONTENT_KB相当)                    │
 │ - ハイブリッド検索（Vector + FT + RRF）               │
-│ - BGE再ランク                                        │
+│ - BGE再ランク（BAAI/bge-reranker-v2-m3）             │
 │ - カテゴリフィルタあり                                │
 │                                                     │
-│ 文体取得:                                            │
-│ - 参照記事からStyleAnalyzerChainで自動抽出           │
-│ - 事前定義されたSTYLE_PROFILEなし                    │
+│ StyleProfileRetriever (STYLE_PROFILE + EXCERPTS)    │
+│ - retrieve_profile(): カテゴリ別文体ルール取得        │
+│ - retrieve_excerpts(): テーマ類似の文体抜粋取得      │
+│ - DBテーブル: style_profiles (profile/excerpt分離)  │
 └─────────────────────────────────────────────────────┘
 ```
 
-#### 差分
-1. **STYLE_PROFILE（文体ルール）が未実装**
-   - Difyでは事前定義された文体ルールドキュメントを検索
-   - 現在は参照記事から動的に抽出
+#### 実装詳細
+1. **STYLE_PROFILE（文体ルール）- 実装済み**
+   - `StyleProfileRetriever.retrieve_profile()` で取得
+   - カテゴリ別に事前定義された文体ルールドキュメントを検索
 
-2. **STYLE_EXCERPTS（文体抜粋）の分離が未実装**
-   - Difyでは専用KBとして分離
-   - 現在はCONTENT_KBと同じ検索結果を使用
+2. **STYLE_EXCERPTS（文体抜粋）- 実装済み**
+   - `StyleProfileRetriever.retrieve_excerpts()` で取得
+   - テーマに類似した文体見本をベクトル検索+リランク
 
-3. **Rerankモデルの差異**
-   - Dify: Cohere rerank-multilingual/english-v3.0
-   - Python: BGE (BAAI/bge-reranker-base)
+3. **Rerankモデル**
+   - Python: BGE (BAAI/bge-reranker-v2-m3) - 多言語対応強化版
 
-### 2.4 自動リライト（node_auto_rewrite - 未実装）
+### 2.4 自動リライト（node_auto_rewrite - 実装済み）
 
 #### Dify v3の処理
 ```
@@ -142,21 +144,24 @@ class QueryGeneratorChain:
   - リライト済み記事テキスト
 ```
 
-#### 現在の実装
-- StyleCheckerChainは問題点と修正提案を返すのみ
-- 実際のリライトは未実装
-- `/verify` エンドポイントで検証結果を返すだけ
+#### 現在の実装（src/chains/auto_rewrite.py）
+- `AutoRewriteChain` が文体チェック結果を反映して記事をリライト
+- gemini-2.0-flash を使用（品質重視タスク）
+- `should_rewrite()` メソッドで閾値判定も実装
 
-#### 必要な実装
 ```python
 class AutoRewriteChain:
-    """文体チェック結果を反映して記事をリライト"""
+    """文体チェック結果を反映して記事をリライト（実装済み）"""
     def rewrite(
         self,
         article_text: str,
         style_check_result: StyleCheckResult,
         style_profile: str
-    ) -> str:
+    ) -> RewriteResult:
+        # 文体一貫性を保つようリライト
+
+    def should_rewrite(self, style_check_result: StyleCheckResult, threshold: float = 0.8) -> bool:
+        # 閾値未満ならリライト推奨
 ```
 
 ### 2.5 最終整形（node_final_format - 部分的差分）

@@ -20,10 +20,10 @@ note記事ドラフト自動生成のためのRAG（Retrieval-Augmented Generati
 |---------|------|
 | 言語 | Python 3.12+ |
 | パッケージ管理 | uv |
-| LLM/Embeddings | Google Vertex AI (Gemini 1.5 Pro, text-embedding-004) |
+| LLM/Embeddings | Google Vertex AI (Gemini 2.0 Flash, text-embedding-004) |
 | ベクトルDB | PostgreSQL 15+ with pgvector |
 | フレームワーク | LangChain 0.3.0+, FastAPI, Streamlit |
-| リランカー | BAAI/bge-reranker-base |
+| リランカー | BAAI/bge-reranker-v2-m3 |
 | インフラ | Google Cloud Platform (Cloud Run, Cloud SQL, Vertex AI) |
 | IaC | Terraform |
 | CI/CD | Cloud Build |
@@ -35,10 +35,12 @@ etude-rag2/
 ├── src/
 │   ├── main.py                 # データ取り込みCLI
 │   ├── config.py               # 設定管理（Secret Manager統合）
-│   ├── secrets.py              # Secret Managerヘルパー
+│   ├── secret_manager.py       # Secret Managerヘルパー
+│   ├── llm.py                  # LLM初期化・設定
 │   ├── api/                    # FastAPI REST API
 │   │   ├── main.py
-│   │   └── models.py
+│   │   ├── models.py
+│   │   └── sse_models.py       # SSEストリーミング用モデル
 │   ├── chains/                 # 記事生成パイプライン
 │   │   ├── article_chain.py    # メインオーケストレーター
 │   │   ├── article_classifier.py
@@ -46,15 +48,21 @@ etude-rag2/
 │   │   ├── outline_generator.py
 │   │   ├── style_analyzer.py
 │   │   ├── structure_analyzer.py
-│   │   └── content_generators.py
+│   │   ├── content_generators.py
+│   │   ├── query_generator.py  # 検索クエリ生成（v3）
+│   │   └── auto_rewrite.py     # 自動リライト（v3）
 │   ├── retriever/              # 検索システム
 │   │   ├── hybrid_search.py    # ハイブリッド検索 + RRF
 │   │   ├── reranker.py         # BGEリランキング
-│   │   └── article_retriever.py
+│   │   ├── article_retriever.py
+│   │   └── style_retriever.py  # スタイルプロファイル検索（v3）
 │   ├── ingestion/              # データ取り込み
 │   │   └── drive_ingester.py   # Google Drive連携
 │   ├── ui/                     # Streamlit UI
-│   │   └── app.py
+│   │   ├── app.py
+│   │   ├── api_client.py       # APIクライアント
+│   │   ├── state.py            # セッション状態管理
+│   │   └── utils.py            # ユーティリティ
 │   └── verification/           # 品質検証
 │       ├── hallucination_detector.py
 │       └── style_checker.py
@@ -122,6 +130,7 @@ uv run streamlit run src/ui/app.py
 | メソッド | パス | 説明 |
 |---------|------|------|
 | POST | `/generate` | 記事ドラフト生成 |
+| POST | `/generate/stream` | 記事ドラフト生成（SSEストリーミング） |
 | POST | `/search` | ハイブリッド検索 |
 | POST | `/verify` | ハルシネーション・スタイルチェック |
 | GET | `/health` | ヘルスチェック |
@@ -178,7 +187,8 @@ TARGET_FOLDER_ID=  # Secret Manager から自動取得
 
 # Vertex AI（デフォルト値あり）
 EMBEDDING_MODEL=text-embedding-004
-LLM_MODEL=gemini-1.5-pro
+LLM_MODEL=gemini-2.0-flash
+LLM_MODEL_LITE=gemini-2.0-flash-lite
 LLM_TEMPERATURE=0.3
 
 # Hybrid Search Parameters
@@ -187,8 +197,15 @@ RRF_K=50
 FINAL_K=10
 
 # Reranker
-RERANKER_MODEL=BAAI/bge-reranker-base
+RERANKER_MODEL=BAAI/bge-reranker-v2-m3
 RERANKER_TOP_K=5
+USE_FP16=true
+
+# Feature Flags（v3機能）
+USE_LITE_MODEL=true        # 軽量タスクにflash-liteを使用
+USE_QUERY_GENERATOR=true   # クエリ生成チェーンを有効化
+USE_STYLE_PROFILE_KB=true  # スタイルプロファイルKBを有効化
+USE_AUTO_REWRITE=true      # 自動リライト機能を有効化
 ```
 
 ## テスト

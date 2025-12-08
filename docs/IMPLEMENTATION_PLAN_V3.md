@@ -2,6 +2,8 @@
 
 Difyワークフロー（note記事ドラフト生成_v3.yml）と同等の処理をPython/LangChainで実現するための実装計画。
 
+> **ステータス**: 実装完了 ✅（全フェーズ実装済み）
+
 ---
 
 ## 1. 実装目標
@@ -145,7 +147,7 @@ Difyワークフロー（note記事ドラフト生成_v3.yml）と同等の処�
 
 ## 3. 実装フェーズ
 
-### Phase 0: モデル設定基盤（優先度: 最高）
+### Phase 0: モデル設定基盤（優先度: 最高）✅ 完了
 
 #### 0.1 config.py の拡張
 
@@ -203,7 +205,7 @@ self.llm = llm or get_llm(quality="lite", temperature=0.2)
 
 ---
 
-### Phase 1: 入力処理の拡張（優先度: 高）
+### Phase 1: 入力処理の拡張（優先度: 高）✅ 完了
 
 #### 1.1 ParsedInputモデルの拡張
 
@@ -270,7 +272,7 @@ USER_PROMPT = """## 入力素材
 
 ---
 
-### Phase 2: クエリ生成チェーンの追加（優先度: 中）
+### Phase 2: クエリ生成チェーンの追加（優先度: 中）✅ 完了
 
 #### 2.1 新規チェーン作成
 
@@ -327,7 +329,7 @@ search_query: "キーワード1 キーワード2 キーワード3 ..."
 
 ---
 
-### Phase 3: 文体プロファイルKBの実装（優先度: 高）
+### Phase 3: 文体プロファイルKBの実装（優先度: 高）✅ 完了
 
 Dify v3では STYLE_PROFILE（文体ルール）と STYLE_EXCERPTS（文体見本）を分離して管理。
 
@@ -737,7 +739,7 @@ class StyleProfileRetriever:
 
 ---
 
-### Phase 4: 自動リライトチェーンの実装（優先度: 中）
+### Phase 4: 自動リライトチェーンの実装（優先度: 中）✅ 完了
 
 #### 4.1 新規チェーン作成
 
@@ -804,7 +806,7 @@ STYLE_PROFILE を満たすように本文を完全リライトしてください
 
 ---
 
-### Phase 5: パイプライン統合（優先度: 高）
+### Phase 5: パイプライン統合（優先度: 高）✅ 完了
 
 #### 5.1 ArticleGenerationPipelineの更新
 
@@ -939,7 +941,7 @@ class ArticleGenerationPipeline:
 
 ---
 
-### Phase 6: 最終整形の拡張（優先度: 低）
+### Phase 6: 最終整形の拡張（優先度: 低）✅ 完了
 
 #### 6.1 ArticleDraftモデルの拡張
 
@@ -1048,28 +1050,27 @@ Week 5:
 
 ---
 
-## 5. ファイル変更一覧
+## 5. ファイル変更一覧（実装済み）
 
-### 新規作成
-| ファイル | 説明 |
-|---------|------|
-| `src/llm.py` | LLMファクトリ関数 |
-| `src/chains/query_generator.py` | クエリ生成チェーン |
-| `src/chains/auto_rewrite.py` | 自動リライトチェーン |
-| `src/retriever/style_retriever.py` | 文体プロファイル検索 |
-| `data/style_profiles/*.md` | 文体プロファイルデータ |
-| `scripts/seed_style_profiles.py` | データ投入スクリプト |
+### 新規作成（完了）
+| ファイル | 説明 | ステータス |
+|---------|------|----------|
+| `src/llm.py` | LLMファクトリ関数 | ✅ |
+| `src/chains/query_generator.py` | クエリ生成チェーン | ✅ |
+| `src/chains/auto_rewrite.py` | 自動リライトチェーン | ✅ |
+| `src/retriever/style_retriever.py` | 文体プロファイル検索 | ✅ |
+| `scripts/seed_style_profiles.py` | データ投入スクリプト | ✅ |
 
-### 変更
-| ファイル | 変更内容 |
-|---------|---------|
-| `src/config.py` | `llm_model_lite`, `reranker_model` 追加 |
-| `src/chains/input_parser.py` | ParsedInput拡張、プロンプト更新 |
-| `src/chains/article_chain.py` | パイプライン全体更新 |
-| `src/chains/*.py` (全チェーン) | `get_llm()` 使用に変更 |
-| `src/retriever/reranker.py` | モデル名デフォルト変更（v2-m3） |
-| `src/verification/*.py` | `get_llm()` 使用に変更 |
-| `schemas/schema.sql` | style_profiles テーブル追加 |
+### 変更（完了）
+| ファイル | 変更内容 | ステータス |
+|---------|---------|----------|
+| `src/config.py` | `llm_model_lite`, Feature Flags 追加 | ✅ |
+| `src/chains/input_parser.py` | ParsedInput拡張、プロンプト更新 | ✅ |
+| `src/chains/article_chain.py` | パイプライン全体更新 | ✅ |
+| `src/chains/*.py` (全チェーン) | `get_llm()` 使用に変更 | ✅ |
+| `src/retriever/reranker.py` | モデル名デフォルト変更（v2-m3） | ✅ |
+| `src/verification/*.py` | `get_llm()` 使用に変更 | ✅ |
+| `schemas/schema.sql` | style_profiles テーブル追加 | ✅ |
 
 ---
 

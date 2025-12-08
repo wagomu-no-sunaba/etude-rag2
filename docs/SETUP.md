@@ -488,7 +488,7 @@ curl https://YOUR_API_URL/health
 
 期待されるレスポンス：
 ```json
-{"status": "healthy"}
+{"status": "ok"}
 ```
 
 ### 7.2 Streamlit UI へのアクセス

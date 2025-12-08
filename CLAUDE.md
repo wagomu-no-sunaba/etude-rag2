@@ -55,7 +55,8 @@ psql rag_db < schemas/schema.sql
 
 - **HybridSearcher** - Combines pgvector cosine similarity + pg_trgm trigram matching
 - Uses Reciprocal Rank Fusion (RRF): `score = Σ(1/(rank + k))`
-- **BGEReranker** - Cross-encoder reranking with BAAI/bge-reranker-base
+- **BGEReranker** - Cross-encoder reranking with BAAI/bge-reranker-v2-m3
+- **StyleRetriever** - Specialized retriever for style profile articles
 
 ### Verification (src/verification/)
 
@@ -64,9 +65,9 @@ psql rag_db < schemas/schema.sql
 
 ### API Layer (src/api/)
 
-FastAPI with endpoints: `/generate`, `/search`, `/verify`, `/health`
+FastAPI with endpoints: `/generate`, `/generate/stream` (SSE), `/search`, `/verify`, `/health`
 
-### Configuration (src/config.py, src/secrets.py)
+### Configuration (src/config.py, src/secret_manager.py)
 
 Pydantic Settings with **Secret Manager integration**. Configuration priority:
 1. Environment variables (highest priority, for Cloud Run)
