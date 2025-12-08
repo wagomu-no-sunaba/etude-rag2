@@ -103,11 +103,15 @@ def generate_article():
     progress_container = st.empty()
     status_container = st.empty()
 
+    status_container.info("🔄 記事を生成中...")
+
     try:
-        for update in api_client.generate_stream(
+        stream = api_client.generate_stream(
             input_material=st.session_state.input_material,
             article_type=st.session_state.selected_article_type,
-        ):
+        )
+
+        for update in stream:
             if isinstance(update, ProgressUpdate):
                 progress_container.progress(
                     update.percentage / 100,
