@@ -245,3 +245,205 @@ class TestArticleDraft:
         assert "### 見出し1" in markdown
         assert "### 見出し2" in markdown
         assert "締めの文章" in markdown
+
+    def test_from_markdown_basic(self):
+        """Test ArticleDraft.from_markdown() with basic parsing."""
+        from src.chains.article_chain import ArticleDraft
+
+        markdown = """## タイトル案（3つ）
+
+1. タイトル1
+2. タイトル2
+3. タイトル3
+
+## リード文
+
+これはリード文です。
+
+## 本文
+
+### 見出し1
+
+本文1の内容です。
+
+### 見出し2
+
+本文2の内容です。
+
+## 締め
+
+締めの文章です。
+
+---
+**記事タイプ**: インタビュー
+"""
+        draft = ArticleDraft.from_markdown(
+            markdown=markdown,
+            article_type="INTERVIEW",
+            article_type_ja="インタビュー",
+        )
+
+        assert len(draft.titles) == 3
+        assert draft.titles[0] == "タイトル1"
+        assert draft.titles[1] == "タイトル2"
+        assert draft.titles[2] == "タイトル3"
+        assert "リード文" in draft.lead
+        assert len(draft.sections) == 2
+        assert draft.sections[0]["heading"] == "見出し1"
+        assert "本文1" in draft.sections[0]["body"]
+        assert draft.sections[1]["heading"] == "見出し2"
+        assert "締め" in draft.closing
+
+    def test_from_markdown_preserves_metadata(self):
+        """Test that metadata is preserved during parsing."""
+        from src.chains.article_chain import ArticleDraft
+
+        markdown = """## タイトル案（3つ）
+
+1. Test Title
+
+## リード文
+
+Lead text.
+
+## 本文
+
+### Section
+
+Body text.
+
+## 締め
+
+Closing.
+
+---
+"""
+        metadata = {"original_key": "value", "rewrite_applied": True}
+        draft = ArticleDraft.from_markdown(
+            markdown=markdown,
+            article_type="CULTURE",
+            article_type_ja="カルチャー",
+            preserve_metadata=metadata,
+        )
+
+        assert draft.metadata.get("original_key") == "value"
+        assert draft.metadata.get("rewrite_applied") is True
+
+    def test_from_markdown_roundtrip(self):
+        """Test that to_markdown -> from_markdown preserves content."""
+        from src.chains.article_chain import ArticleDraft
+
+        original = ArticleDraft(
+            titles=["タイトルA", "タイトルB", "タイトルC"],
+            lead="リード文の内容です。",
+            sections=[
+                {"heading": "セクション1", "body": "本文1です。"},
+                {"heading": "セクション2", "body": "本文2です。"},
+            ],
+            closing="締めくくりの文章です。",
+            article_type="EVENT_REPORT",
+            article_type_ja="イベントレポート",
+        )
+
+        markdown = original.to_markdown()
+        parsed = ArticleDraft.from_markdown(
+            markdown=markdown,
+            article_type=original.article_type,
+            article_type_ja=original.article_type_ja,
+        )
+
+        assert parsed.titles == original.titles
+        assert parsed.lead == original.lead
+        assert len(parsed.sections) == len(original.sections)
+        for i, section in enumerate(parsed.sections):
+            assert section["heading"] == original.sections[i]["heading"]
+            assert section["body"] == original.sections[i]["body"]
+        assert parsed.closing == original.closing
+
+    def test_from_markdown_invalid_format(self):
+        """Test that invalid markdown raises ValueError."""
+        from src.chains.article_chain import ArticleDraft
+        import pytest
+
+        invalid_markdown = "This is not valid markdown format"
+
+        with pytest.raises(ValueError, match="Failed to parse titles"):
+            ArticleDraft.from_markdown(
+                markdown=invalid_markdown,
+                article_type="INTERVIEW",
+                article_type_ja="インタビュー",
+            )
+
+    def test_from_markdown_with_multiline_content(self):
+        """Test parsing markdown with multiline sections."""
+        from src.chains.article_chain import ArticleDraft
+
+        markdown = """## タイトル案（3つ）
+
+1. タイトル
+
+## リード文
+
+リード文の1行目。
+リード文の2行目。
+
+## 本文
+
+### 見出し
+
+本文の1行目。
+
+本文の2行目（空行を挟む）。
+
+## 締め
+
+締めの文章。
+
+---
+"""
+        draft = ArticleDraft.from_markdown(
+            markdown=markdown,
+            article_type="CULTURE",
+            article_type_ja="カルチャー",
+        )
+
+        assert "1行目" in draft.lead
+        assert "2行目" in draft.lead
+        assert "本文の1行目" in draft.sections[0]["body"]
+        # Note: empty lines within body are preserved
+        assert "本文の2行目" in draft.sections[0]["body"]
+
+    def test_from_markdown_fullwidth_period(self):
+        """Test parsing markdown with full-width period in title numbers."""
+        from src.chains.article_chain import ArticleDraft
+
+        markdown = """## タイトル案（3つ）
+
+１．全角タイトル1
+２．全角タイトル2
+３．全角タイトル3
+
+## リード文
+
+リード文。
+
+## 本文
+
+### 見出し
+
+本文。
+
+## 締め
+
+締め。
+
+---
+"""
+        draft = ArticleDraft.from_markdown(
+            markdown=markdown,
+            article_type="INTERVIEW",
+            article_type_ja="インタビュー",
+        )
+
+        assert len(draft.titles) == 3
+        assert draft.titles[0] == "全角タイトル1"

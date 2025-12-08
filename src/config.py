@@ -82,6 +82,7 @@ class Settings(BaseSettings):
     use_query_generator: bool = True  # Enable query generation chain
     use_style_profile_kb: bool = True  # Enable style profile knowledge base
     use_auto_rewrite: bool = True  # Enable automatic rewriting
+    recheck_after_rewrite: bool = True  # Re-check style consistency after rewriting
 
     # Google Drive
     target_folder_id: str | None = None

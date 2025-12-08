@@ -1,6 +1,7 @@
 """Article generation orchestration chain (Dify v3 compatible)."""
 
 import logging
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -120,6 +121,113 @@ class ArticleDraft(BaseModel):
 3. 必要に応じて文章を微調整してください
 """
         return md + meta
+
+    @classmethod
+    def from_markdown(
+        cls,
+        markdown: str,
+        article_type: str,
+        article_type_ja: str,
+        preserve_metadata: dict[str, Any] | None = None,
+    ) -> "ArticleDraft":
+        """Parse markdown back into ArticleDraft structure.
+
+        Args:
+            markdown: Markdown text in the format produced by to_markdown().
+            article_type: Article type (INTERVIEW, EVENT_REPORT, etc.).
+            article_type_ja: Japanese article type name.
+            preserve_metadata: Optional metadata to preserve from original draft.
+
+        Returns:
+            ArticleDraft reconstructed from markdown.
+
+        Raises:
+            ValueError: If markdown format is invalid or cannot be parsed.
+        """
+        lines = markdown.split("\n")
+
+        # State machine for parsing
+        current_section: str | None = None
+        titles: list[str] = []
+        lead_lines: list[str] = []
+        sections: list[dict[str, str]] = []
+        closing_lines: list[str] = []
+        current_heading: str | None = None
+        current_body_lines: list[str] = []
+
+        for line in lines:
+            # Detect section headers
+            if line.startswith("## タイトル案"):
+                current_section = "titles"
+                continue
+            elif line.startswith("## リード文"):
+                current_section = "lead"
+                continue
+            elif line.startswith("## 本文"):
+                current_section = "body"
+                continue
+            elif line.startswith("## 締め"):
+                # Save previous body section if exists
+                if current_heading and current_body_lines:
+                    sections.append({
+                        "heading": current_heading,
+                        "body": "\n".join(current_body_lines).strip(),
+                    })
+                current_section = "closing"
+                continue
+            elif line.startswith("---"):
+                # End of content, metadata follows
+                # Save any pending body section
+                if current_section == "body" and current_heading and current_body_lines:
+                    sections.append({
+                        "heading": current_heading,
+                        "body": "\n".join(current_body_lines).strip(),
+                    })
+                break
+
+            # Parse based on current section
+            if current_section == "titles":
+                # Match numbered titles: "1. Title", "1．Title", "１. Title", "１．Title"
+                # Supports both half-width and full-width numbers and periods
+                match = re.match(r"^[\d０-９]+[.．]\s*(.+)$", line)
+                if match:
+                    titles.append(match.group(1))
+
+            elif current_section == "lead":
+                if line.strip():
+                    lead_lines.append(line)
+
+            elif current_section == "body":
+                # Detect subsection headings
+                if line.startswith("### "):
+                    # Save previous section
+                    if current_heading and current_body_lines:
+                        sections.append({
+                            "heading": current_heading,
+                            "body": "\n".join(current_body_lines).strip(),
+                        })
+                    current_heading = line[4:].strip()
+                    current_body_lines = []
+                elif current_heading is not None:
+                    current_body_lines.append(line)
+
+            elif current_section == "closing":
+                if line.strip():
+                    closing_lines.append(line)
+
+        # Validate parsed content
+        if not titles:
+            raise ValueError("Failed to parse titles from markdown")
+
+        return cls(
+            titles=titles,
+            lead="\n".join(lead_lines).strip(),
+            sections=sections,
+            closing="\n".join(closing_lines).strip(),
+            article_type=article_type,
+            article_type_ja=article_type_ja,
+            metadata=preserve_metadata or {},
+        )
 
 
 class ArticleGenerationPipeline:
@@ -492,11 +600,64 @@ class ArticleGenerationPipeline:
                 style_check_result=style_check,
                 style_profile=style_profile,
             )
+
             # Parse rewritten content back into draft structure
-            # For now, just update the metadata to indicate rewrite was done
-            draft.metadata["rewrite_applied"] = True
-            draft.metadata["rewrite_changes"] = rewrite_result.changes_made
-            logger.info(f"  9.2: Rewrite complete, {len(rewrite_result.changes_made)} changes made")
+            try:
+                # Preserve original metadata and add rewrite info
+                preserved_metadata = draft.metadata.copy()
+                preserved_metadata["rewrite_applied"] = True
+                preserved_metadata["rewrite_changes"] = rewrite_result.changes_made
+                preserved_metadata["original_consistency_score"] = style_check.consistency_score
+
+                rewritten_draft = ArticleDraft.from_markdown(
+                    markdown=rewrite_result.rewritten_text,
+                    article_type=draft.article_type,
+                    article_type_ja=draft.article_type_ja,
+                    preserve_metadata=preserved_metadata,
+                )
+
+                # Preserve fields that should not be overwritten
+                rewritten_draft.theme = draft.theme
+                rewritten_draft.desired_length = draft.desired_length
+                rewritten_draft.verification_confidence = draft.verification_confidence
+
+                draft = rewritten_draft
+                logger.info(
+                    f"  9.2: Rewrite complete, {len(rewrite_result.changes_made)} changes made"
+                )
+
+                # Step 9.2.1: Re-check style consistency after rewrite
+                if settings.recheck_after_rewrite:
+                    logger.info("  9.2.1: Re-checking style consistency after rewrite")
+                    new_body_text = "\n\n".join(s["body"] for s in draft.sections)
+                    new_style_check = self.style_checker.check(
+                        lead=draft.lead,
+                        body=new_body_text,
+                        closing=draft.closing,
+                        style_analysis=style_analysis,
+                    )
+                    draft.consistency_score = new_style_check.consistency_score
+                    draft.metadata["rewrite_improvement"] = (
+                        new_style_check.consistency_score
+                        - preserved_metadata["original_consistency_score"]
+                    )
+                    logger.info(
+                        f"  9.2.1: Style consistency: "
+                        f"{preserved_metadata['original_consistency_score']:.1%} -> "
+                        f"{new_style_check.consistency_score:.1%}"
+                    )
+                else:
+                    # Keep original consistency score if not re-checking
+                    draft.consistency_score = style_check.consistency_score
+
+                # Update body_text for subsequent hallucination check
+                body_text = "\n\n".join(s["body"] for s in draft.sections)
+
+            except ValueError as e:
+                # Parsing failed, keep original draft
+                logger.warning(f"  9.2: Failed to parse rewritten content: {e}")
+                draft.metadata["rewrite_applied"] = False
+                draft.metadata["rewrite_parse_error"] = str(e)
         else:
             draft.metadata["rewrite_applied"] = False
 
