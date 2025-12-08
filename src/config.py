@@ -25,7 +25,7 @@ def _get_secret_value(key: str) -> str | None:
         return None
 
     try:
-        from src.secrets import get_app_secret
+        from src.secret_manager import get_app_secret
 
         return get_app_secret(key)
     except Exception:
