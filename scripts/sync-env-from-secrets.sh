@@ -43,6 +43,25 @@ DB_PASSWORD=$(get_secret "etude-rag2-db-password-${ENVIRONMENT}")
 TARGET_FOLDER_ID=$(get_secret "etude-rag2-drive-folder-id-${ENVIRONMENT}")
 MY_EMAIL=$(get_secret "etude-rag2-my-email-${ENVIRONMENT}")
 
+# Fetch app config (JSON)
+APP_CONFIG=$(get_secret "etude-rag2-app-config-${ENVIRONMENT}")
+if [ -n "$APP_CONFIG" ]; then
+    EMBEDDING_MODEL=$(echo "$APP_CONFIG" | jq -r '.embedding_model // "text-embedding-004"')
+    LLM_MODEL=$(echo "$APP_CONFIG" | jq -r '.llm_model // "gemini-2.0-flash"')
+    LLM_TEMPERATURE=$(echo "$APP_CONFIG" | jq -r '.llm_temperature // "0.3"')
+    RERANKER_MODEL=$(echo "$APP_CONFIG" | jq -r '.reranker_model // "BAAI/bge-reranker-v2-m3"')
+    HYBRID_SEARCH_K=$(echo "$APP_CONFIG" | jq -r '.hybrid_search_k // "20"')
+    RRF_K=$(echo "$APP_CONFIG" | jq -r '.rrf_k // "60"')
+else
+    echo "  Warning: app-config secret not found, using defaults"
+    EMBEDDING_MODEL="text-embedding-004"
+    LLM_MODEL="gemini-2.0-flash"
+    LLM_TEMPERATURE="0.3"
+    RERANKER_MODEL="BAAI/bge-reranker-v2-m3"
+    HYBRID_SEARCH_K="20"
+    RRF_K="60"
+fi
+
 # Get Terraform outputs for non-secret values (if available)
 TERRAFORM_DIR="terraform"
 if [ -d "$TERRAFORM_DIR" ]; then
@@ -97,18 +116,18 @@ TARGET_FOLDER_ID=${TARGET_FOLDER_ID}
 # Email
 MY_EMAIL=${MY_EMAIL}
 
-# Vertex AI (defaults)
-EMBEDDING_MODEL=text-embedding-004
-LLM_MODEL=gemini-1.5-pro
-LLM_TEMPERATURE=0.3
+# Vertex AI
+EMBEDDING_MODEL=${EMBEDDING_MODEL}
+LLM_MODEL=${LLM_MODEL}
+LLM_TEMPERATURE=${LLM_TEMPERATURE}
 
-# Hybrid Search Parameters (defaults)
-HYBRID_SEARCH_K=20
-RRF_K=50
+# Hybrid Search Parameters
+HYBRID_SEARCH_K=${HYBRID_SEARCH_K}
+RRF_K=${RRF_K}
 FINAL_K=10
 
-# Reranker (defaults)
-RERANKER_MODEL=BAAI/bge-reranker-base
+# Reranker
+RERANKER_MODEL=${RERANKER_MODEL}
 RERANKER_TOP_K=5
 USE_FP16=true
 
