@@ -27,8 +27,8 @@ def init_session_state():
         st.session_state.selected_article_type = None
     if "generated_draft" not in st.session_state:
         st.session_state.generated_draft = None
-    if "is_generating" not in st.session_state:
-        st.session_state.is_generating = False
+    if "is_processing" not in st.session_state:
+        st.session_state.is_processing = False
 
 
 def render_sidebar():
@@ -88,10 +88,11 @@ def render_input_section():
 
     col1, col2 = st.columns([1, 4])
     with col1:
+        is_disabled = not st.session_state.input_material or st.session_state.is_processing
         generate_button = st.button(
             "🚀 記事を生成",
             type="primary",
-            disabled=not st.session_state.input_material,
+            disabled=is_disabled,
         )
 
     if generate_button:
@@ -100,6 +101,7 @@ def render_input_section():
 
 def generate_article():
     """Generate article using streaming API with progress bar."""
+    st.session_state.is_processing = True
     progress_container = st.empty()
     status_container = st.empty()
 
@@ -132,6 +134,8 @@ def generate_article():
         progress_container.empty()
         status_container.empty()
         st.error(f"❌ エラーが発生しました: {e}")
+    finally:
+        st.session_state.is_processing = False
 
 
 def render_output_section():
@@ -193,13 +197,14 @@ def render_verification_section():
     st.header("🔍 検証")
 
     col1, col2 = st.columns(2)
+    is_disabled = st.session_state.is_processing
 
     with col1:
-        if st.button("ハルシネーション検証", type="secondary"):
+        if st.button("ハルシネーション検証", type="secondary", disabled=is_disabled):
             verify_content("hallucination")
 
     with col2:
-        if st.button("文体検証", type="secondary"):
+        if st.button("文体検証", type="secondary", disabled=is_disabled):
             verify_content("style")
 
 
@@ -209,8 +214,9 @@ def verify_content(check_type: str):
     if draft is None:
         return
 
-    with st.spinner("検証中..."):
-        try:
+    st.session_state.is_processing = True
+    try:
+        with st.spinner("検証中..."):
             body = parse_sections_to_body(draft.get("sections", []))
             result = api_client.verify(
                 lead=draft.get("lead", ""),
@@ -224,8 +230,10 @@ def verify_content(check_type: str):
             else:
                 render_style_result(result.get("style", {}))
 
-        except Exception as e:
-            st.error(f"❌ 検証エラー: {e}")
+    except Exception as e:
+        st.error(f"❌ 検証エラー: {e}")
+    finally:
+        st.session_state.is_processing = False
 
 
 def render_hallucination_result(result: dict):
