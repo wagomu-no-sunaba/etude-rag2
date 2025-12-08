@@ -5,7 +5,7 @@ import logging
 import sys
 
 from src.config import settings
-from src.ingestion import DriveIngester
+from src.ingestion import DataType, DriveIngester
 
 # Configure logging
 logging.basicConfig(
@@ -40,6 +40,18 @@ def main():
         help="Article type for local file ingestion",
     )
     parser.add_argument(
+        "--data-type",
+        type=str,
+        choices=["content", "style_profile", "style_excerpt"],
+        default=None,
+        help="Data type to ingest (content, style_profile, style_excerpt)",
+    )
+    parser.add_argument(
+        "--structured",
+        action="store_true",
+        help="Ingest from structured folder (content/style_profile/style_excerpts subfolders)",
+    )
+    parser.add_argument(
         "--no-recursive",
         action="store_true",
         help="Do not process subfolders recursively",
@@ -67,17 +79,35 @@ def main():
                 article_type=args.article_type,
             )
             logger.info(f"Successfully ingested {count} chunks from local file")
-        else:
-            # Ingest from Google Drive
+
+        elif args.structured:
+            # Ingest from structured folder with content/style subfolders
             folder_id = args.folder_id or settings.target_folder_id
             if not folder_id:
                 logger.error("No folder ID specified. Use --folder-id or set TARGET_FOLDER_ID")
                 sys.exit(1)
 
+            logger.info(f"Starting structured ingestion from folder: {folder_id}")
+            counts = ingester.ingest_structured_folder(folder_id=folder_id)
+            logger.info("Ingestion complete:")
+            for data_type, count in counts.items():
+                logger.info(f"  {data_type}: {count} items")
+
+        else:
+            # Ingest from Google Drive (single folder)
+            folder_id = args.folder_id or settings.target_folder_id
+            if not folder_id:
+                logger.error("No folder ID specified. Use --folder-id or set TARGET_FOLDER_ID")
+                sys.exit(1)
+
+            # Convert data_type string to DataType enum if specified
+            data_type = DataType(args.data_type) if args.data_type else None
+
             logger.info(f"Starting ingestion from folder: {folder_id}")
             count = ingester.ingest_folder(
                 folder_id=folder_id,
                 recursive=not args.no_recursive,
+                data_type=data_type,
             )
             logger.info(f"Successfully ingested {count} chunks from Google Drive")
 

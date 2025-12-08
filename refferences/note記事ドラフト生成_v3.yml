@@ -1,0 +1,2219 @@
+app:
+  description: 'note記事ドラフト生成ワークフロー v3
+
+
+    【v3の特徴】
+
+    - カテゴリ別CONTENT_KB × STYLE_KB分離構成
+
+    - STYLE_PROFILE（文体ルール）+ STYLE_EXCERPTS（文体見本）の二層取得
+
+    - 2段階生成（アウトライン → 本文）
+
+    - 文体整合性チェック + 自動リライト機能
+
+    - ハルシネーション検知と[要確認]タグ挿入
+
+
+    【対応カテゴリ】
+
+    - interview（社員インタビュー）
+
+    - event（イベントレポート）
+
+    - announcement（お知らせ・リリース）
+
+    - story（カルチャー・ストーリー）
+
+
+    【対象】
+
+    株式会社ギグー 採用広報note記事
+
+    '
+  icon: 🤖
+  icon_background: '#E0F2FE'
+  mode: advanced-chat
+  name: note記事ドラフト生成_v3
+  use_icon_as_answer_icon: true
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openai:0.2.7@9031bbf9b37d9f6341a20c78a8bd18d686afd3ff627545496c3557705419d084
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/cohere:0.0.8@1456818eb78f25c1a25e91809cecbd78e5523d39868dcb78607e625913b5e4fe
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .TXT
+      - .MD
+      - .PDF
+      - .DOCX
+      allowed_file_types:
+      - document
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: true
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 5
+    opening_statement: 'こんにちは！株式会社ギグーのnote記事ドラフト生成AI（v3）です。
+
+
+      📝 対応している記事カテゴリ：
+
+      - interview（社員インタビュー）
+
+      - event（イベントレポート）
+
+      - announcement（お知らせ・リリース）
+
+      - story（カルチャー・ストーリー）
+
+
+      以下の情報を入力してください：
+
+      - 記事カテゴリ（上記4種類から選択）
+
+      - テーマ・主旨
+
+      - 読者ターゲット
+
+      - 記事の目的
+
+      - 箇条書きのメモ、インタビュー内容など
+
+      - 希望文字数（任意）
+
+      '
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 'category: interview で入社エントリを書きたい'
+    - 'category: event で社内勉強会のレポートを作成したい'
+    - 'category: announcement で新サービスリリースを告知したい'
+    - 'category: story でリモートワーク制度を紹介したい'
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start-to-collect-inputs
+      source: node_start
+      sourceHandle: source
+      target: node_collect_inputs
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: if-else
+      id: collect-inputs-to-category-switch
+      source: node_collect_inputs
+      sourceHandle: source
+      target: node_category_switch
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: category-switch-to-query-interview
+      source: node_category_switch
+      sourceHandle: interview
+      target: node_query_gen_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: category-switch-to-query-event
+      source: node_category_switch
+      sourceHandle: event
+      target: node_query_gen_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: category-switch-to-query-announcement
+      source: node_category_switch
+      sourceHandle: announcement
+      target: node_query_gen_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: category-switch-to-query-story
+      source: node_category_switch
+      sourceHandle: story
+      target: node_query_gen_story
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: query-interview-to-content-kb
+      source: node_query_gen_interview
+      sourceHandle: source
+      target: node_content_kb_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: query-event-to-content-kb
+      source: node_query_gen_event
+      sourceHandle: source
+      target: node_content_kb_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: query-announcement-to-content-kb
+      source: node_query_gen_announcement
+      sourceHandle: source
+      target: node_content_kb_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: knowledge-retrieval
+      id: query-story-to-content-kb
+      source: node_query_gen_story
+      sourceHandle: source
+      target: node_content_kb_story
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: content-interview-to-style-profile
+      source: node_content_kb_interview
+      sourceHandle: source
+      target: node_style_profile_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: content-event-to-style-profile
+      source: node_content_kb_event
+      sourceHandle: source
+      target: node_style_profile_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: content-announcement-to-style-profile
+      source: node_content_kb_announcement
+      sourceHandle: source
+      target: node_style_profile_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: content-story-to-style-profile
+      source: node_content_kb_story
+      sourceHandle: source
+      target: node_style_profile_story
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: style-profile-interview-to-excerpts
+      source: node_style_profile_interview
+      sourceHandle: source
+      target: node_style_excerpts_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: style-profile-event-to-excerpts
+      source: node_style_profile_event
+      sourceHandle: source
+      target: node_style_excerpts_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: style-profile-announcement-to-excerpts
+      source: node_style_profile_announcement
+      sourceHandle: source
+      target: node_style_excerpts_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: knowledge-retrieval
+      id: style-profile-story-to-excerpts
+      source: node_style_profile_story
+      sourceHandle: source
+      target: node_style_excerpts_story
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: style-excerpts-interview-to-merge
+      source: node_style_excerpts_interview
+      sourceHandle: source
+      target: node_merge_results
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: style-excerpts-event-to-merge
+      source: node_style_excerpts_event
+      sourceHandle: source
+      target: node_merge_results
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: style-excerpts-announcement-to-merge
+      source: node_style_excerpts_announcement
+      sourceHandle: source
+      target: node_merge_results
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: knowledge-retrieval
+        targetType: code
+      id: style-excerpts-story-to-merge
+      source: node_style_excerpts_story
+      sourceHandle: source
+      target: node_merge_results
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: merge-to-outline
+      source: node_merge_results
+      sourceHandle: source
+      target: node_generate_outline
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: outline-to-article
+      source: node_generate_outline
+      sourceHandle: source
+      target: node_generate_article
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: article-to-style-check
+      source: node_generate_article
+      sourceHandle: source
+      target: node_style_check
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: style-check-to-rewrite
+      source: node_style_check
+      sourceHandle: source
+      target: node_auto_rewrite
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: rewrite-to-hallucination
+      source: node_auto_rewrite
+      sourceHandle: source
+      target: node_hallucination_detect
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: hallucination-to-tag
+      source: node_hallucination_detect
+      sourceHandle: source
+      target: node_tag_inserter
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: code
+      id: tag-to-format
+      source: node_tag_inserter
+      sourceHandle: source
+      target: node_final_format
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: format-to-answer
+      source: node_final_format
+      sourceHandle: source
+      target: node_answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ユーザーから記事素材と設定を受け取る開始ノード
+        selected: false
+        title: 素材入力
+        type: start
+        variables: []
+      height: 117
+      id: node_start
+      position:
+        x: 0
+        y: 400
+      positionAbsolute:
+        x: 0
+        y: 400
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 'ユーザー入力からカテゴリ、テーマ、読者、目的、希望文字数を抽出して構造化
+
+          '
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-collect-inputs
+          role: system
+          text: 'あなたは入力情報を構造化するエキスパートです。
+
+
+            ## タスク
+
+            ユーザーから提供された記事素材を分析し、以下の情報を抽出・構造化してください。
+
+
+            ## 抽出項目
+
+            1. category: 記事カテゴリ（interview / event / announcement / story）
+
+            2. theme: 記事のテーマ・主旨（1文で要約）
+
+            3. audience: 想定読者
+
+            4. goal: 記事の目的
+
+            5. desired_length: 希望文字数（指定なしの場合は2000）
+
+            6. key_points: 記事に含めるべき重要ポイント
+
+            7. interview_quotes: インタビュー発言（該当する場合）
+
+            8. data_facts: 具体的な数値やデータ
+
+            9. keywords: 検索用キーワード（5-10個）
+
+
+            ## カテゴリ判定基準
+
+            - interview: 社員インタビュー、入社エントリ、人物フォーカス
+
+            - event: 勉強会、イベント、セミナー報告
+
+            - announcement: 新サービス、リリース、お知らせ
+
+            - story: 企業文化、制度紹介、カルチャー
+
+
+            ## ルール
+
+            - 入力にない情報は推測しない
+
+            - カテゴリが不明確な場合は最も近いものを選択
+
+            - 数値や固有名詞は正確に抽出
+
+            '
+        - id: user-input-collect
+          role: user
+          text: '## 入力素材
+
+            {{#sys.query#}}
+
+
+            上記の素材を構造化してください。
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            $schema: http://json-schema.org/draft-07/schema#
+            additionalProperties: false
+            properties:
+              audience:
+                description: 想定読者
+                type: string
+              category:
+                description: 記事カテゴリ
+                enum:
+                - interview
+                - event
+                - announcement
+                - story
+                type: string
+              data_facts:
+                description: 具体的な数値やデータ
+                items:
+                  type: string
+                type: array
+              desired_length:
+                default: 2000
+                description: 希望文字数
+                type: number
+              goal:
+                description: 記事の目的
+                type: string
+              interview_quotes:
+                description: インタビュー発言
+                items:
+                  properties:
+                    quote:
+                      type: string
+                    speaker:
+                      type: string
+                  type: object
+                type: array
+              key_points:
+                description: 重要ポイント
+                items:
+                  type: string
+                type: array
+              keywords:
+                description: 検索用キーワード
+                items:
+                  type: string
+                type: array
+              theme:
+                description: 記事のテーマ
+                type: string
+            required:
+            - category
+            - theme
+            - audience
+            - goal
+            - keywords
+            type: object
+        structured_output_enabled: true
+        title: 入力情報収集
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_collect_inputs
+      position:
+        x: 342
+        y: 358.924467808821
+      positionAbsolute:
+        x: 342
+        y: 358.924467808821
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: interview
+          conditions:
+          - comparison_operator: is
+            id: condition-interview
+            value: interview
+            varType: string
+            variable_selector:
+            - node_collect_inputs
+            - structured_output
+            - category
+          id: interview
+          logical_operator: and
+        - case_id: event
+          conditions:
+          - comparison_operator: is
+            id: condition-event
+            value: event
+            varType: string
+            variable_selector:
+            - node_collect_inputs
+            - structured_output
+            - category
+          id: event
+          logical_operator: and
+        - case_id: announcement
+          conditions:
+          - comparison_operator: is
+            id: condition-announcement
+            value: announcement
+            varType: string
+            variable_selector:
+            - node_collect_inputs
+            - structured_output
+            - category
+          id: announcement
+          logical_operator: and
+        - case_id: story
+          conditions:
+          - comparison_operator: is
+            id: condition-story
+            value: story
+            varType: string
+            variable_selector:
+            - node_collect_inputs
+            - structured_output
+            - category
+          id: story
+          logical_operator: and
+        desc: カテゴリに応じて適切なナレッジベースへ振り分け
+        selected: false
+        title: カテゴリ分岐
+        type: if-else
+      height: 312
+      id: node_category_switch
+      position:
+        x: 684
+        y: 300
+      positionAbsolute:
+        x: 684
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: インタビュー記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-interview
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            以下の情報から、note記事の内容検索に最適な検索クエリを生成してください。
+
+
+            ## 入力情報
+
+            - テーマ: {{#node_collect_inputs.structured_output.theme#}}
+
+            - 読者: {{#node_collect_inputs.structured_output.audience#}}
+
+            - 目的: {{#node_collect_inputs.structured_output.goal#}}
+
+            - キーワード: {{#node_collect_inputs.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - キーワード列挙形式で出力
+
+            - 各クエリは簡潔に（1-6単語）
+
+            - テーマに関連するクエリ（2-3個）
+
+            - インタビュー記事の構成参考用クエリ（1-2個）
+
+            '
+        - id: user-query-interview
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              search_query:
+                description: 検索クエリ（スペース区切り）
+                type: string
+            required:
+            - search_query
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（インタビュー）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_interview
+      position:
+        x: 1026
+        y: 0
+      positionAbsolute:
+        x: 1026
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: イベントレポート記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-event
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            以下の情報から、イベントレポート記事の内容検索に最適な検索クエリを生成してください。
+
+
+            ## 入力情報
+
+            - テーマ: {{#node_collect_inputs.structured_output.theme#}}
+
+            - 読者: {{#node_collect_inputs.structured_output.audience#}}
+
+            - 目的: {{#node_collect_inputs.structured_output.goal#}}
+
+            - キーワード: {{#node_collect_inputs.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - キーワード列挙形式で出力
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-event
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              search_query:
+                description: 検索クエリ（スペース区切り）
+                type: string
+            required:
+            - search_query
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（イベントレポート）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_event
+      position:
+        x: 1026
+        y: 200
+      positionAbsolute:
+        x: 1026
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: アナウンスメント記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-announcement
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            以下の情報から、アナウンスメント記事の内容検索に最適な検索クエリを生成してください。
+
+
+            ## 入力情報
+
+            - テーマ: {{#node_collect_inputs.structured_output.theme#}}
+
+            - 読者: {{#node_collect_inputs.structured_output.audience#}}
+
+            - 目的: {{#node_collect_inputs.structured_output.goal#}}
+
+            - キーワード: {{#node_collect_inputs.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - キーワード列挙形式で出力
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-announcement
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              search_query:
+                description: 検索クエリ（スペース区切り）
+                type: string
+            required:
+            - search_query
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（アナウンスメント）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_announcement
+      position:
+        x: 1026
+        y: 400
+      positionAbsolute:
+        x: 1026
+        y: 400
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ストーリー/カルチャー記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-story
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            以下の情報から、カルチャー/ストーリー記事の内容検索に最適な検索クエリを生成してください。
+
+
+            ## 入力情報
+
+            - テーマ: {{#node_collect_inputs.structured_output.theme#}}
+
+            - 読者: {{#node_collect_inputs.structured_output.audience#}}
+
+            - 目的: {{#node_collect_inputs.structured_output.goal#}}
+
+            - キーワード: {{#node_collect_inputs.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - キーワード列挙形式で出力
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-story
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              search_query:
+                description: 検索クエリ（スペース区切り）
+                type: string
+            required:
+            - search_query
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（カルチャー）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_story
+      position:
+        x: 1026
+        y: 600
+      positionAbsolute:
+        x: 1026
+        y: 600
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - MJ76sox5qOIVoWvQkEQW5eMwMFGMpvqO/A/0OUFacUz/lC0Pal/u6QAnqcmgkksm
+        desc: インタビュー記事コンテンツKB（KB_interview_all）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 15
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_query_gen_interview
+        - structured_output
+        - search_query
+        retrieval_mode: multiple
+        selected: false
+        title: CONTENT_KB（インタビュー）
+        type: knowledge-retrieval
+      height: 134
+      id: node_content_kb_interview
+      position:
+        x: 1368
+        y: 0
+      positionAbsolute:
+        x: 1368
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: イベントレポート記事コンテンツKB（KB_event_all）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 15
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_query_gen_event
+        - structured_output
+        - search_query
+        retrieval_mode: multiple
+        selected: false
+        title: CONTENT_KB（イベントレポート）
+        type: knowledge-retrieval
+      height: 134
+      id: node_content_kb_event
+      position:
+        x: 1368
+        y: 200
+      positionAbsolute:
+        x: 1368
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - T9oOmTCouVy8CThEzkHls5iSYnjKkW5BZ/+rXS8fTROcleRe6epxYyK7S3W0gBEf
+        desc: アナウンスメント記事コンテンツKB（KB_announcement_all）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 15
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_query_gen_announcement
+        - structured_output
+        - search_query
+        retrieval_mode: multiple
+        selected: false
+        title: CONTENT_KB（アナウンスメント）
+        type: knowledge-retrieval
+      height: 134
+      id: node_content_kb_announcement
+      position:
+        x: 1368
+        y: 400
+      positionAbsolute:
+        x: 1368
+        y: 400
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - cplMlK4lzAxWZxD5Az986vMJ6WEgnZzPm3VL83K+k3qdse77MR5k7axgMjyFJCpv
+        desc: ストーリー記事コンテンツKB（KB_story_all）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 15
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_query_gen_story
+        - structured_output
+        - search_query
+        retrieval_mode: multiple
+        selected: false
+        title: CONTENT_KB（カルチャ）
+        type: knowledge-retrieval
+      height: 134
+      id: node_content_kb_story
+      position:
+        x: 1368
+        y: 600
+      positionAbsolute:
+        x: 1368
+        y: 600
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: インタビュー記事文体プロファイルKB（KB_interview_style, type=style_profile）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-english-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 1
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - category
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_PROFILE（インタビュー）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_profile_interview
+      position:
+        x: 1710
+        y: 0
+      positionAbsolute:
+        x: 1710
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: イベントレポート文体プロファイルKB（KB_event_style, type=style_profile）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-english-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 1
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - category
+        retrieval_mode: multiple
+        selected: true
+        title: STYLE_PROFILE（イベントレポート）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_profile_event
+      position:
+        x: 1710
+        y: 200
+      positionAbsolute:
+        x: 1710
+        y: 200
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - T9oOmTCouVy8CThEzkHls5iSYnjKkW5BZ/+rXS8fTROcleRe6epxYyK7S3W0gBEf
+        desc: アナウンスメント文体プロファイルKB（KB_announcement_style, type=style_profile）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-english-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 1
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - category
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_PROFILE（アナウンスメント）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_profile_announcement
+      position:
+        x: 1710
+        y: 400
+      positionAbsolute:
+        x: 1710
+        y: 400
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - cplMlK4lzAxWZxD5Az986vMJ6WEgnZzPm3VL83K+k3qdse77MR5k7axgMjyFJCpv
+        desc: ストーリー文体プロファイルKB（KB_story_style, type=style_profile）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-english-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 1
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - category
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_PROFILE（カルチャー）
+        type: knowledge-retrieval
+      height: 134
+      id: node_style_profile_story
+      position:
+        x: 1710
+        y: 600
+      positionAbsolute:
+        x: 1710
+        y: 600
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: インタビュー記事文体抜粋KB（KB_interview_style, type=style_excerpt）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - theme
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_EXCERPTS（インタビュー）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_excerpts_interview
+      position:
+        x: 2052
+        y: 0
+      positionAbsolute:
+        x: 2052
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: イベントレポート文体抜粋KB（KB_event_style, type=style_excerpt）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - theme
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_EXCERPTS（イベントレポート）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_excerpts_event
+      position:
+        x: 2052
+        y: 200
+      positionAbsolute:
+        x: 2052
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - T9oOmTCouVy8CThEzkHls5iSYnjKkW5BZ/+rXS8fTROcleRe6epxYyK7S3W0gBEf
+        desc: アナウンスメント文体抜粋KB（KB_announcement_style, type=style_excerpt）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - theme
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_EXCERPTS（アナウンスメント）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_excerpts_announcement
+      position:
+        x: 2052
+        y: 400
+      positionAbsolute:
+        x: 2052
+        y: 400
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        dataset_ids:
+        - cplMlK4lzAxWZxD5Az986vMJ6WEgnZzPm3VL83K+k3qdse77MR5k7axgMjyFJCpv
+        desc: ストーリー文体抜粋KB（KB_story_style, type=style_excerpt）
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.1
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_collect_inputs
+        - structured_output
+        - theme
+        retrieval_mode: multiple
+        selected: false
+        title: STYLE_EXCERPTS（カルチャー）
+        type: knowledge-retrieval
+      height: 150
+      id: node_style_excerpts_story
+      position:
+        x: 2052
+        y: 600
+      positionAbsolute:
+        x: 2052
+        y: 600
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ \n    category,\n    content_interview, content_event,\
+          \ content_announcement, content_story,\n    style_profile_interview, style_profile_event,\
+          \ style_profile_announcement, style_profile_story,\n    style_excerpts_interview,\
+          \ style_excerpts_event, style_excerpts_announcement, style_excerpts_story\n\
+          }) {\n    // カテゴリに応じて適切なデータを選択\n    let content_chunks = '';\n    let style_profile\
+          \ = '';\n    let style_excerpts = '';\n    \n    switch(category) {\n  \
+          \      case 'interview':\n            content_chunks = content_interview\
+          \ || '';\n            style_profile = style_profile_interview || '';\n \
+          \           style_excerpts = style_excerpts_interview || '';\n         \
+          \   break;\n        case 'event':\n            content_chunks = content_event\
+          \ || '';\n            style_profile = style_profile_event || '';\n     \
+          \       style_excerpts = style_excerpts_event || '';\n            break;\n\
+          \        case 'announcement':\n            content_chunks = content_announcement\
+          \ || '';\n            style_profile = style_profile_announcement || '';\n\
+          \            style_excerpts = style_excerpts_announcement || '';\n     \
+          \       break;\n        case 'story':\n            content_chunks = content_story\
+          \ || '';\n            style_profile = style_profile_story || '';\n     \
+          \       style_excerpts = style_excerpts_story || '';\n            break;\n\
+          \    }\n    \n    return {\n        content_chunks: content_chunks,\n  \
+          \      style_profile: style_profile,\n        style_excerpts: style_excerpts\n\
+          \    };\n}\n"
+        code_language: javascript
+        desc: カテゴリに応じた検索結果をマージ
+        outputs:
+          content_chunks:
+            children: null
+            type: string
+          style_excerpts:
+            children: null
+            type: string
+          style_profile:
+            children: null
+            type: string
+        selected: false
+        title: 結果マージ
+        type: code
+        variables:
+        - value_selector:
+          - node_collect_inputs
+          - structured_output
+          - category
+          variable: category
+        - value_selector:
+          - node_content_kb_interview
+          - result
+          variable: content_interview
+        - value_selector:
+          - node_content_kb_event
+          - result
+          variable: content_event
+        - value_selector:
+          - node_content_kb_announcement
+          - result
+          variable: content_announcement
+        - value_selector:
+          - node_content_kb_story
+          - result
+          variable: content_story
+        - value_selector:
+          - node_style_profile_interview
+          - result
+          variable: style_profile_interview
+        - value_selector:
+          - node_style_profile_event
+          - result
+          variable: style_profile_event
+        - value_selector:
+          - node_style_profile_announcement
+          - result
+          variable: style_profile_announcement
+        - value_selector:
+          - node_style_profile_story
+          - result
+          variable: style_profile_story
+        - value_selector:
+          - node_style_excerpts_interview
+          - result
+          variable: style_excerpts_interview
+        - value_selector:
+          - node_style_excerpts_event
+          - result
+          variable: style_excerpts_event
+        - value_selector:
+          - node_style_excerpts_announcement
+          - result
+          variable: style_excerpts_announcement
+        - value_selector:
+          - node_style_excerpts_story
+          - result
+          variable: style_excerpts_story
+      height: 80
+      id: node_merge_results
+      position:
+        x: 2394
+        y: 300
+      positionAbsolute:
+        x: 2394
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 'STYLE_PROFILEに定義された文体に従い、CONTENT_CHUNKSのみを参照してH2/H3アウトラインを生成
+
+          '
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-outline-system
+          role: system
+          text: 'あなたは弊社ナーチャリング記事の編集者です。
+
+            STYLE_PROFILE に定義された文体に厳密に従ってください。
+
+            内容は CONTENT_CHUNKS のみを参照し、外部知識を使わないこと。
+
+
+            ## STYLE_PROFILE（文体ルール）
+
+            {{#node_merge_results.style_profile#}}
+
+
+            ## STYLE_EXCERPTS（文体見本）
+
+            {{#node_merge_results.style_excerpts#}}
+
+
+            ## CONTENT_CHUNKS（参照コンテンツ）
+
+            {{#node_merge_results.content_chunks#}}
+
+            '
+        - id: prompt-outline-user
+          role: user
+          text: '以下の条件で H2/H3 のアウトラインを作成してください。
+
+
+            - カテゴリ: {{#node_collect_inputs.structured_output.category#}}
+
+            - テーマ: {{#node_collect_inputs.structured_output.theme#}}
+
+            - 読者: {{#node_collect_inputs.structured_output.audience#}}
+
+            - 目的: {{#node_collect_inputs.structured_output.goal#}}
+
+
+            本文はまだ書かないでください。H2/H3の見出し構成と各セクションの概要のみ出力してください。
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              headings:
+                description: アウトライン見出し
+                items:
+                  properties:
+                    content_summary:
+                      description: このセクションで書く内容の概要
+                      type: string
+                    key_sources:
+                      description: 使用するCONTENT_CHUNKSからの情報
+                      items:
+                        type: string
+                      type: array
+                    level:
+                      description: 見出しレベル（H2またはH3）
+                      enum:
+                      - H2
+                      - H3
+                      type: string
+                    target_length:
+                      description: 目標文字数
+                      type: number
+                    title:
+                      description: 見出しテキスト
+                      type: string
+                  type: object
+                type: array
+              total_target_length:
+                description: 本文全体の目標文字数
+                type: number
+            required:
+            - headings
+            - total_target_length
+            type: object
+        structured_output_enabled: true
+        title: アウトライン生成
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_generate_outline
+      position:
+        x: 2736
+        y: 300
+      positionAbsolute:
+        x: 2736
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 'OUTLINE_TEXT を維持したまま、STYLE_PROFILE に忠実に本文を生成
+
+          CONTENT_CHUNKS に記載のない事実を勝手に作らない
+
+          '
+        model:
+          completion_params:
+            temperature: 0.6
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-article-system
+          role: system
+          text: 'あなたは弊社のナーチャリング記事編集者です。
+
+            STYLE_PROFILE を絶対に遵守し、文体を模倣してください。
+
+            CONTENT_CHUNKS に記載のない事実を勝手に作らないこと。
+
+
+            ## STYLE_PROFILE（文体ルール）
+
+            {{#node_merge_results.style_profile#}}
+
+
+            ## CONTENT_CHUNKS（参照コンテンツ）
+
+            {{#node_merge_results.content_chunks#}}
+
+
+            ## OUTLINE_TEXT（アウトライン）
+
+            {{#node_generate_outline.structured_output.headings#}}
+
+            '
+        - id: prompt-article-user
+          role: user
+          text: 'OUTLINE_TEXT を維持したまま、本文を書いてください。
+
+
+            ## 制約
+
+            - 文体: STYLE_PROFILE に忠実
+
+            - 長さ: {{#node_collect_inputs.structured_output.desired_length#}} 文字程度
+
+            - 過剰な煽り禁止、丁寧で親しみやすい調子
+
+            - CONTENT_CHUNKS の内容のみを利用する
+
+            - 外部知識を使わない
+
+
+            ## 出力形式
+
+            - タイトル案（3つ）
+
+            - リード文（100-150字）
+
+            - 本文（見出しを含む）
+
+            - 締めの文章
+
+            '
+        selected: false
+        title: 本文生成
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_generate_article
+      position:
+        x: 3078
+        y: 300
+      positionAbsolute:
+        x: 3078
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 'STYLE_PROFILEとの一致度を判定し、ズレがある部分を指摘して修正案を提示
+
+          '
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-style-check-system
+          role: system
+          text: '以下の STYLE_PROFILE との一致度を判定し、
+
+            どの部分にズレがあるか指摘し、必要な修正文を提示してください。
+
+
+            ## STYLE_PROFILE（文体ルール）
+
+            {{#node_merge_results.style_profile#}}
+
+            '
+        - id: prompt-style-check-user
+          role: user
+          text: '以下の文章を STYLE_PROFILE に完全適合させるためのレビューと修正案を示してください。
+
+
+            {{#node_generate_article.text#}}
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              consistency_score:
+                description: 文体一貫性スコア（0-1）
+                maximum: 1
+                minimum: 0
+                type: number
+              corrected_sections:
+                description: 修正が必要な箇所と修正案
+                items:
+                  properties:
+                    corrected:
+                      description: 修正後
+                      type: string
+                    original:
+                      description: 修正前
+                      type: string
+                    reason:
+                      description: 修正理由
+                      type: string
+                  type: object
+                type: array
+              issues:
+                description: 文体上の問題点
+                items:
+                  properties:
+                    description:
+                      type: string
+                    location:
+                      type: string
+                    severity:
+                      enum:
+                      - high
+                      - medium
+                      - low
+                      type: string
+                  type: object
+                type: array
+            required:
+            - consistency_score
+            - issues
+            type: object
+        structured_output_enabled: true
+        title: 文体整合性チェック
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_style_check
+      position:
+        x: 3420
+        y: 300
+      positionAbsolute:
+        x: 3420
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 'STYLE_PROFILE を満たすように本文を完全リライト
+
+          '
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-rewrite-system
+          role: system
+          text: 'あなたはスタイル編集者です。
+
+            STYLE_PROFILE を満たすように本文を完全リライトしてください。
+
+
+            ## STYLE_PROFILE（文体ルール）
+
+            {{#node_merge_results.style_profile#}}
+
+
+            ## 文体チェック結果
+
+            一貫性スコア: {{#node_style_check.structured_output.consistency_score#}}
+
+            問題点: {{#node_style_check.structured_output.issues#}}
+
+            修正案: {{#node_style_check.structured_output.corrected_sections#}}
+
+            '
+        - id: prompt-rewrite-user
+          role: user
+          text: '以下の記事を STYLE_PROFILE に一致するよう整えてください。
+
+            文体チェック結果の修正案を反映してください。
+
+
+            {{#node_generate_article.text#}}
+
+            '
+        selected: false
+        title: 自動リライト
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_auto_rewrite
+      position:
+        x: 3762
+        y: 300
+      positionAbsolute:
+        x: 3762
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: CONTENT_CHUNKSにない事実を検出し、[要確認]タグの挿入候補を特定
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-hallucination-system
+          role: system
+          text: 'あなたは事実検証の専門家です。
+
+
+            ## タスク
+
+            以下の記事ドラフトを CONTENT_CHUNKS と照合し、
+
+            CONTENT_CHUNKS に記載のない事実や主張を特定してください。
+
+
+            ## CONTENT_CHUNKS（参照コンテンツ）
+
+            {{#node_merge_results.content_chunks#}}
+
+
+            ## チェック対象
+
+            - 具体的な数値、日付、固有名詞
+
+            - 事実の主張（〇〇した、〇〇である）
+
+            - 引用やコメント
+
+
+            ## 出力ルール
+
+            - 検証不能な主張には[要確認]タグを推奨
+
+            - 明らかにCONTENT_CHUNKSから得た情報は除外
+
+            '
+        - id: prompt-hallucination-user
+          role: user
+          text: '以下の記事ドラフトを検証してください。
+
+
+            {{#node_auto_rewrite.text#}}
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              confidence:
+                description: 全体的な事実検証信頼度（0-1）
+                maximum: 1
+                minimum: 0
+                type: number
+              unverified_claims:
+                description: 検証不能な主張
+                items:
+                  properties:
+                    claim:
+                      description: 該当する主張
+                      type: string
+                    reason:
+                      description: 検証不能な理由
+                      type: string
+                    suggested_tag:
+                      description: 推奨される[要確認]タグ
+                      type: string
+                  type: object
+                type: array
+            required:
+            - unverified_claims
+            - confidence
+            type: object
+        structured_output_enabled: true
+        title: ハルシネーション検知
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_hallucination_detect
+      position:
+        x: 4104
+        y: 300
+      positionAbsolute:
+        x: 4104
+        y: 300
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ article_text, unverified_claims }) {\n    try {\n \
+          \       let result = article_text || '';\n        let tagCount = 0;\n  \
+          \      \n        if (Array.isArray(unverified_claims)) {\n            for\
+          \ (const item of unverified_claims) {\n                if (item.claim &&\
+          \ item.suggested_tag) {\n                    const tag = `[要確認: ${item.suggested_tag}]`;\n\
+          \                    if (result.includes(item.claim)) {\n              \
+          \          result = result.replace(\n                            item.claim,\n\
+          \                            `${item.claim} ${tag}`\n                  \
+          \      );\n                        tagCount++;\n                    }\n\
+          \                }\n            }\n        }\n        \n        return {\n\
+          \            tagged_article: result,\n            tag_count: tagCount\n\
+          \        };\n    } catch (e) {\n        return {\n            tagged_article:\
+          \ article_text || '',\n            tag_count: 0\n        };\n    }\n}\n"
+        code_language: javascript
+        desc: 検証不能な主張に[要確認]タグを挿入
+        outputs:
+          tag_count:
+            children: null
+            type: number
+          tagged_article:
+            children: null
+            type: string
+        selected: false
+        title: タグ挿入
+        type: code
+        variables:
+        - value_selector:
+          - node_auto_rewrite
+          - text
+          variable: article_text
+        - value_selector:
+          - node_hallucination_detect
+          - structured_output
+          - unverified_claims
+          variable: unverified_claims
+      height: 80
+      id: node_tag_inserter
+      position:
+        x: 4446
+        y: 330
+      positionAbsolute:
+        x: 4446
+        y: 330
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ \n    tagged_article, \n    tag_count,\n    category,\n\
+          \    theme,\n    desired_length,\n    style_score,\n    hallucination_confidence\n\
+          }) {\n    try {\n        const categoryJa = {\n            'interview':\
+          \ 'インタビュー',\n            'event': 'イベントレポート',\n            'announcement':\
+          \ 'アナウンスメント',\n            'story': 'カルチャー/ストーリー'\n        };\n        \n\
+          \        const articleLength = (tagged_article || '').replace(/\\s/g, '').length;\n\
+          \        \n        const metaSection = `---\n\n### \U0001F4CA メタ情報\n\n-\
+          \ **記事カテゴリ**: ${categoryJa[category] || category}\n- **テーマ**: ${theme ||\
+          \ '不明'}\n- **総文字数**: 約${articleLength}字（目標: ${desired_length || 2000}字）\n\
+          - **[要確認]タグ**: ${tag_count || 0}箇所\n- **文体一貫性スコア**: ${((style_score || 0)\
+          \ * 100).toFixed(0)}%\n- **事実検証信頼度**: ${((hallucination_confidence || 0)\
+          \ * 100).toFixed(0)}%\n\n### \U0001F4A1 次のステップ\n\n1. [要確認] タグがある箇所は事実確認してください\n\
+          2. タイトルは3案から選択または調整してください\n3. 必要に応じて文章を微調整してください`;\n        \n        const\
+          \ finalOutput = `${tagged_article || ''}\n\n${metaSection}`;\n        \n\
+          \        return {\n            final_output: finalOutput,\n            total_length:\
+          \ articleLength\n        };\n    } catch (e) {\n        return {\n     \
+          \       final_output: 'ドラフト生成中にエラーが発生しました: ' + e.message,\n            total_length:\
+          \ 0\n        };\n    }\n}\n"
+        code_language: javascript
+        desc: 最終的なドラフトを整形して出力
+        outputs:
+          final_output:
+            children: null
+            type: string
+          total_length:
+            children: null
+            type: number
+        selected: false
+        title: 最終整形
+        type: code
+        variables:
+        - value_selector:
+          - node_tag_inserter
+          - tagged_article
+          variable: tagged_article
+        - value_selector:
+          - node_tag_inserter
+          - tag_count
+          variable: tag_count
+        - value_selector:
+          - node_collect_inputs
+          - structured_output
+          - category
+          variable: category
+        - value_selector:
+          - node_collect_inputs
+          - structured_output
+          - theme
+          variable: theme
+        - value_selector:
+          - node_collect_inputs
+          - structured_output
+          - desired_length
+          variable: desired_length
+        - value_selector:
+          - node_style_check
+          - structured_output
+          - consistency_score
+          variable: style_score
+        - value_selector:
+          - node_hallucination_detect
+          - structured_output
+          - confidence
+          variable: hallucination_confidence
+      height: 80
+      id: node_final_format
+      position:
+        x: 4788
+        y: 330
+      positionAbsolute:
+        x: 4788
+        y: 330
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#node_final_format.final_output#}}'
+        desc: 最終ドラフトを出力
+        selected: false
+        title: ドラフト出力
+        type: answer
+        variables: []
+      height: 131
+      id: node_answer
+      position:
+        x: 5130
+        y: 314
+      positionAbsolute:
+        x: 5130
+        y: 314
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 14.390790915109847
+      y: 83.80644216676353
+      zoom: 0.8798803294690914
+  rag_pipeline_variables: []

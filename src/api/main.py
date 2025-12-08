@@ -239,6 +239,9 @@ async def generate_article_stream(
         error_holder: dict[str, Exception | None] = {"error": None}
         current_step_holder: dict[str, str | None] = {"step": None}
 
+        # Capture the event loop reference before entering threads
+        loop = asyncio.get_running_loop()
+
         def progress_callback(step: str) -> None:
             """Callback to emit progress events from sync thread."""
             current_step_holder["step"] = step
@@ -250,10 +253,8 @@ async def generate_article_stream(
                 step_number=metadata["order"],
                 percentage=metadata["percentage"],
             )
-            # Thread-safe queue put
-            asyncio.get_event_loop().call_soon_threadsafe(
-                progress_queue.put_nowait, event
-            )
+            # Thread-safe queue put using captured loop reference
+            loop.call_soon_threadsafe(progress_queue.put_nowait, event)
 
         def run_generation() -> None:
             """Run generation in a thread."""
@@ -267,13 +268,10 @@ async def generate_article_stream(
                 logger.exception("Error in streaming generation")
                 error_holder["error"] = e
             finally:
-                # Signal completion
-                asyncio.get_event_loop().call_soon_threadsafe(
-                    progress_queue.put_nowait, None
-                )
+                # Signal completion using captured loop reference
+                loop.call_soon_threadsafe(progress_queue.put_nowait, None)
 
         # Start generation in background thread
-        loop = asyncio.get_event_loop()
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         loop.run_in_executor(executor, run_generation)
 

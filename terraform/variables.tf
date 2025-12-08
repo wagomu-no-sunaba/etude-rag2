@@ -147,9 +147,15 @@ variable "embedding_model" {
 }
 
 variable "llm_model" {
-  description = "LLM model name"
+  description = "LLM model name (high quality)"
   type        = string
-  default     = "gemini-1.5-pro"
+  default     = "gemini-2.0-flash"
+}
+
+variable "llm_model_lite" {
+  description = "LLM model name (lightweight, cost-efficient)"
+  type        = string
+  default     = "gemini-2.0-flash-lite"
 }
 
 variable "llm_temperature" {
@@ -165,7 +171,7 @@ variable "llm_temperature" {
 variable "reranker_model" {
   description = "BGE reranker model name"
   type        = string
-  default     = "BAAI/bge-reranker-base"
+  default     = "BAAI/bge-reranker-v2-m3"
 }
 
 # =============================================================================
@@ -182,6 +188,34 @@ variable "rrf_k" {
   description = "RRF fusion parameter"
   type        = string
   default     = "60"
+}
+
+# =============================================================================
+# Feature Flags (Dify v3 compatible features)
+# =============================================================================
+
+variable "use_lite_model" {
+  description = "Use flash-lite model for lightweight tasks"
+  type        = string
+  default     = "true"
+}
+
+variable "use_query_generator" {
+  description = "Enable query generation chain"
+  type        = string
+  default     = "true"
+}
+
+variable "use_style_profile_kb" {
+  description = "Enable style profile knowledge base"
+  type        = string
+  default     = "true"
+}
+
+variable "use_auto_rewrite" {
+  description = "Enable automatic style rewriting"
+  type        = string
+  default     = "true"
 }
 
 # =============================================================================

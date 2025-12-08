@@ -8,7 +8,7 @@ from langchain_google_vertexai import ChatVertexAI
 from pydantic import BaseModel, Field
 
 from src.chains.style_analyzer import StyleAnalysis
-from src.config import settings
+from src.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +83,8 @@ class StyleCheckerChain:
         Args:
             llm: Optional ChatVertexAI instance. Creates one if not provided.
         """
-        self.llm = llm or ChatVertexAI(
-            model_name=settings.llm_model,
-            project=settings.google_project_id,
-            location=settings.google_location,
-            temperature=0.1,  # Low temperature for consistent checking
-        )
+        # Use lite model for verification task (lightweight)
+        self.llm = llm or get_llm(quality="lite", temperature=0.1)
         self.parser = JsonOutputParser(pydantic_object=StyleCheckResult)
         self.prompt = ChatPromptTemplate.from_messages(
             [

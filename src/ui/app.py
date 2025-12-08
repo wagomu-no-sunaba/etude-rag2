@@ -27,8 +27,12 @@ def init_session_state():
         st.session_state.selected_article_type = None
     if "generated_draft" not in st.session_state:
         st.session_state.generated_draft = None
-    if "is_generating" not in st.session_state:
-        st.session_state.is_generating = False
+    if "is_processing" not in st.session_state:
+        st.session_state.is_processing = False
+    if "hallucination_result" not in st.session_state:
+        st.session_state.hallucination_result = None
+    if "style_result" not in st.session_state:
+        st.session_state.style_result = None
 
 
 def render_sidebar():
@@ -88,10 +92,11 @@ def render_input_section():
 
     col1, col2 = st.columns([1, 4])
     with col1:
+        is_disabled = not st.session_state.input_material or st.session_state.is_processing
         generate_button = st.button(
             "🚀 記事を生成",
             type="primary",
-            disabled=not st.session_state.input_material,
+            disabled=is_disabled,
         )
 
     if generate_button:
@@ -100,14 +105,23 @@ def render_input_section():
 
 def generate_article():
     """Generate article using streaming API with progress bar."""
+    st.session_state.is_processing = True
+    # Clear previous verification results
+    st.session_state.hallucination_result = None
+    st.session_state.style_result = None
+
     progress_container = st.empty()
     status_container = st.empty()
 
+    status_container.info("🔄 記事を生成中...")
+
     try:
-        for update in api_client.generate_stream(
+        stream = api_client.generate_stream(
             input_material=st.session_state.input_material,
             article_type=st.session_state.selected_article_type,
-        ):
+        )
+
+        for update in stream:
             if isinstance(update, ProgressUpdate):
                 progress_container.progress(
                     update.percentage / 100,
@@ -128,6 +142,8 @@ def generate_article():
         progress_container.empty()
         status_container.empty()
         st.error(f"❌ エラーが発生しました: {e}")
+    finally:
+        st.session_state.is_processing = False
 
 
 def render_output_section():
@@ -189,14 +205,26 @@ def render_verification_section():
     st.header("🔍 検証")
 
     col1, col2 = st.columns(2)
+    is_disabled = st.session_state.is_processing
 
     with col1:
-        if st.button("ハルシネーション検証", type="secondary"):
+        if st.button("ハルシネーション検証", type="secondary", disabled=is_disabled):
             verify_content("hallucination")
 
     with col2:
-        if st.button("文体検証", type="secondary"):
+        if st.button("文体検証", type="secondary", disabled=is_disabled):
             verify_content("style")
+
+    # Display stored results
+    result_col1, result_col2 = st.columns(2)
+
+    with result_col1:
+        if st.session_state.hallucination_result is not None:
+            render_hallucination_result(st.session_state.hallucination_result)
+
+    with result_col2:
+        if st.session_state.style_result is not None:
+            render_style_result(st.session_state.style_result)
 
 
 def verify_content(check_type: str):
@@ -205,8 +233,9 @@ def verify_content(check_type: str):
     if draft is None:
         return
 
-    with st.spinner("検証中..."):
-        try:
+    st.session_state.is_processing = True
+    try:
+        with st.spinner("検証中..."):
             body = parse_sections_to_body(draft.get("sections", []))
             result = api_client.verify(
                 lead=draft.get("lead", ""),
@@ -216,12 +245,14 @@ def verify_content(check_type: str):
             )
 
             if check_type == "hallucination":
-                render_hallucination_result(result.get("hallucination", {}))
+                st.session_state.hallucination_result = result.get("hallucination", {})
             else:
-                render_style_result(result.get("style", {}))
+                st.session_state.style_result = result.get("style", {})
 
-        except Exception as e:
-            st.error(f"❌ 検証エラー: {e}")
+    except Exception as e:
+        st.error(f"❌ 検証エラー: {e}")
+    finally:
+        st.session_state.is_processing = False
 
 
 def render_hallucination_result(result: dict):

@@ -209,9 +209,11 @@ class APIClient:
         """
         headers = self._get_auth_headers()
         headers["Accept"] = "text/event-stream"
-        with (
-            httpx.Client(timeout=None) as client,
-            client.stream(
+
+        # Use explicit client management to avoid Streamlit re-render issues
+        client = httpx.Client(timeout=None)
+        try:
+            with client.stream(
                 "POST",
                 f"{self.base_url}/generate/stream",
                 json={
@@ -219,47 +221,57 @@ class APIClient:
                     "article_type": article_type,
                 },
                 headers=headers,
-            ) as response,
-        ):
-            response.raise_for_status()
+            ) as response:
+                response.raise_for_status()
 
-            event_type: str | None = None
-            data_buffer: str = ""
+                event_type: str | None = None
+                data_buffer: str = ""
 
-            for line in response.iter_lines():
-                line = line.strip()
+                for line in response.iter_lines():
+                    line = line.strip()
 
-                if not line:
-                    # Empty line marks end of event
-                    if event_type and data_buffer:
-                        data = json.loads(data_buffer)
+                    if not line:
+                        # Empty line marks end of event
+                        if event_type and data_buffer:
+                            try:
+                                data = json.loads(data_buffer)
+                            except json.JSONDecodeError:
+                                logger.warning(f"Failed to parse SSE data: {data_buffer}")
+                                event_type = None
+                                data_buffer = ""
+                                continue
 
-                        if event_type == "progress":
-                            yield ProgressUpdate(
-                                step=data["step"],
-                                step_name=data["step_name"],
-                                step_number=data["step_number"],
-                                total_steps=data["total_steps"],
-                                percentage=data["percentage"],
-                            )
-                        elif event_type == "complete":
-                            yield StreamResult(
-                                success=True,
-                                result=data["result"],
-                            )
-                            return
-                        elif event_type == "error":
-                            yield StreamResult(
-                                success=False,
-                                error=data["error"],
-                            )
-                            return
+                            if event_type == "progress":
+                                yield ProgressUpdate(
+                                    step=data["step"],
+                                    step_name=data["step_name"],
+                                    step_number=data["step_number"],
+                                    total_steps=data["total_steps"],
+                                    percentage=data["percentage"],
+                                )
+                            elif event_type == "complete":
+                                yield StreamResult(
+                                    success=True,
+                                    result=data["result"],
+                                )
+                                return
+                            elif event_type == "error":
+                                yield StreamResult(
+                                    success=False,
+                                    error=data.get("error", "Unknown error"),
+                                )
+                                return
 
-                    event_type = None
-                    data_buffer = ""
-                    continue
+                        event_type = None
+                        data_buffer = ""
+                        continue
 
-                if line.startswith("event:"):
-                    event_type = line[6:].strip()
-                elif line.startswith("data:"):
-                    data_buffer = line[5:].strip()
+                    if line.startswith("event:"):
+                        event_type = line[6:].strip()
+                    elif line.startswith("data:"):
+                        data_buffer = line[5:].strip()
+        except httpx.RequestError as e:
+            logger.error(f"Request error during streaming: {e}")
+            yield StreamResult(success=False, error=str(e))
+        finally:
+            client.close()

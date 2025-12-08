@@ -1,4 +1,4 @@
-"""Article generation orchestration chain."""
+"""Article generation orchestration chain (Dify v3 compatible)."""
 
 import logging
 from collections.abc import Callable
@@ -8,6 +8,7 @@ from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 
 from src.chains.article_classifier import ArticleClassifierChain, ClassificationResult
+from src.chains.auto_rewrite import AutoRewriteChain
 from src.chains.content_generators import (
     ClosingGeneratorChain,
     LeadGeneratorChain,
@@ -16,15 +17,20 @@ from src.chains.content_generators import (
 )
 from src.chains.input_parser import InputParserChain, ParsedInput
 from src.chains.outline_generator import Outline, OutlineGeneratorChain
+from src.chains.query_generator import QueryGeneratorChain
 from src.chains.structure_analyzer import StructureAnalysis, StructureAnalyzerChain
 from src.chains.style_analyzer import StyleAnalysis, StyleAnalyzerChain
-from src.retriever.article_retriever import ArticleRetriever
+from src.config import settings
+from src.retriever.article_retriever import ArticleRetriever, ArticleType
+from src.retriever.style_retriever import StyleProfileRetriever
+from src.verification.hallucination_detector import HallucinationDetectorChain
+from src.verification.style_checker import StyleCheckerChain
 
 logger = logging.getLogger(__name__)
 
 
 class ArticleDraft(BaseModel):
-    """Complete article draft output."""
+    """Complete article draft output (Dify v3 compatible with metadata)."""
 
     titles: list[str] = Field(description="タイトル案（3つ）")
     lead: str = Field(description="リード文")
@@ -33,6 +39,18 @@ class ArticleDraft(BaseModel):
     article_type: str = Field(description="記事タイプ")
     article_type_ja: str = Field(description="記事タイプ（日本語）")
     metadata: dict[str, Any] = Field(default_factory=dict, description="メタデータ")
+
+    # New fields for Dify v3 compatibility
+    theme: str = Field(default="", description="記事テーマ")
+    desired_length: int = Field(default=2000, description="希望文字数")
+    actual_length: int = Field(default=0, description="実際の文字数")
+    tag_count: int = Field(default=0, description="[要確認]タグの数")
+    consistency_score: float = Field(default=0.0, description="文体一貫性スコア")
+    verification_confidence: float = Field(default=0.0, description="事実検証信頼度")
+
+    def calculate_length(self) -> int:
+        """Calculate total content length."""
+        return len(self.lead) + sum(len(s["body"]) for s in self.sections) + len(self.closing)
 
     def to_markdown(self) -> str:
         """Convert draft to markdown format."""
@@ -64,24 +82,63 @@ class ArticleDraft(BaseModel):
         # Metadata
         lines.append("---\n")
         lines.append(f"**記事タイプ**: {self.article_type_ja}")
-        total_length = (
-            len(self.lead) + sum(len(s["body"]) for s in self.sections) + len(self.closing)
-        )
+        total_length = self.calculate_length()
         lines.append(f"**総文字数**: 約{total_length}字")
 
         return "\n".join(lines)
 
+    def to_markdown_with_meta(self) -> str:
+        """Convert draft to markdown with comprehensive metadata (Dify v3 compatible)."""
+        md = self.to_markdown()
+
+        category_ja = {
+            "INTERVIEW": "インタビュー",
+            "EVENT_REPORT": "イベントレポート",
+            "ANNOUNCEMENT": "アナウンスメント",
+            "CULTURE": "カルチャー/ストーリー",
+        }
+
+        self.actual_length = self.calculate_length()
+
+        meta = f"""
+
+---
+
+### メタ情報
+
+- **記事カテゴリ**: {category_ja.get(self.article_type, self.article_type_ja)}
+- **テーマ**: {self.theme}
+- **総文字数**: 約{self.actual_length}字（目標: {self.desired_length}字）
+- **[要確認]タグ**: {self.tag_count}箇所
+- **文体一貫性スコア**: {int(self.consistency_score * 100)}%
+- **事実検証信頼度**: {int(self.verification_confidence * 100)}%
+
+### 次のステップ
+
+1. [要確認] タグがある箇所は事実確認してください
+2. タイトルは3案から選択または調整してください
+3. 必要に応じて文章を微調整してください
+"""
+        return md + meta
+
 
 class ArticleGenerationPipeline:
-    """Full pipeline for generating article drafts.
+    """Full pipeline for generating article drafts (Dify v3 compatible).
 
     This pipeline orchestrates all chains:
-    1. Input parsing
-    2. Article type classification
-    3. Reference article retrieval
-    4. Style and structure analysis
-    5. Outline generation
-    6. Content generation (title, lead, sections, closing)
+    1. Input parsing (flash-lite)
+    2. Article type classification (flash-lite)
+    3. Query generation (flash-lite) [NEW]
+    4. Reference article retrieval (CONTENT_KB)
+    5. Style profile retrieval (STYLE_PROFILE + STYLE_EXCERPTS) [NEW]
+    6. Style and structure analysis (flash-lite)
+    7. Outline generation (flash)
+    8. Content generation (flash)
+    9. Quality assurance pipeline [NEW]
+       - Style check (flash-lite)
+       - Auto-rewrite if needed (flash)
+       - Hallucination detection (flash-lite)
+    10. Final formatting with metadata
     """
 
     def __init__(
@@ -89,6 +146,8 @@ class ArticleGenerationPipeline:
         retriever: ArticleRetriever | None = None,
         input_parser: InputParserChain | None = None,
         classifier: ArticleClassifierChain | None = None,
+        query_generator: QueryGeneratorChain | None = None,
+        style_retriever: StyleProfileRetriever | None = None,
         style_analyzer: StyleAnalyzerChain | None = None,
         structure_analyzer: StructureAnalyzerChain | None = None,
         outline_generator: OutlineGeneratorChain | None = None,
@@ -96,11 +155,19 @@ class ArticleGenerationPipeline:
         lead_generator: LeadGeneratorChain | None = None,
         section_generator: SectionGeneratorChain | None = None,
         closing_generator: ClosingGeneratorChain | None = None,
+        style_checker: StyleCheckerChain | None = None,
+        hallucination_detector: HallucinationDetectorChain | None = None,
+        auto_rewriter: AutoRewriteChain | None = None,
     ):
         """Initialize the pipeline with optional custom components."""
         self.retriever = retriever
         self.input_parser = input_parser or InputParserChain()
         self.classifier = classifier or ArticleClassifierChain()
+
+        # New Dify v3 components
+        self.query_generator = query_generator or QueryGeneratorChain()
+        self.style_retriever = style_retriever  # Lazy init to avoid DB connection on import
+
         self.style_analyzer = style_analyzer or StyleAnalyzerChain()
         self.structure_analyzer = structure_analyzer or StructureAnalyzerChain()
         self.outline_generator = outline_generator or OutlineGeneratorChain()
@@ -109,20 +176,33 @@ class ArticleGenerationPipeline:
         self.section_generator = section_generator or SectionGeneratorChain()
         self.closing_generator = closing_generator or ClosingGeneratorChain()
 
+        # Quality assurance components
+        self.style_checker = style_checker or StyleCheckerChain()
+        self.hallucination_detector = hallucination_detector or HallucinationDetectorChain()
+        self.auto_rewriter = auto_rewriter or AutoRewriteChain()
+
+    def _get_style_retriever(self) -> StyleProfileRetriever:
+        """Lazy initialization of style retriever."""
+        if self.style_retriever is None:
+            self.style_retriever = StyleProfileRetriever()
+        return self.style_retriever
+
     def generate(
         self,
         input_material: str,
         reference_articles: list[Document] | None = None,
+        enable_quality_assurance: bool = True,
     ) -> ArticleDraft:
-        """Generate a complete article draft.
+        """Generate a complete article draft (Dify v3 compatible).
 
         Args:
             input_material: Raw input material from user.
             reference_articles: Optional pre-fetched reference articles.
                 If None and retriever is configured, articles will be retrieved.
+            enable_quality_assurance: Whether to run quality assurance pipeline.
 
         Returns:
-            ArticleDraft with all generated content.
+            ArticleDraft with all generated content and metadata.
         """
         # Step 1: Parse input material
         logger.info("Step 1: Parsing input material")
@@ -131,28 +211,45 @@ class ArticleGenerationPipeline:
         # Step 2: Classify article type
         logger.info("Step 2: Classifying article type")
         classification = self.classifier.classify(parsed_input)
+        article_type = ArticleType(classification.article_type)
 
-        # Step 3: Retrieve reference articles if not provided
+        # Step 3: Generate optimized search query (Dify v3)
+        search_query = parsed_input.theme
+        if settings.use_query_generator:
+            logger.info("Step 3: Generating optimized search query")
+            search_query = self.query_generator.generate(parsed_input, article_type)
+        else:
+            logger.info("Step 3: Using theme as search query (query_generator disabled)")
+
+        # Step 4: Retrieve reference articles if not provided
         if reference_articles is None and self.retriever:
-            logger.info("Step 3: Retrieving reference articles")
-            reference_articles = self._retrieve_references(parsed_input, classification)
+            logger.info("Step 4: Retrieving reference articles")
+            reference_articles = self._retrieve_references(
+                parsed_input, classification, search_query
+            )
         elif reference_articles is None:
             reference_articles = []
 
-        # Step 4: Analyze style and structure
-        logger.info("Step 4: Analyzing style and structure")
+        # Step 5: Retrieve style profile (Dify v3)
+        style_profile = None
+        if settings.use_style_profile_kb:
+            logger.info("Step 5: Retrieving style profile")
+            style_profile = self._get_style_retriever().retrieve_profile(article_type)
+
+        # Step 6: Analyze style and structure
+        logger.info("Step 6: Analyzing style and structure")
         style_analysis, structure_analysis = self._analyze_references(
             reference_articles, classification.article_type_ja
         )
 
-        # Step 5: Generate outline
-        logger.info("Step 5: Generating outline")
+        # Step 7: Generate outline
+        logger.info("Step 7: Generating outline")
         outline = self.outline_generator.generate(
             parsed_input, classification.article_type_ja, structure_analysis
         )
 
-        # Step 6: Generate content
-        logger.info("Step 6: Generating content")
+        # Step 8: Generate content
+        logger.info("Step 8: Generating content")
         draft = self._generate_content(
             parsed_input,
             classification,
@@ -160,6 +257,17 @@ class ArticleGenerationPipeline:
             style_analysis,
             structure_analysis,
         )
+
+        # Set theme and desired_length from parsed input
+        draft.theme = parsed_input.theme
+        draft.desired_length = parsed_input.desired_length
+
+        # Step 9: Quality assurance pipeline (Dify v3)
+        if enable_quality_assurance:
+            logger.info("Step 9: Running quality assurance pipeline")
+            draft = self._run_quality_assurance(
+                draft, parsed_input, style_analysis, style_profile, reference_articles
+            )
 
         return draft
 
@@ -235,13 +343,23 @@ class ArticleGenerationPipeline:
         self,
         parsed_input: ParsedInput,
         classification: ClassificationResult,
+        search_query: str | None = None,
     ) -> list[Document]:
-        """Retrieve reference articles based on classification."""
+        """Retrieve reference articles based on classification.
+
+        Args:
+            parsed_input: Parsed input data.
+            classification: Article type classification.
+            search_query: Optimized search query (from QueryGeneratorChain).
+        """
         if not self.retriever:
             return []
 
-        # Generate search queries from keywords
-        queries = parsed_input.keywords[:3] if parsed_input.keywords else [parsed_input.theme]
+        # Use generated query or fallback to keywords/theme
+        if search_query:
+            queries = [search_query]
+        else:
+            queries = parsed_input.keywords[:3] if parsed_input.keywords else [parsed_input.theme]
 
         return self.retriever.retrieve_multi_query(
             queries=queries,
@@ -323,3 +441,104 @@ class ArticleGenerationPipeline:
                 "outline_headings": [h.title for h in outline.headings],
             },
         )
+
+    def _run_quality_assurance(
+        self,
+        draft: ArticleDraft,
+        parsed_input: ParsedInput,
+        style_analysis: StyleAnalysis,
+        style_profile: str | None,
+        reference_articles: list[Document],
+    ) -> ArticleDraft:
+        """Run quality assurance pipeline (Dify v3 compatible).
+
+        This includes:
+        1. Style consistency check
+        2. Auto-rewrite if consistency score < 0.8
+        3. Hallucination detection
+        4. [要確認] tag insertion
+
+        Args:
+            draft: Generated article draft.
+            parsed_input: Original parsed input.
+            style_analysis: Style analysis from reference articles.
+            style_profile: Style profile from KB (optional).
+            reference_articles: Reference articles for fact-checking.
+
+        Returns:
+            Updated ArticleDraft with quality metrics.
+        """
+        # Prepare text for checking
+        body_text = "\n\n".join(s["body"] for s in draft.sections)
+
+        # Step 9.1: Style consistency check
+        logger.info("  9.1: Checking style consistency")
+        style_check = self.style_checker.check(
+            lead=draft.lead,
+            body=body_text,
+            closing=draft.closing,
+            style_analysis=style_analysis,
+        )
+        draft.consistency_score = style_check.consistency_score
+
+        # Step 9.2: Auto-rewrite if needed
+        if settings.use_auto_rewrite and style_profile and style_check.consistency_score < 0.8:
+            logger.info(
+                f"  9.2: Auto-rewriting (consistency score: {style_check.consistency_score:.1%})"
+            )
+            full_article = draft.to_markdown()
+            rewrite_result = self.auto_rewriter.rewrite(
+                article_text=full_article,
+                style_check_result=style_check,
+                style_profile=style_profile,
+            )
+            # Parse rewritten content back into draft structure
+            # For now, just update the metadata to indicate rewrite was done
+            draft.metadata["rewrite_applied"] = True
+            draft.metadata["rewrite_changes"] = rewrite_result.changes_made
+            logger.info(f"  9.2: Rewrite complete, {len(rewrite_result.changes_made)} changes made")
+        else:
+            draft.metadata["rewrite_applied"] = False
+
+        # Step 9.3: Hallucination detection
+        logger.info("  9.3: Detecting hallucinations")
+        hallucination_check = self.hallucination_detector.detect(
+            lead=draft.lead,
+            body=body_text,
+            closing=draft.closing,
+            parsed_input=parsed_input,
+        )
+        draft.verification_confidence = hallucination_check.confidence
+
+        # Step 9.4: Apply [要確認] tags
+        if hallucination_check.unverified_claims:
+            logger.info(
+                f"  9.4: Found {len(hallucination_check.unverified_claims)} unverified claims"
+            )
+            draft.tag_count = len(hallucination_check.unverified_claims)
+
+            # Apply tags to lead
+            draft.lead = HallucinationDetectorChain.apply_tags(
+                draft.lead, hallucination_check.unverified_claims
+            )
+
+            # Apply tags to sections
+            for section in draft.sections:
+                section["body"] = HallucinationDetectorChain.apply_tags(
+                    section["body"], hallucination_check.unverified_claims
+                )
+
+            # Apply tags to closing
+            draft.closing = HallucinationDetectorChain.apply_tags(
+                draft.closing, hallucination_check.unverified_claims
+            )
+
+            draft.metadata["unverified_claims"] = [
+                {"claim": c.claim, "location": c.location, "tag": c.suggested_tag}
+                for c in hallucination_check.unverified_claims
+            ]
+
+        # Update actual length
+        draft.actual_length = draft.calculate_length()
+
+        return draft

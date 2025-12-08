@@ -3,9 +3,11 @@
 import io
 import json
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import google.auth
 import psycopg2
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -17,6 +19,30 @@ from src.config import settings
 from src.retriever.article_retriever import ArticleType
 
 logger = logging.getLogger(__name__)
+
+
+class DataType(str, Enum):
+    """Type of data being ingested from Google Drive."""
+
+    CONTENT = "content"  # Past articles for RAG retrieval
+    STYLE_PROFILE = "style_profile"  # Writing style rules
+    STYLE_EXCERPT = "style_excerpt"  # Sample excerpts for style reference
+
+
+# Mapping of Japanese folder names to ArticleType
+FOLDER_NAME_TO_ARTICLE_TYPE: dict[str, ArticleType] = {
+    "カルチャー": ArticleType.CULTURE,
+    "インタビュー": ArticleType.INTERVIEW,
+    "アナウンスメント": ArticleType.ANNOUNCEMENT,
+    "イベントレポート": ArticleType.EVENT_REPORT,
+}
+
+# Mapping of top-level folder names to DataType
+FOLDER_NAME_TO_DATA_TYPE: dict[str, DataType] = {
+    "content": DataType.CONTENT,
+    "style_profile": DataType.STYLE_PROFILE,
+    "style_excerpts": DataType.STYLE_EXCERPT,
+}
 
 
 class DriveIngester:
@@ -80,17 +106,21 @@ class DriveIngester:
             connection_string: Database connection string.
         """
         sa_file = service_account_file or settings.service_account_file
-        if not sa_file:
-            raise ValueError(
-                "Service account file is required. "
-                "Set SERVICE_ACCOUNT_FILE environment variable or pass it directly."
-            )
 
-        # Initialize Google Drive API
-        creds = service_account.Credentials.from_service_account_file(
-            sa_file,
-            scopes=["https://www.googleapis.com/auth/drive.readonly"],
-        )
+        # Initialize Google Drive API credentials
+        scopes = ["https://www.googleapis.com/auth/drive.readonly"]
+        if sa_file:
+            # Use service account file if provided (local development)
+            creds = service_account.Credentials.from_service_account_file(
+                sa_file,
+                scopes=scopes,
+            )
+            logger.info("Using service account file for authentication")
+        else:
+            # Use Application Default Credentials (Cloud Run)
+            creds, project = google.auth.default(scopes=scopes)
+            logger.info(f"Using ADC for authentication (project: {project})")
+
         self.drive_service = build("drive", "v3", credentials=creds)
 
         # Initialize embeddings
@@ -144,12 +174,14 @@ class DriveIngester:
         self,
         folder_id: str | None = None,
         recursive: bool = True,
+        data_type: DataType | None = None,
     ) -> int:
         """Ingest all files from a Google Drive folder.
 
         Args:
             folder_id: Google Drive folder ID. Uses TARGET_FOLDER_ID if None.
             recursive: Whether to process subfolders.
+            data_type: Force a specific data type. If None, auto-detect from folder name.
 
         Returns:
             Number of documents ingested.
@@ -158,13 +190,75 @@ class DriveIngester:
         if not folder_id:
             raise ValueError("Folder ID is required")
 
-        return self._process_folder(folder_id, "", recursive)
+        return self._process_folder(folder_id, "", recursive, data_type=data_type)
+
+    def ingest_structured_folder(self, folder_id: str | None = None) -> dict[str, int]:
+        """Ingest from a structured Google Drive folder with content/style subfolders.
+
+        Expected structure:
+        root_folder/
+        ├── content/
+        │   ├── カルチャー/
+        │   ├── インタビュー/
+        │   ├── アナウンスメント/
+        │   └── イベントレポート/
+        ├── style_exerpts/
+        │   ├── カルチャー/
+        │   └── ...
+        └── style_profile/
+            ├── カルチャー/
+            └── ...
+
+        Args:
+            folder_id: Google Drive folder ID of the root. Uses TARGET_FOLDER_ID if None.
+
+        Returns:
+            Dict with counts per data type: {"content": N, "style_profile": N, "style_excerpt": N}
+        """
+        folder_id = folder_id or settings.target_folder_id
+        if not folder_id:
+            raise ValueError("Folder ID is required")
+
+        counts: dict[str, int] = {
+            DataType.CONTENT.value: 0,
+            DataType.STYLE_PROFILE.value: 0,
+            DataType.STYLE_EXCERPT.value: 0,
+        }
+
+        # List top-level folders
+        query = (
+            f"'{folder_id}' in parents "
+            "and mimeType = 'application/vnd.google-apps.folder' "
+            "and trashed = false"
+        )
+        results = (
+            self.drive_service.files()
+            .list(q=query, fields="files(id, name)")
+            .execute()
+        )
+
+        for item in results.get("files", []):
+            folder_name = item["name"].lower()
+            data_type = FOLDER_NAME_TO_DATA_TYPE.get(folder_name)
+
+            if data_type:
+                logger.info(f"Processing {data_type.value} folder: {item['name']}")
+                count = self._process_folder(
+                    item["id"], item["name"], recursive=True, data_type=data_type
+                )
+                counts[data_type.value] += count
+            else:
+                logger.warning(f"Unknown top-level folder: {item['name']}, skipping")
+
+        return counts
 
     def _process_folder(
         self,
         folder_id: str,
         parent_path: str,
         recursive: bool,
+        data_type: DataType | None = None,
+        article_type: ArticleType | None = None,
     ) -> int:
         """Recursively process a folder and its contents.
 
@@ -172,6 +266,8 @@ class DriveIngester:
             folder_id: Google Drive folder ID.
             parent_path: Path of parent folders for classification.
             recursive: Whether to process subfolders.
+            data_type: Type of data being ingested (content, style_profile, style_excerpt).
+            article_type: Article type for style data. Auto-detected from folder name if None.
 
         Returns:
             Number of documents ingested.
@@ -182,6 +278,12 @@ class DriveIngester:
         folder_meta = self.drive_service.files().get(fileId=folder_id, fields="name").execute()
         folder_name = folder_meta.get("name", "")
         current_path = f"{parent_path}/{folder_name}" if parent_path else folder_name
+
+        # Try to detect article_type from folder name (for Japanese category folders)
+        detected_article_type = FOLDER_NAME_TO_ARTICLE_TYPE.get(folder_name)
+        if detected_article_type:
+            article_type = detected_article_type
+            logger.info(f"Detected article type {article_type.value} from folder: {folder_name}")
 
         logger.info(f"Processing folder: {current_path}")
 
@@ -204,10 +306,22 @@ class DriveIngester:
                 if mime_type == "application/vnd.google-apps.folder":
                     # Process subfolder
                     if recursive:
-                        total_count += self._process_folder(item["id"], current_path, recursive)
+                        total_count += self._process_folder(
+                            item["id"],
+                            current_path,
+                            recursive,
+                            data_type=data_type,
+                            article_type=article_type,
+                        )
                 else:
-                    # Process file
-                    count = self.process_file(item, current_path)
+                    # Process file based on data type
+                    if data_type == DataType.STYLE_PROFILE:
+                        count = self._process_style_profile(item, article_type)
+                    elif data_type == DataType.STYLE_EXCERPT:
+                        count = self._process_style_excerpt(item, article_type)
+                    else:
+                        # Default: process as content
+                        count = self.process_file(item, current_path)
                     total_count += count
 
             page_token = results.get("nextPageToken")
@@ -403,9 +517,141 @@ class DriveIngester:
         logger.info(f"Ingested {len(chunks)} chunks from local file: {file_name}")
         return len(chunks)
 
+    def _process_style_profile(
+        self,
+        file_item: dict[str, str],
+        article_type: ArticleType | None,
+    ) -> int:
+        """Process a style profile file from Google Drive.
+
+        Args:
+            file_item: File metadata dict with 'id', 'name', 'mimeType'.
+            article_type: Article type for this profile.
+
+        Returns:
+            1 if successfully ingested, 0 otherwise.
+        """
+        if not article_type:
+            logger.warning(f"No article type for style profile: {file_item['name']}, skipping")
+            return 0
+
+        file_name = file_item["name"]
+        file_id = file_item["id"]
+        mime_type = file_item.get("mimeType", "")
+
+        if not self._is_supported_file(file_name, mime_type):
+            logger.debug(f"Skipping unsupported file: {file_name}")
+            return 0
+
+        logger.info(f"Processing style profile: {file_name} for {article_type.value}")
+
+        try:
+            content = self._download_file(file_id)
+            if not content:
+                logger.warning(f"Empty content for style profile: {file_name}")
+                return 0
+
+            # Generate embedding
+            embedding = self.embeddings.embed_query(content)
+
+            # UPSERT into style_profiles table
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT id FROM style_profiles
+                    WHERE article_type = %s AND profile_type = 'profile'
+                    """,
+                    (article_type.value,),
+                )
+                existing = cur.fetchone()
+
+                if existing:
+                    cur.execute(
+                        """
+                        UPDATE style_profiles
+                        SET content = %s, embedding = %s, updated_at = NOW()
+                        WHERE article_type = %s AND profile_type = 'profile'
+                        """,
+                        (content, embedding, article_type.value),
+                    )
+                    logger.info(f"Updated style profile for {article_type.value}")
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO style_profiles (article_type, profile_type, content, embedding)
+                        VALUES (%s, 'profile', %s, %s)
+                        """,
+                        (article_type.value, content, embedding),
+                    )
+                    logger.info(f"Inserted style profile for {article_type.value}")
+
+            self.conn.commit()
+            return 1
+
+        except Exception as e:
+            logger.error(f"Error processing style profile {file_name}: {e}")
+            self.conn.rollback()
+            return 0
+
+    def _process_style_excerpt(
+        self,
+        file_item: dict[str, str],
+        article_type: ArticleType | None,
+    ) -> int:
+        """Process a style excerpt file from Google Drive.
+
+        Args:
+            file_item: File metadata dict with 'id', 'name', 'mimeType'.
+            article_type: Article type for this excerpt.
+
+        Returns:
+            Number of excerpts ingested.
+        """
+        if not article_type:
+            logger.warning(f"No article type for style excerpt: {file_item['name']}, skipping")
+            return 0
+
+        file_name = file_item["name"]
+        file_id = file_item["id"]
+        mime_type = file_item.get("mimeType", "")
+
+        if not self._is_supported_file(file_name, mime_type):
+            logger.debug(f"Skipping unsupported file: {file_name}")
+            return 0
+
+        logger.info(f"Processing style excerpt: {file_name} for {article_type.value}")
+
+        try:
+            content = self._download_file(file_id)
+            if not content:
+                logger.warning(f"Empty content for style excerpt: {file_name}")
+                return 0
+
+            # Generate embedding
+            embedding = self.embeddings.embed_query(content)
+
+            # Insert into style_profiles table (excerpts can have multiple per article_type)
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO style_profiles (article_type, profile_type, content, embedding)
+                    VALUES (%s, 'excerpt', %s, %s)
+                    """,
+                    (article_type.value, content, embedding),
+                )
+
+            self.conn.commit()
+            logger.info(f"Inserted style excerpt for {article_type.value}: {file_name}")
+            return 1
+
+        except Exception as e:
+            logger.error(f"Error processing style excerpt {file_name}: {e}")
+            self.conn.rollback()
+            return 0
+
     def close(self):
         """Close database connection."""
-        if self.conn and not self.conn.closed:
+        if hasattr(self, "conn") and self.conn and not self.conn.closed:
             self.conn.close()
 
     def __del__(self):
