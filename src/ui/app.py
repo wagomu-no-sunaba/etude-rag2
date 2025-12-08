@@ -29,6 +29,10 @@ def init_session_state():
         st.session_state.generated_draft = None
     if "is_processing" not in st.session_state:
         st.session_state.is_processing = False
+    if "hallucination_result" not in st.session_state:
+        st.session_state.hallucination_result = None
+    if "style_result" not in st.session_state:
+        st.session_state.style_result = None
 
 
 def render_sidebar():
@@ -102,6 +106,10 @@ def render_input_section():
 def generate_article():
     """Generate article using streaming API with progress bar."""
     st.session_state.is_processing = True
+    # Clear previous verification results
+    st.session_state.hallucination_result = None
+    st.session_state.style_result = None
+
     progress_container = st.empty()
     status_container = st.empty()
 
@@ -207,6 +215,17 @@ def render_verification_section():
         if st.button("文体検証", type="secondary", disabled=is_disabled):
             verify_content("style")
 
+    # Display stored results
+    result_col1, result_col2 = st.columns(2)
+
+    with result_col1:
+        if st.session_state.hallucination_result is not None:
+            render_hallucination_result(st.session_state.hallucination_result)
+
+    with result_col2:
+        if st.session_state.style_result is not None:
+            render_style_result(st.session_state.style_result)
+
 
 def verify_content(check_type: str):
     """Verify content using API."""
@@ -226,9 +245,9 @@ def verify_content(check_type: str):
             )
 
             if check_type == "hallucination":
-                render_hallucination_result(result.get("hallucination", {}))
+                st.session_state.hallucination_result = result.get("hallucination", {})
             else:
-                render_style_result(result.get("style", {}))
+                st.session_state.style_result = result.get("style", {})
 
     except Exception as e:
         st.error(f"❌ 検証エラー: {e}")
