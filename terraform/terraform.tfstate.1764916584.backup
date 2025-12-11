@@ -1,0 +1,2365 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.0",
+  "serial": 70,
+  "lineage": "27defb9b-4d7b-61a5-c652-4bccafc38a84",
+  "outputs": {
+    "api_image_uri": {
+      "value": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo/api-server:latest",
+      "type": "string"
+    },
+    "api_service_url": {
+      "value": "https://etude-rag2-api-dev-uzrsujnvkq-uc.a.run.app",
+      "type": "string"
+    },
+    "artifact_registry_repository": {
+      "value": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo",
+      "type": "string"
+    },
+    "cloud_run_service_account_email": {
+      "value": "etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+      "type": "string"
+    },
+    "cloud_sql_connection_name": {
+      "value": "etude-rag2:us-central1:etude-rag2-db-dev",
+      "type": "string"
+    },
+    "cloud_sql_instance_name": {
+      "value": "etude-rag2-db-dev",
+      "type": "string"
+    },
+    "cloud_sql_private_ip": {
+      "value": "10.107.0.3",
+      "type": "string"
+    },
+    "db_name": {
+      "value": "rag_db",
+      "type": "string"
+    },
+    "db_password_secret_id": {
+      "value": "etude-rag2-db-password-dev",
+      "type": "string"
+    },
+    "db_private_ip": {
+      "value": "10.107.0.3",
+      "type": "string"
+    },
+    "db_user": {
+      "value": "raguser",
+      "type": "string"
+    },
+    "deploy_service_account_email": {
+      "value": "etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+      "type": "string"
+    },
+    "github_actions_config": {
+      "value": {
+        "ARTIFACT_REGISTRY": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo",
+        "DEPLOY_SERVICE_ACCOUNT": "etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+        "GCP_PROJECT_ID": "etude-rag2",
+        "GCP_REGION": "us-central1",
+        "WORKLOAD_IDENTITY_PROVIDER": "projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev/providers/github-provider"
+      },
+      "type": [
+        "object",
+        {
+          "ARTIFACT_REGISTRY": "string",
+          "DEPLOY_SERVICE_ACCOUNT": "string",
+          "GCP_PROJECT_ID": "string",
+          "GCP_REGION": "string",
+          "WORKLOAD_IDENTITY_PROVIDER": "string"
+        }
+      ]
+    },
+    "ingester_image_uri": {
+      "value": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo/ingester:latest",
+      "type": "string"
+    },
+    "ingester_job_name": {
+      "value": "etude-rag2-ingester-dev",
+      "type": "string"
+    },
+    "region": {
+      "value": "us-central1",
+      "type": "string"
+    },
+    "service_account_key_secret_id": {
+      "value": "etude-rag2-service-account-key-dev",
+      "type": "string"
+    },
+    "streamlit_image_uri": {
+      "value": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo/streamlit-ui:latest",
+      "type": "string"
+    },
+    "streamlit_service_url": {
+      "value": "",
+      "type": "string"
+    },
+    "vpc_connector_id": {
+      "value": "projects/etude-rag2/locations/us-central1/connectors/etude-rag2-vpc-dev",
+      "type": "string"
+    },
+    "workload_identity_pool": {
+      "value": "projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev",
+      "type": "string"
+    },
+    "workload_identity_provider": {
+      "value": "projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev/providers/github-provider",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "google_artifact_registry_repository",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "cleanup_policies": [
+              {
+                "action": "KEEP",
+                "condition": [],
+                "id": "keep-recent-versions",
+                "most_recent_versions": [
+                  {
+                    "keep_count": 10,
+                    "package_name_prefixes": []
+                  }
+                ]
+              }
+            ],
+            "cleanup_policy_dry_run": false,
+            "create_time": "2025-12-05T04:42:47.522441Z",
+            "description": "Docker repository for etude-rag2 images",
+            "docker_config": [],
+            "effective_labels": {},
+            "format": "DOCKER",
+            "id": "projects/etude-rag2/locations/us-central1/repositories/etude-rag2-repo",
+            "kms_key_name": "",
+            "labels": {},
+            "location": "us-central1",
+            "maven_config": [],
+            "mode": "STANDARD_REPOSITORY",
+            "name": "etude-rag2-repo",
+            "project": "etude-rag2",
+            "remote_repository_config": [],
+            "repository_id": "etude-rag2-repo",
+            "terraform_labels": {},
+            "timeouts": null,
+            "update_time": "2025-12-05T06:23:58.757855Z",
+            "virtual_repository_config": []
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_cloud_run_v2_job",
+      "name": "ingester",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "status": "tainted",
+          "schema_version": 0,
+          "attributes": {
+            "annotations": null,
+            "binary_authorization": [],
+            "client": null,
+            "client_version": null,
+            "conditions": null,
+            "create_time": null,
+            "creator": null,
+            "delete_time": null,
+            "effective_annotations": null,
+            "effective_labels": null,
+            "etag": null,
+            "execution_count": null,
+            "expire_time": null,
+            "generation": null,
+            "id": "projects/etude-rag2/locations/us-central1/jobs/etude-rag2-ingester-dev",
+            "labels": null,
+            "last_modifier": null,
+            "latest_created_execution": null,
+            "launch_stage": null,
+            "location": "us-central1",
+            "name": "etude-rag2-ingester-dev",
+            "observed_generation": null,
+            "project": "etude-rag2",
+            "reconciling": null,
+            "template": [
+              {
+                "annotations": null,
+                "labels": null,
+                "parallelism": 0,
+                "task_count": 0,
+                "template": [
+                  {
+                    "containers": [
+                      {
+                        "args": null,
+                        "command": null,
+                        "env": [
+                          {
+                            "name": "GOOGLE_PROJECT_ID",
+                            "value": "etude-rag2",
+                            "value_source": []
+                          },
+                          {
+                            "name": "GOOGLE_LOCATION",
+                            "value": "us-central1",
+                            "value_source": []
+                          },
+                          {
+                            "name": "DB_HOST",
+                            "value": "10.107.0.3",
+                            "value_source": []
+                          },
+                          {
+                            "name": "DB_PORT",
+                            "value": "5432",
+                            "value_source": []
+                          },
+                          {
+                            "name": "DB_NAME",
+                            "value": "rag_db",
+                            "value_source": []
+                          },
+                          {
+                            "name": "DB_USER",
+                            "value": "raguser",
+                            "value_source": []
+                          },
+                          {
+                            "name": "EMBEDDING_MODEL",
+                            "value": "text-embedding-004",
+                            "value_source": []
+                          },
+                          {
+                            "name": "DB_PASSWORD",
+                            "value": "",
+                            "value_source": [
+                              {
+                                "secret_key_ref": [
+                                  {
+                                    "secret": "etude-rag2-db-password-dev",
+                                    "version": "latest"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "TARGET_FOLDER_ID",
+                            "value": "",
+                            "value_source": [
+                              {
+                                "secret_key_ref": [
+                                  {
+                                    "secret": "etude-rag2-drive-folder-id-dev",
+                                    "version": "latest"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "MY_EMAIL",
+                            "value": "",
+                            "value_source": [
+                              {
+                                "secret_key_ref": [
+                                  {
+                                    "secret": "etude-rag2-my-email-dev",
+                                    "version": "latest"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "name": "SERVICE_ACCOUNT_KEY",
+                            "value": "",
+                            "value_source": [
+                              {
+                                "secret_key_ref": [
+                                  {
+                                    "secret": "etude-rag2-service-account-key-dev",
+                                    "version": "latest"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ],
+                        "image": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo/ingester:latest",
+                        "name": "",
+                        "ports": [],
+                        "resources": [
+                          {
+                            "limits": {
+                              "cpu": "2",
+                              "memory": "2Gi"
+                            }
+                          }
+                        ],
+                        "volume_mounts": [],
+                        "working_dir": ""
+                      }
+                    ],
+                    "encryption_key": "",
+                    "execution_environment": "",
+                    "max_retries": 0,
+                    "service_account": "etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+                    "timeout": "3600s",
+                    "volumes": [],
+                    "vpc_access": [
+                      {
+                        "connector": "projects/etude-rag2/locations/us-central1/connectors/etude-rag2-vpc-dev",
+                        "egress": "PRIVATE_RANGES_ONLY",
+                        "network_interfaces": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "terminal_condition": null,
+            "terraform_labels": null,
+            "timeouts": null,
+            "uid": null,
+            "update_time": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_artifact_registry_repository.main",
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_secret_manager_secret.db_password",
+            "google_secret_manager_secret.drive_folder_id",
+            "google_secret_manager_secret.my_email",
+            "google_secret_manager_secret.service_account_key",
+            "google_secret_manager_secret_version.db_password",
+            "google_service_account.cloud_run",
+            "google_service_networking_connection.private_vpc_connection",
+            "google_sql_database_instance.postgres",
+            "google_vpc_access_connector.connector",
+            "random_password.db_password"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_cloud_run_v2_service",
+      "name": "api",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": null,
+            "binary_authorization": [],
+            "client": "",
+            "client_version": "",
+            "conditions": [
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:31:47.089011Z",
+                "message": "",
+                "reason": "",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_SUCCEEDED",
+                "type": "RoutesReady"
+              },
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:31:45.762567Z",
+                "message": "",
+                "reason": "",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_SUCCEEDED",
+                "type": "ConfigurationsReady"
+              }
+            ],
+            "create_time": "2025-12-05T06:26:33.131564Z",
+            "creator": "wagomu.dev.th@gmail.com",
+            "custom_audiences": null,
+            "delete_time": "",
+            "description": "",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "etag": "\"CJn2yckGEOCD3j4/cHJvamVjdHMvZXR1ZGUtcmFnMi9sb2NhdGlvbnMvdXMtY2VudHJhbDEvc2VydmljZXMvZXR1ZGUtcmFnMi1hcGktZGV2\"",
+            "expire_time": "",
+            "generation": "1",
+            "id": "projects/etude-rag2/locations/us-central1/services/etude-rag2-api-dev",
+            "ingress": "INGRESS_TRAFFIC_ALL",
+            "labels": null,
+            "last_modifier": "wagomu.dev.th@gmail.com",
+            "latest_created_revision": "projects/etude-rag2/locations/us-central1/services/etude-rag2-api-dev/revisions/etude-rag2-api-dev-00001-lr7",
+            "latest_ready_revision": "projects/etude-rag2/locations/us-central1/services/etude-rag2-api-dev/revisions/etude-rag2-api-dev-00001-lr7",
+            "launch_stage": "GA",
+            "location": "us-central1",
+            "name": "etude-rag2-api-dev",
+            "observed_generation": "1",
+            "project": "etude-rag2",
+            "reconciling": false,
+            "template": [
+              {
+                "annotations": null,
+                "containers": [
+                  {
+                    "args": null,
+                    "command": null,
+                    "depends_on": null,
+                    "env": [
+                      {
+                        "name": "GOOGLE_PROJECT_ID",
+                        "value": "etude-rag2",
+                        "value_source": []
+                      },
+                      {
+                        "name": "GOOGLE_LOCATION",
+                        "value": "us-central1",
+                        "value_source": []
+                      },
+                      {
+                        "name": "DB_HOST",
+                        "value": "10.107.0.3",
+                        "value_source": []
+                      },
+                      {
+                        "name": "DB_PORT",
+                        "value": "5432",
+                        "value_source": []
+                      },
+                      {
+                        "name": "DB_NAME",
+                        "value": "rag_db",
+                        "value_source": []
+                      },
+                      {
+                        "name": "DB_USER",
+                        "value": "raguser",
+                        "value_source": []
+                      },
+                      {
+                        "name": "EMBEDDING_MODEL",
+                        "value": "text-embedding-004",
+                        "value_source": []
+                      },
+                      {
+                        "name": "LLM_MODEL",
+                        "value": "gemini-1.5-pro",
+                        "value_source": []
+                      },
+                      {
+                        "name": "LLM_TEMPERATURE",
+                        "value": "0.3",
+                        "value_source": []
+                      },
+                      {
+                        "name": "RERANKER_MODEL",
+                        "value": "BAAI/bge-reranker-base",
+                        "value_source": []
+                      },
+                      {
+                        "name": "HYBRID_SEARCH_K",
+                        "value": "20",
+                        "value_source": []
+                      },
+                      {
+                        "name": "RRF_K",
+                        "value": "60",
+                        "value_source": []
+                      },
+                      {
+                        "name": "DB_PASSWORD",
+                        "value": "",
+                        "value_source": [
+                          {
+                            "secret_key_ref": [
+                              {
+                                "secret": "etude-rag2-db-password-dev",
+                                "version": "latest"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "TARGET_FOLDER_ID",
+                        "value": "",
+                        "value_source": [
+                          {
+                            "secret_key_ref": [
+                              {
+                                "secret": "etude-rag2-drive-folder-id-dev",
+                                "version": "latest"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "MY_EMAIL",
+                        "value": "",
+                        "value_source": [
+                          {
+                            "secret_key_ref": [
+                              {
+                                "secret": "etude-rag2-my-email-dev",
+                                "version": "latest"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "image": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2-repo/api-server:latest",
+                    "liveness_probe": [
+                      {
+                        "failure_threshold": 3,
+                        "grpc": [],
+                        "http_get": [
+                          {
+                            "http_headers": [],
+                            "path": "/health",
+                            "port": 8080
+                          }
+                        ],
+                        "initial_delay_seconds": 0,
+                        "period_seconds": 30,
+                        "tcp_socket": [],
+                        "timeout_seconds": 5
+                      }
+                    ],
+                    "name": "",
+                    "ports": [
+                      {
+                        "container_port": 8080,
+                        "name": "http1"
+                      }
+                    ],
+                    "resources": [
+                      {
+                        "cpu_idle": true,
+                        "limits": {
+                          "cpu": "2",
+                          "memory": "4Gi"
+                        },
+                        "startup_cpu_boost": true
+                      }
+                    ],
+                    "startup_probe": [
+                      {
+                        "failure_threshold": 1,
+                        "grpc": [],
+                        "http_get": [],
+                        "initial_delay_seconds": 0,
+                        "period_seconds": 240,
+                        "tcp_socket": [
+                          {
+                            "port": 8080
+                          }
+                        ],
+                        "timeout_seconds": 240
+                      }
+                    ],
+                    "volume_mounts": [],
+                    "working_dir": ""
+                  }
+                ],
+                "encryption_key": "",
+                "execution_environment": "",
+                "labels": null,
+                "max_instance_request_concurrency": 80,
+                "revision": "",
+                "scaling": [
+                  {
+                    "max_instance_count": 10,
+                    "min_instance_count": 0
+                  }
+                ],
+                "service_account": "etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+                "session_affinity": false,
+                "timeout": "300s",
+                "volumes": [],
+                "vpc_access": [
+                  {
+                    "connector": "projects/etude-rag2/locations/us-central1/connectors/etude-rag2-vpc-dev",
+                    "egress": "PRIVATE_RANGES_ONLY",
+                    "network_interfaces": []
+                  }
+                ]
+              }
+            ],
+            "terminal_condition": [
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:31:47.129997Z",
+                "message": "",
+                "reason": "",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_SUCCEEDED",
+                "type": "Ready"
+              }
+            ],
+            "terraform_labels": {},
+            "timeouts": null,
+            "traffic": [
+              {
+                "percent": 100,
+                "revision": "",
+                "tag": "",
+                "type": "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+              }
+            ],
+            "traffic_statuses": [
+              {
+                "percent": 100,
+                "revision": "",
+                "tag": "",
+                "type": "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",
+                "uri": ""
+              }
+            ],
+            "uid": "d1410fbf-6433-4927-8e0b-047f204fdf5e",
+            "update_time": "2025-12-05T06:26:33.131564Z",
+            "uri": "https://etude-rag2-api-dev-uzrsujnvkq-uc.a.run.app"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_artifact_registry_repository.main",
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_secret_manager_secret.db_password",
+            "google_secret_manager_secret.drive_folder_id",
+            "google_secret_manager_secret.my_email",
+            "google_secret_manager_secret_version.db_password",
+            "google_secret_manager_secret_version.drive_folder_id",
+            "google_service_account.cloud_run",
+            "google_service_networking_connection.private_vpc_connection",
+            "google_sql_database_instance.postgres",
+            "google_vpc_access_connector.connector",
+            "random_password.db_password"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_cloud_run_v2_service",
+      "name": "streamlit",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": {},
+            "binary_authorization": [],
+            "client": "gcloud",
+            "client_version": "548.0.0",
+            "conditions": [
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:06:06.566671Z",
+                "message": "Image 'us-central1-docker.pkg.dev/etude-rag2/etude-rag2/streamlit-ui:latest' not found.",
+                "reason": "REVISION_FAILED",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_FAILED",
+                "type": "RoutesReady"
+              },
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:06:06.537547Z",
+                "message": "Image 'us-central1-docker.pkg.dev/etude-rag2/etude-rag2/streamlit-ui:latest' not found.",
+                "reason": "",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_FAILED",
+                "type": "ConfigurationsReady"
+              }
+            ],
+            "create_time": "2025-12-05T06:06:06.250786Z",
+            "creator": "wagomu.dev.th@gmail.com",
+            "custom_audiences": [],
+            "delete_time": "",
+            "description": "",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "etag": "\"CM7syckGENDhync/cHJvamVjdHMvZXR1ZGUtcmFnMi9sb2NhdGlvbnMvdXMtY2VudHJhbDEvc2VydmljZXMvZXR1ZGUtcmFnMi1zdHJlYW1saXQtZGV2\"",
+            "expire_time": "",
+            "generation": "1",
+            "id": "projects/etude-rag2/locations/us-central1/services/etude-rag2-streamlit-dev",
+            "ingress": "INGRESS_TRAFFIC_ALL",
+            "labels": {},
+            "last_modifier": "wagomu.dev.th@gmail.com",
+            "latest_created_revision": "projects/etude-rag2/locations/us-central1/services/etude-rag2-streamlit-dev/revisions/etude-rag2-streamlit-dev-00001-bsl",
+            "latest_ready_revision": "",
+            "launch_stage": "GA",
+            "location": "us-central1",
+            "name": "etude-rag2-streamlit-dev",
+            "observed_generation": "1",
+            "project": "etude-rag2",
+            "reconciling": false,
+            "template": [
+              {
+                "annotations": {},
+                "containers": [
+                  {
+                    "args": [],
+                    "command": [],
+                    "depends_on": [],
+                    "env": [],
+                    "image": "us-central1-docker.pkg.dev/etude-rag2/etude-rag2/streamlit-ui:latest",
+                    "liveness_probe": [],
+                    "name": "",
+                    "ports": [
+                      {
+                        "container_port": 8080,
+                        "name": "http1"
+                      }
+                    ],
+                    "resources": [
+                      {
+                        "cpu_idle": true,
+                        "limits": {
+                          "cpu": "1000m",
+                          "memory": "512Mi"
+                        },
+                        "startup_cpu_boost": true
+                      }
+                    ],
+                    "startup_probe": [
+                      {
+                        "failure_threshold": 1,
+                        "grpc": [],
+                        "http_get": [],
+                        "initial_delay_seconds": 0,
+                        "period_seconds": 240,
+                        "tcp_socket": [
+                          {
+                            "port": 8080
+                          }
+                        ],
+                        "timeout_seconds": 240
+                      }
+                    ],
+                    "volume_mounts": [],
+                    "working_dir": ""
+                  }
+                ],
+                "encryption_key": "",
+                "execution_environment": "",
+                "labels": {},
+                "max_instance_request_concurrency": 80,
+                "revision": "",
+                "scaling": [
+                  {
+                    "max_instance_count": 3,
+                    "min_instance_count": 0
+                  }
+                ],
+                "service_account": "901817577416-compute@developer.gserviceaccount.com",
+                "session_affinity": false,
+                "timeout": "300s",
+                "volumes": [],
+                "vpc_access": []
+              }
+            ],
+            "terminal_condition": [
+              {
+                "execution_reason": "",
+                "last_transition_time": "2025-12-05T06:06:07.240936Z",
+                "message": "Image 'us-central1-docker.pkg.dev/etude-rag2/etude-rag2/streamlit-ui:latest' not found.",
+                "reason": "REVISION_FAILED",
+                "revision_reason": "",
+                "severity": "",
+                "state": "CONDITION_FAILED",
+                "type": "Ready"
+              }
+            ],
+            "terraform_labels": {},
+            "timeouts": null,
+            "traffic": [
+              {
+                "percent": 100,
+                "revision": "",
+                "tag": "",
+                "type": "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+              }
+            ],
+            "traffic_statuses": [],
+            "uid": "55b6f8a5-3641-4b07-ba8e-52819e81ce1e",
+            "update_time": "2025-12-05T06:06:06.250786Z",
+            "uri": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMCJ9"
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_cloud_run_v2_service_iam_member",
+      "name": "api_public",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "index_key": 0,
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLpn2ukM=",
+            "id": "projects/etude-rag2/locations/us-central1/services/etude-rag2-api-dev/roles/run.invoker/allUsers",
+            "location": "us-central1",
+            "member": "allUsers",
+            "name": "projects/etude-rag2/locations/us-central1/services/etude-rag2-api-dev",
+            "project": "etude-rag2",
+            "role": "roles/run.invoker"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_artifact_registry_repository.main",
+            "google_cloud_run_v2_service.api",
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_secret_manager_secret.db_password",
+            "google_secret_manager_secret.drive_folder_id",
+            "google_secret_manager_secret.my_email",
+            "google_secret_manager_secret_version.db_password",
+            "google_secret_manager_secret_version.drive_folder_id",
+            "google_service_account.cloud_run",
+            "google_service_networking_connection.private_vpc_connection",
+            "google_sql_database_instance.postgres",
+            "google_vpc_access_connector.connector",
+            "random_password.db_password"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_global_address",
+      "name": "private_ip",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "address": "10.107.0.0",
+            "address_type": "INTERNAL",
+            "creation_timestamp": "2025-12-04T20:42:49.887-08:00",
+            "description": "",
+            "effective_labels": {},
+            "id": "projects/etude-rag2/global/addresses/etude-rag2-db-ip-dev",
+            "ip_version": "",
+            "label_fingerprint": "42WmSpB8rSM=",
+            "labels": {},
+            "name": "etude-rag2-db-ip-dev",
+            "network": "https://www.googleapis.com/compute/v1/projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+            "prefix_length": 16,
+            "project": "etude-rag2",
+            "purpose": "VPC_PEERING",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/etude-rag2/global/addresses/etude-rag2-db-ip-dev",
+            "terraform_labels": {},
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_network",
+      "name": "vpc",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "auto_create_subnetworks": false,
+            "delete_default_routes_on_create": false,
+            "description": "",
+            "enable_ula_internal_ipv6": false,
+            "gateway_ipv4": "",
+            "id": "projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+            "internal_ipv6_range": "",
+            "mtu": 0,
+            "name": "etude-rag2-vpc-dev",
+            "network_firewall_policy_enforcement_order": "AFTER_CLASSIC_FIREWALL",
+            "numeric_id": "6511152273284914258",
+            "project": "etude-rag2",
+            "routing_mode": "REGIONAL",
+            "self_link": "https://www.googleapis.com/compute/v1/projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_compute_subnetwork",
+      "name": "subnet",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "creation_timestamp": "2025-12-04T20:42:51.098-08:00",
+            "description": "",
+            "external_ipv6_prefix": "",
+            "fingerprint": null,
+            "gateway_address": "10.0.0.1",
+            "id": "projects/etude-rag2/regions/us-central1/subnetworks/etude-rag2-subnet-dev",
+            "internal_ipv6_prefix": "",
+            "ip_cidr_range": "10.0.0.0/24",
+            "ipv6_access_type": "",
+            "ipv6_cidr_range": "",
+            "log_config": [],
+            "name": "etude-rag2-subnet-dev",
+            "network": "https://www.googleapis.com/compute/v1/projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+            "private_ip_google_access": false,
+            "private_ipv6_google_access": "DISABLE_GOOGLE_ACCESS",
+            "project": "etude-rag2",
+            "purpose": "PRIVATE",
+            "region": "us-central1",
+            "role": "",
+            "secondary_ip_range": [],
+            "self_link": "https://www.googleapis.com/compute/v1/projects/etude-rag2/regions/us-central1/subnetworks/etude-rag2-subnet-dev",
+            "send_secondary_ip_range_if_empty": null,
+            "stack_type": "IPV4_ONLY",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_iam_workload_identity_pool",
+      "name": "github",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google-beta\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "description": "Workload Identity Pool for GitHub Actions",
+            "disabled": false,
+            "display_name": "GitHub Actions Pool (dev)",
+            "id": "projects/etude-rag2/locations/global/workloadIdentityPools/github-pool-dev",
+            "name": "projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev",
+            "project": "etude-rag2",
+            "state": "ACTIVE",
+            "timeouts": null,
+            "workload_identity_pool_id": "github-pool-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_iam_workload_identity_pool_provider",
+      "name": "github",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google-beta\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "attribute_condition": "assertion.repository == 'wagomu-no-sunaba/etude-rag2'",
+            "attribute_mapping": {
+              "attribute.actor": "assertion.actor",
+              "attribute.ref": "assertion.ref",
+              "attribute.repository": "assertion.repository",
+              "google.subject": "assertion.sub"
+            },
+            "aws": [],
+            "description": "OIDC provider for GitHub Actions",
+            "disabled": false,
+            "display_name": "GitHub Actions Provider",
+            "id": "projects/etude-rag2/locations/global/workloadIdentityPools/github-pool-dev/providers/github-provider",
+            "name": "projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev/providers/github-provider",
+            "oidc": [
+              {
+                "allowed_audiences": [],
+                "issuer_uri": "https://token.actions.githubusercontent.com",
+                "jwks_json": ""
+              }
+            ],
+            "project": "etude-rag2",
+            "saml": [],
+            "state": "ACTIVE",
+            "timeouts": null,
+            "workload_identity_pool_id": "github-pool-dev",
+            "workload_identity_pool_provider_id": "github-provider"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_iam_workload_identity_pool.github",
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "cloudsql_client",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/cloudsql.client/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/cloudsql.client"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "deploy_artifactregistry_writer",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/artifactregistry.writer/serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/artifactregistry.writer"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "deploy_cloudbuild_editor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/cloudbuild.builds.editor/serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/cloudbuild.builds.editor"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "deploy_run_admin",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/run.admin/serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/run.admin"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "deploy_storage_admin",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/storage.admin/serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/storage.admin"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "secret_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "storage_viewer",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/storage.objectViewer/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/storage.objectViewer"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_iam_member",
+      "name": "vertex_ai_user",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLUBIumg=",
+            "id": "etude-rag2/roles/aiplatform.user/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/aiplatform.user"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_project_service",
+      "name": "services",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "index_key": "aiplatform.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/aiplatform.googleapis.com",
+            "project": "etude-rag2",
+            "service": "aiplatform.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "artifactregistry.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/artifactregistry.googleapis.com",
+            "project": "etude-rag2",
+            "service": "artifactregistry.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "cloudbuild.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/cloudbuild.googleapis.com",
+            "project": "etude-rag2",
+            "service": "cloudbuild.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "cloudresourcemanager.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/cloudresourcemanager.googleapis.com",
+            "project": "etude-rag2",
+            "service": "cloudresourcemanager.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "drive.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/drive.googleapis.com",
+            "project": "etude-rag2",
+            "service": "drive.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "iam.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/iam.googleapis.com",
+            "project": "etude-rag2",
+            "service": "iam.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "iamcredentials.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/iamcredentials.googleapis.com",
+            "project": "etude-rag2",
+            "service": "iamcredentials.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "run.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/run.googleapis.com",
+            "project": "etude-rag2",
+            "service": "run.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "secretmanager.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/secretmanager.googleapis.com",
+            "project": "etude-rag2",
+            "service": "secretmanager.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "sqladmin.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/sqladmin.googleapis.com",
+            "project": "etude-rag2",
+            "service": "sqladmin.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        },
+        {
+          "index_key": "vpcaccess.googleapis.com",
+          "schema_version": 0,
+          "attributes": {
+            "disable_dependent_services": null,
+            "disable_on_destroy": false,
+            "id": "etude-rag2/vpcaccess.googleapis.com",
+            "project": "etude-rag2",
+            "service": "vpcaccess.googleapis.com",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInJlYWQiOjYwMDAwMDAwMDAwMCwidXBkYXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret",
+      "name": "app_config",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": {},
+            "create_time": "2025-12-05T04:42:37.460630Z",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "expire_time": "",
+            "id": "projects/etude-rag2/secrets/etude-rag2-app-config-dev",
+            "labels": {},
+            "name": "projects/901817577416/secrets/etude-rag2-app-config-dev",
+            "project": "etude-rag2",
+            "replication": [
+              {
+                "auto": [
+                  {
+                    "customer_managed_encryption": []
+                  }
+                ],
+                "user_managed": []
+              }
+            ],
+            "rotation": [],
+            "secret_id": "etude-rag2-app-config-dev",
+            "terraform_labels": {},
+            "timeouts": null,
+            "topics": [],
+            "ttl": null,
+            "version_aliases": {},
+            "version_destroy_ttl": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret",
+      "name": "db_password",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": {},
+            "create_time": "2025-12-05T04:42:37.760622Z",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "expire_time": "",
+            "id": "projects/etude-rag2/secrets/etude-rag2-db-password-dev",
+            "labels": {},
+            "name": "projects/901817577416/secrets/etude-rag2-db-password-dev",
+            "project": "etude-rag2",
+            "replication": [
+              {
+                "auto": [
+                  {
+                    "customer_managed_encryption": []
+                  }
+                ],
+                "user_managed": []
+              }
+            ],
+            "rotation": [],
+            "secret_id": "etude-rag2-db-password-dev",
+            "terraform_labels": {},
+            "timeouts": null,
+            "topics": [],
+            "ttl": null,
+            "version_aliases": {},
+            "version_destroy_ttl": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret",
+      "name": "drive_folder_id",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": {},
+            "create_time": "2025-12-05T04:42:37.463757Z",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "expire_time": "",
+            "id": "projects/etude-rag2/secrets/etude-rag2-drive-folder-id-dev",
+            "labels": {},
+            "name": "projects/901817577416/secrets/etude-rag2-drive-folder-id-dev",
+            "project": "etude-rag2",
+            "replication": [
+              {
+                "auto": [
+                  {
+                    "customer_managed_encryption": []
+                  }
+                ],
+                "user_managed": []
+              }
+            ],
+            "rotation": [],
+            "secret_id": "etude-rag2-drive-folder-id-dev",
+            "terraform_labels": {},
+            "timeouts": null,
+            "topics": [],
+            "ttl": null,
+            "version_aliases": {},
+            "version_destroy_ttl": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret",
+      "name": "my_email",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "annotations": {},
+            "create_time": "2025-12-05T04:42:37.759468Z",
+            "effective_annotations": {},
+            "effective_labels": {},
+            "expire_time": "",
+            "id": "projects/etude-rag2/secrets/etude-rag2-my-email-dev",
+            "labels": {},
+            "name": "projects/901817577416/secrets/etude-rag2-my-email-dev",
+            "project": "etude-rag2",
+            "replication": [
+              {
+                "auto": [
+                  {
+                    "customer_managed_encryption": []
+                  }
+                ],
+                "user_managed": []
+              }
+            ],
+            "rotation": [],
+            "secret_id": "etude-rag2-my-email-dev",
+            "terraform_labels": {},
+            "timeouts": null,
+            "topics": [],
+            "ttl": null,
+            "version_aliases": {},
+            "version_destroy_ttl": ""
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_iam_member",
+      "name": "app_config_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRSgfVo=",
+            "id": "projects/etude-rag2/secrets/etude-rag2-app-config-dev/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor",
+            "secret_id": "projects/etude-rag2/secrets/etude-rag2-app-config-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.app_config",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_iam_member",
+      "name": "db_password_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRQVgI4=",
+            "id": "projects/etude-rag2/secrets/etude-rag2-db-password-dev/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor",
+            "secret_id": "projects/etude-rag2/secrets/etude-rag2-db-password-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.db_password",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_iam_member",
+      "name": "drive_folder_id_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRSiKX4=",
+            "id": "projects/etude-rag2/secrets/etude-rag2-drive-folder-id-dev/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor",
+            "secret_id": "projects/etude-rag2/secrets/etude-rag2-drive-folder-id-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.drive_folder_id",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_iam_member",
+      "name": "my_email_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRQ7r4Q=",
+            "id": "projects/etude-rag2/secrets/etude-rag2-my-email-dev/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor",
+            "secret_id": "projects/etude-rag2/secrets/etude-rag2-my-email-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.my_email",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_iam_member",
+      "name": "service_account_key_accessor",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRSDYYw=",
+            "id": "projects/etude-rag2/secrets/etude-rag2-service-account-key-dev/roles/secretmanager.secretAccessor/serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "role": "roles/secretmanager.secretAccessor",
+            "secret_id": "projects/etude-rag2/secrets/etude-rag2-service-account-key-dev"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.service_account_key",
+            "google_service_account.cloud_run"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_version",
+      "name": "app_config",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "create_time": "2025-12-05T04:42:40.958340Z",
+            "deletion_policy": "DELETE",
+            "destroy_time": "",
+            "enabled": true,
+            "id": "projects/901817577416/secrets/etude-rag2-app-config-dev/versions/1",
+            "is_secret_data_base64": false,
+            "name": "projects/901817577416/secrets/etude-rag2-app-config-dev/versions/1",
+            "secret": "projects/etude-rag2/secrets/etude-rag2-app-config-dev",
+            "secret_data": "{\"embedding_model\":\"text-embedding-004\",\"hybrid_search_k\":\"20\",\"llm_model\":\"gemini-1.5-pro\",\"llm_temperature\":\"0.3\",\"reranker_model\":\"BAAI/bge-reranker-base\",\"rrf_k\":\"60\"}",
+            "timeouts": null,
+            "version": "1"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_data"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.app_config"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_version",
+      "name": "db_password",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "create_time": "2025-12-05T04:42:42.651351Z",
+            "deletion_policy": "DELETE",
+            "destroy_time": "",
+            "enabled": true,
+            "id": "projects/901817577416/secrets/etude-rag2-db-password-dev/versions/1",
+            "is_secret_data_base64": false,
+            "name": "projects/901817577416/secrets/etude-rag2-db-password-dev/versions/1",
+            "secret": "projects/etude-rag2/secrets/etude-rag2-db-password-dev",
+            "secret_data": "r1L6GjnOV3ni5JmbYlCtKKp4VCeasviB",
+            "timeouts": null,
+            "version": "1"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_data"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.db_password",
+            "random_password.db_password"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_version",
+      "name": "drive_folder_id",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "create_time": "2025-12-05T04:42:39.057806Z",
+            "deletion_policy": "DELETE",
+            "destroy_time": "",
+            "enabled": true,
+            "id": "projects/901817577416/secrets/etude-rag2-drive-folder-id-dev/versions/1",
+            "is_secret_data_base64": false,
+            "name": "projects/901817577416/secrets/etude-rag2-drive-folder-id-dev/versions/1",
+            "secret": "projects/etude-rag2/secrets/etude-rag2-drive-folder-id-dev",
+            "secret_data": "1WLmhwBePlT7yqUmMybptacrNQ4hDEcMd",
+            "timeouts": null,
+            "version": "1"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_data"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.drive_folder_id"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_secret_manager_secret_version",
+      "name": "my_email",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "create_time": "2025-12-05T04:42:41.459786Z",
+            "deletion_policy": "DELETE",
+            "destroy_time": "",
+            "enabled": true,
+            "id": "projects/901817577416/secrets/etude-rag2-my-email-dev/versions/1",
+            "is_secret_data_base64": false,
+            "name": "projects/901817577416/secrets/etude-rag2-my-email-dev/versions/1",
+            "secret": "projects/etude-rag2/secrets/etude-rag2-my-email-dev",
+            "secret_data": "wagomu.dev.th@gmail.com",
+            "timeouts": null,
+            "version": "1"
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "secret_data"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_project_service.services",
+            "google_secret_manager_secret.my_email"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_account",
+      "name": "cloud_run",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "etude-rag2-dev",
+            "create_ignore_already_exists": null,
+            "description": "",
+            "disabled": false,
+            "display_name": "etude-rag2 Cloud Run Service Account (dev)",
+            "email": "etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "id": "projects/etude-rag2/serviceAccounts/etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "name": "projects/etude-rag2/serviceAccounts/etude-rag2-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "timeouts": null,
+            "unique_id": "115912871169321519366"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_account",
+      "name": "deploy",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "etude-rag2-deploy-dev",
+            "create_ignore_already_exists": null,
+            "description": "Service account for GitHub Actions deployment",
+            "disabled": false,
+            "display_name": "etude-rag2 Deploy Service Account (dev)",
+            "email": "etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "id": "projects/etude-rag2/serviceAccounts/etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "name": "projects/etude-rag2/serviceAccounts/etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "project": "etude-rag2",
+            "timeouts": null,
+            "unique_id": "116794791638052525692"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_account_iam_member",
+      "name": "deploy_act_as_cloud_run",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRRxvts=",
+            "id": "projects/etude-rag2/serviceAccounts/etude-rag2-dev@etude-rag2.iam.gserviceaccount.com/roles/iam.serviceAccountUser/serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "member": "serviceAccount:etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com",
+            "role": "roles/iam.serviceAccountUser",
+            "service_account_id": "projects/etude-rag2/serviceAccounts/etude-rag2-dev@etude-rag2.iam.gserviceaccount.com"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_project_service.services",
+            "google_service_account.cloud_run",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_account_iam_member",
+      "name": "workload_identity_user",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "condition": [],
+            "etag": "BwZFLRPwKEg=",
+            "id": "projects/etude-rag2/serviceAccounts/etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com/roles/iam.workloadIdentityUser/principalSet://iam.googleapis.com/projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev/attribute.repository/wagomu-no-sunaba/etude-rag2",
+            "member": "principalSet://iam.googleapis.com/projects/901817577416/locations/global/workloadIdentityPools/github-pool-dev/attribute.repository/wagomu-no-sunaba/etude-rag2",
+            "role": "roles/iam.workloadIdentityUser",
+            "service_account_id": "projects/etude-rag2/serviceAccounts/etude-rag2-deploy-dev@etude-rag2.iam.gserviceaccount.com"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "google_iam_workload_identity_pool.github",
+            "google_project_service.services",
+            "google_service_account.deploy"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_service_networking_connection",
+      "name": "private_vpc_connection",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "deletion_policy": null,
+            "id": "projects%2Fetude-rag2%2Fglobal%2Fnetworks%2Fetude-rag2-vpc-dev:servicenetworking.googleapis.com",
+            "network": "projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+            "peering": "servicenetworking-googleapis-com",
+            "reserved_peering_ranges": [
+              "etude-rag2-db-ip-dev"
+            ],
+            "service": "servicenetworking.googleapis.com",
+            "timeouts": null,
+            "update_on_creation_fail": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_database",
+      "name": "database",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "charset": "UTF8",
+            "collation": "en_US.UTF8",
+            "deletion_policy": "DELETE",
+            "id": "projects/etude-rag2/instances/etude-rag2-db-dev/databases/rag_db",
+            "instance": "etude-rag2-db-dev",
+            "name": "rag_db",
+            "project": "etude-rag2",
+            "self_link": "https://sqladmin.googleapis.com/sql/v1beta4/projects/etude-rag2/instances/etude-rag2-db-dev/databases/rag_db",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDAsInVwZGF0ZSI6MTIwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_service_networking_connection.private_vpc_connection",
+            "google_sql_database_instance.postgres"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_database_instance",
+      "name": "postgres",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "available_maintenance_versions": [],
+            "clone": [],
+            "connection_name": "etude-rag2:us-central1:etude-rag2-db-dev",
+            "database_version": "POSTGRES_16",
+            "deletion_protection": false,
+            "dns_name": "",
+            "encryption_key_name": null,
+            "first_ip_address": "10.107.0.3",
+            "id": "etude-rag2-db-dev",
+            "instance_type": "CLOUD_SQL_INSTANCE",
+            "ip_address": [
+              {
+                "ip_address": "10.107.0.3",
+                "time_to_retire": "",
+                "type": "PRIVATE"
+              }
+            ],
+            "maintenance_version": "POSTGRES_16_11.R20251004.01_19",
+            "master_instance_name": "",
+            "name": "etude-rag2-db-dev",
+            "private_ip_address": "10.107.0.3",
+            "project": "etude-rag2",
+            "psc_service_attachment_link": "",
+            "public_ip_address": "",
+            "region": "us-central1",
+            "replica_configuration": [],
+            "restore_backup_context": [],
+            "root_password": null,
+            "self_link": "https://sqladmin.googleapis.com/sql/v1beta4/projects/etude-rag2/instances/etude-rag2-db-dev",
+            "server_ca_cert": [
+              {
+                "cert": "-----BEGIN CERTIFICATE-----\nMIIDfzCCAmegAwIBAgIBADANBgkqhkiG9w0BAQsFADB3MS0wKwYDVQQuEyQ4MTg0\nODcxNy0yMjMxLTRhMzQtYTk2Yy1kMDgzMDBhZWZmMDIxIzAhBgNVBAMTGkdvb2ds\nZSBDbG91ZCBTUUwgU2VydmVyIENBMRQwEgYDVQQKEwtHb29nbGUsIEluYzELMAkG\nA1UEBhMCVVMwHhcNMjUxMjA1MDUwMjIxWhcNMzUxMjAzMDUwMzIxWjB3MS0wKwYD\nVQQuEyQ4MTg0ODcxNy0yMjMxLTRhMzQtYTk2Yy1kMDgzMDBhZWZmMDIxIzAhBgNV\nBAMTGkdvb2dsZSBDbG91ZCBTUUwgU2VydmVyIENBMRQwEgYDVQQKEwtHb29nbGUs\nIEluYzELMAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB\nAQDIobEQLn69z/1i2Hq/hbhBKkHc387rOBXRXDu07PlZA3tArnzER8ellCg1Cnrq\ngqyrmT0a+RdIffSNg/yXdMyLGQZYBUrwgfMx3qzGSrOKI4bDmIoWFBgBWcRRLPN9\ntyG2KTRtvPXTDXKl4xUqSIB4dYixuiT2pyy+senoYQW7Vu9L5GltQyoVdCi1FI3U\njgvTKh2c/LKypqssLJIst76NpZ1L6TaiegsN08tV0lznpXHqS6r86t7sMqKsc+DH\nnO/F7ejKa+5UyHrLJFiWCbb8n/wMAr8EnKxLNnVVWAduA33+g2he3TVYFOhZAkeO\n7omlE0fAo+DIBBxmTmkJImA7AgMBAAGjFjAUMBIGA1UdEwEB/wQIMAYBAf8CAQAw\nDQYJKoZIhvcNAQELBQADggEBAI2TBy8x1ONmXvPwaVDgF7XriaLLTTyB67v2/KP7\nHowUC64Cw/FjlCshsmDNhJNLmM20epGtojXOzk7nWTQxeM6bGmfYillElmTrIrEG\n+WeDRrMtHKpo0kwMi9d5QK6D3ya5uAtYVR1mMW9nyLFxfq75MyOBkT1LhHIHpBDo\nHT8Xlx3oCUUzCbYRXPN22wqq1fs5yTUdaH8ITrwI4FU3E9jXgMUx0KA45oNgztX+\nOWv1NzP+CCYuCvkz0k3WKCK5c6C1X8DSGL7onqrlTyTwQPwCVrmXYpgYntRUHIh8\nBv3PeZJWDPcxdHE5h9rBPwDb90sRJyHloFcMbHthmTwEDsI=\n-----END CERTIFICATE-----",
+                "common_name": "C=US,O=Google\\, Inc,CN=Google Cloud SQL Server CA,dnQualifier=81848717-2231-4a34-a96c-d08300aeff02",
+                "create_time": "2025-12-05T05:02:21.877Z",
+                "expiration_time": "2035-12-03T05:03:21.877Z",
+                "sha1_fingerprint": "e2e5907d02f99be62aa72ed070ce89c307561886"
+              }
+            ],
+            "service_account_email_address": "p901817577416-wn0zrg@gcp-sa-cloud-sql.iam.gserviceaccount.com",
+            "settings": [
+              {
+                "activation_policy": "ALWAYS",
+                "active_directory_config": [],
+                "advanced_machine_features": [],
+                "availability_type": "ZONAL",
+                "backup_configuration": [
+                  {
+                    "backup_retention_settings": [
+                      {
+                        "retained_backups": 7,
+                        "retention_unit": "COUNT"
+                      }
+                    ],
+                    "binary_log_enabled": false,
+                    "enabled": true,
+                    "location": "",
+                    "point_in_time_recovery_enabled": false,
+                    "start_time": "03:00",
+                    "transaction_log_retention_days": 7
+                  }
+                ],
+                "collation": "",
+                "connector_enforcement": "NOT_REQUIRED",
+                "data_cache_config": [],
+                "database_flags": [
+                  {
+                    "name": "max_connections",
+                    "value": "100"
+                  }
+                ],
+                "deletion_protection_enabled": false,
+                "deny_maintenance_period": [],
+                "disk_autoresize": true,
+                "disk_autoresize_limit": 0,
+                "disk_size": 10,
+                "disk_type": "PD_SSD",
+                "edition": "ENTERPRISE",
+                "enable_dataplex_integration": false,
+                "enable_google_ml_integration": false,
+                "insights_config": [],
+                "ip_configuration": [
+                  {
+                    "allocated_ip_range": "",
+                    "authorized_networks": [],
+                    "enable_private_path_for_google_cloud_services": true,
+                    "ipv4_enabled": false,
+                    "private_network": "projects/etude-rag2/global/networks/etude-rag2-vpc-dev",
+                    "psc_config": [],
+                    "require_ssl": false,
+                    "server_ca_mode": "GOOGLE_MANAGED_INTERNAL_CA",
+                    "ssl_mode": ""
+                  }
+                ],
+                "location_preference": [
+                  {
+                    "follow_gae_application": "",
+                    "secondary_zone": "",
+                    "zone": "us-central1-c"
+                  }
+                ],
+                "maintenance_window": [
+                  {
+                    "day": 7,
+                    "hour": 4,
+                    "update_track": ""
+                  }
+                ],
+                "password_validation_policy": [],
+                "pricing_plan": "PER_USE",
+                "sql_server_audit_config": [],
+                "tier": "db-f1-micro",
+                "time_zone": "",
+                "user_labels": {},
+                "version": 1
+              }
+            ],
+            "timeouts": null
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "root_password"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "server_ca_cert"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo1NDAwMDAwMDAwMDAwLCJkZWxldGUiOjU0MDAwMDAwMDAwMDAsInVwZGF0ZSI6NTQwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_service_networking_connection.private_vpc_connection"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_sql_user",
+      "name": "user",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "deletion_policy": null,
+            "host": "",
+            "id": "raguser//etude-rag2-db-dev",
+            "instance": "etude-rag2-db-dev",
+            "name": "raguser",
+            "password": "r1L6GjnOV3ni5JmbYlCtKKp4VCeasviB",
+            "password_policy": [],
+            "project": "etude-rag2",
+            "sql_server_user_details": [],
+            "timeouts": null,
+            "type": ""
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMSJ9",
+          "dependencies": [
+            "google_compute_global_address.private_ip",
+            "google_compute_network.vpc",
+            "google_project_service.services",
+            "google_service_networking_connection.private_vpc_connection",
+            "google_sql_database_instance.postgres",
+            "random_password.db_password"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "google_vpc_access_connector",
+      "name": "connector",
+      "provider": "provider[\"registry.terraform.io/hashicorp/google\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "connected_projects": [],
+            "id": "projects/etude-rag2/locations/us-central1/connectors/etude-rag2-vpc-dev",
+            "ip_cidr_range": "10.8.0.0/28",
+            "machine_type": "e2-micro",
+            "max_instances": 3,
+            "max_throughput": 300,
+            "min_instances": 2,
+            "min_throughput": 200,
+            "name": "etude-rag2-vpc-dev",
+            "network": "etude-rag2-vpc-dev",
+            "project": "etude-rag2",
+            "region": "us-central1",
+            "self_link": "projects/etude-rag2/locations/us-central1/connectors/etude-rag2-vpc-dev",
+            "state": "READY",
+            "subnet": [],
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxMjAwMDAwMDAwMDAwLCJkZWxldGUiOjEyMDAwMDAwMDAwMDB9fQ==",
+          "dependencies": [
+            "google_compute_network.vpc",
+            "google_project_service.services"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "random_password",
+      "name": "db_password",
+      "provider": "provider[\"registry.terraform.io/hashicorp/random\"]",
+      "instances": [
+        {
+          "schema_version": 3,
+          "attributes": {
+            "bcrypt_hash": "$2a$10$YBbvLIWTOSg0kp0p0QdJ9.JCGpTGEJK585HmG.evB8xZn6Q.ZifUa",
+            "id": "none",
+            "keepers": null,
+            "length": 32,
+            "lower": true,
+            "min_lower": 0,
+            "min_numeric": 0,
+            "min_special": 0,
+            "min_upper": 0,
+            "number": true,
+            "numeric": true,
+            "override_special": null,
+            "result": "r1L6GjnOV3ni5JmbYlCtKKp4VCeasviB",
+            "special": false,
+            "upper": true
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "bcrypt_hash"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "result"
+              }
+            ]
+          ],
+          "identity_schema_version": 0
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

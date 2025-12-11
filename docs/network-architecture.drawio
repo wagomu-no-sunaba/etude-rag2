@@ -1,0 +1,254 @@
+<mxfile host="app.diagrams.net" modified="2025-12-08T00:00:00.000Z" agent="Claude" version="22.1.0" type="device">
+  <diagram name="Network Architecture" id="etude-rag2-network">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="etude-rag2 Network Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="600" y="20" width="400" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- External Users -->
+        <mxCell id="user" value="Browser&#xa;(User)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="80" width="60" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="github" value="GitHub&#xa;Actions" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="60" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- GCP Boundary -->
+        <mxCell id="gcp-boundary" value="Google Cloud Platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;fontSize=14;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="1520" height="900" as="geometry" />
+        </mxCell>
+
+        <!-- Cloud Run Public Services -->
+        <mxCell id="cloudrun-group" value="Cloud Run Services (Public Endpoints)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="500" height="180" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api-service" value="etude-rag2-api&#xa;(FastAPI)&#xa;&#xa;Port: 8080&#xa;CPU: 2 / Mem: 4Gi&#xa;Max: 10 instances" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4285F4;strokeColor=#1a73e8;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="120" y="280" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="streamlit-service" value="etude-rag2-streamlit&#xa;(Streamlit UI)&#xa;&#xa;Port: 8501&#xa;CPU: 2 / Mem: 4Gi&#xa;Max: 5 instances" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4285F4;strokeColor=#1a73e8;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="360" y="280" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- VPC Section -->
+        <mxCell id="vpc-boundary" value="VPC: etude-rag2-vpc (10.0.0.0/24)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="700" height="320" as="geometry" />
+        </mxCell>
+
+        <mxCell id="vpc-connector" value="VPC Access Connector&#xa;(10.8.0.0/28)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a9d18e;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="120" y="540" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- VPC Peering -->
+        <mxCell id="vpc-peering" value="Private Service Access (VPC Peering)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c6efce;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="640" width="620" height="160" as="geometry" />
+        </mxCell>
+
+        <!-- Cloud SQL -->
+        <mxCell id="cloudsql" value="Cloud SQL (Private IP Only)&#xa;&#xa;PostgreSQL 16&#xa;etude-rag2-db&#xa;&#xa;• pgvector (768-dim embeddings)&#xa;• pg_trgm (trigram search)&#xa;• Regional HA (prod)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="280" y="670" width="240" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Cloud Run Job -->
+        <mxCell id="cloudrun-job-group" value="Cloud Run Job (On-Demand)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="840" y="240" width="340" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ingester" value="etude-rag2-ingester&#xa;(Document Ingester)&#xa;&#xa;CPU: 2 / Mem: 2Gi&#xa;Timeout: 3600s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4285F4;strokeColor=#1a73e8;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="280" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="google-drive" value="Google Drive&#xa;(Source Documents)" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;fillColor=#4285F4;strokeColor=#1a73e8;rounded=1;html=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="420" width="100" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- GCP Managed Services -->
+        <mxCell id="managed-services" value="GCP Managed Services" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="840" y="560" width="680" height="260" as="geometry" />
+        </mxCell>
+
+        <mxCell id="vertex-ai" value="Vertex AI&#xa;&#xa;• text-embedding-004&#xa;  (768 dimensions)&#xa;• gemini-2.0-flash&#xa;• gemini-2.0-flash-lite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#34A853;strokeColor=#2d8e47;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="600" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="secret-manager" value="Secret Manager&#xa;&#xa;• db-password&#xa;• drive-folder-id&#xa;• my-email&#xa;• app-config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EA4335;strokeColor=#c5221f;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="600" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="artifact-registry" value="Artifact Registry&#xa;&#xa;• api-server image&#xa;• streamlit-ui image&#xa;• ingester image&#xa;• base images" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FBBC04;strokeColor=#e0a800;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="600" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cloud-build" value="Cloud Build&#xa;&#xa;• Kaniko builds&#xa;• E2_HIGHCPU_8&#xa;• Cache: 168h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4285F4;strokeColor=#1a73e8;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="880" y="720" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="iam" value="IAM&#xa;&#xa;• Service Accounts&#xa;• Workload Identity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4285F4;strokeColor=#1a73e8;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="720" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Data Flow Box -->
+        <mxCell id="dataflow-box" value="Data Flow Summary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="860" width="700" height="200" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dataflow-ingestion" value="[Document Ingestion]&#xa;Google Drive → Ingester → Vertex AI (Embed) → Cloud SQL (pgvector)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="900" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dataflow-query" value="[Query Processing]&#xa;User Query → API → Hybrid Search (Vector + Trigram) → BGE Reranker&#xa;         └→ Vertex AI (LLM) → Article Draft → User" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="950" width="500" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dataflow-cicd" value="[CI/CD]&#xa;GitHub → Cloud Build (Kaniko) → Artifact Registry → Cloud Run Deploy" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1010" width="500" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Connections -->
+        <!-- User to Streamlit -->
+        <mxCell id="conn-user-streamlit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6c8ebf;" edge="1" parent="1" source="user" target="streamlit-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-user-streamlit-label" value="HTTPS" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-user-streamlit">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Streamlit to API -->
+        <mxCell id="conn-streamlit-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#9673a6;" edge="1" parent="1" source="streamlit-service" target="api-service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-streamlit-api-label" value="HTTP" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-streamlit-api">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- GitHub to Cloud Build -->
+        <mxCell id="conn-github-build" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="github" target="cloud-build">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="390" y="180" />
+              <mxPoint x="700" y="180" />
+              <mxPoint x="700" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-github-build-label" value="OIDC / Workload Identity" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-github-build">
+          <mxGeometry x="-0.5" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- API to VPC Connector -->
+        <mxCell id="conn-api-vpc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1" source="api-service" target="vpc-connector">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- VPC Connector to Cloud SQL -->
+        <mxCell id="conn-vpc-sql" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#b85450;" edge="1" parent="1" source="vpc-connector" target="cloudsql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-vpc-sql-label" value="Private IP" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-vpc-sql">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- API to Vertex AI -->
+        <mxCell id="conn-api-vertex" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#2d8e47;dashed=1;" edge="1" parent="1" source="api-service" target="vertex-ai">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="460" />
+              <mxPoint x="800" y="460" />
+              <mxPoint x="800" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-api-vertex-label" value="Embeddings / LLM" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-api-vertex">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Ingester to Google Drive -->
+        <mxCell id="conn-ingester-drive" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#1a73e8;" edge="1" parent="1" source="ingester" target="google-drive">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn-ingester-drive-label" value="Drive API" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-ingester-drive">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Ingester to Vertex AI -->
+        <mxCell id="conn-ingester-vertex" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#2d8e47;dashed=1;" edge="1" parent="1" source="ingester" target="vertex-ai">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="330" />
+              <mxPoint x="1100" y="550" />
+              <mxPoint x="970" y="550" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-ingester-vertex-label" value="Embeddings" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-ingester-vertex">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Ingester to Cloud SQL (via VPC) -->
+        <mxCell id="conn-ingester-sql" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="ingester" target="cloudsql">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="330" />
+              <mxPoint x="820" y="730" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-ingester-sql-label" value="via VPC Connector" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-ingester-sql">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Cloud Build to Artifact Registry -->
+        <mxCell id="conn-build-registry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#e0a800;" edge="1" parent="1" source="cloud-build" target="artifact-registry">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="760" />
+              <mxPoint x="1250" y="760" />
+              <mxPoint x="1250" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn-build-registry-label" value="Push Images" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="conn-build-registry">
+          <mxGeometry x="-0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- API to Secret Manager -->
+        <mxCell id="conn-api-secrets" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#c5221f;dashed=1;" edge="1" parent="1" source="api-service" target="secret-manager">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="450" />
+              <mxPoint x="610" y="450" />
+              <mxPoint x="610" y="850" />
+              <mxPoint x="1170" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -384,6 +384,7 @@ class ArticleGenerationPipeline:
         input_material: str,
         progress_callback: Callable[[str], None] | None = None,
         reference_articles: list[Document] | None = None,
+        enable_quality_assurance: bool = True,
     ) -> ArticleDraft:
         """Generate a complete article draft with progress callbacks.
 
@@ -393,6 +394,7 @@ class ArticleGenerationPipeline:
                 Called with step name (str) after each step completes.
             reference_articles: Optional pre-fetched reference articles.
                 If None and retriever is configured, articles will be retrieved.
+            enable_quality_assurance: Whether to run quality assurance pipeline.
 
         Returns:
             ArticleDraft with all generated content.
@@ -410,6 +412,7 @@ class ArticleGenerationPipeline:
         # Step 2: Classify article type
         logger.info("Step 2: Classifying article type")
         classification = self.classifier.classify(parsed_input)
+        article_type = ArticleType(classification.article_type)
         emit_progress("classification")
 
         # Step 3: Retrieve reference articles if not provided
@@ -443,6 +446,24 @@ class ArticleGenerationPipeline:
             style_analysis,
             structure_analysis,
         )
+
+        # Set theme and desired_length from parsed input
+        draft.theme = parsed_input.theme
+        draft.desired_length = parsed_input.desired_length
+
+        # Step 7: Quality assurance pipeline (style check, rewrite, hallucination detection)
+        if enable_quality_assurance:
+            # Retrieve style profile for QA
+            style_profile = None
+            if settings.use_style_profile_kb:
+                logger.info("Step 7: Retrieving style profile for QA")
+                style_profile = self._get_style_retriever().retrieve_profile(article_type)
+
+            logger.info("Step 7: Running quality assurance pipeline")
+            draft = self._run_quality_assurance(
+                draft, parsed_input, style_analysis, style_profile, reference_articles
+            )
+
         emit_progress("content")
 
         return draft
@@ -588,6 +609,10 @@ class ArticleGenerationPipeline:
             style_analysis=style_analysis,
         )
         draft.consistency_score = style_check.consistency_score
+        logger.info(
+            f"  9.1: Style consistency score: {style_check.consistency_score:.1%}, "
+            f"style_profile: {'available' if style_profile else 'not available'}"
+        )
 
         # Step 9.2: Auto-rewrite if needed
         if settings.use_auto_rewrite and style_profile and style_check.consistency_score < 0.8:
@@ -660,6 +685,15 @@ class ArticleGenerationPipeline:
                 draft.metadata["rewrite_parse_error"] = str(e)
         else:
             draft.metadata["rewrite_applied"] = False
+            # Log why rewrite was skipped
+            if not settings.use_auto_rewrite:
+                logger.info("  9.2: Skipped (use_auto_rewrite disabled)")
+            elif not style_profile:
+                logger.info("  9.2: Skipped (no style profile available)")
+            else:
+                logger.info(
+                    f"  9.2: Skipped (consistency score {style_check.consistency_score:.1%} >= 80%)"
+                )
 
         # Step 9.3: Hallucination detection
         logger.info("  9.3: Detecting hallucinations")

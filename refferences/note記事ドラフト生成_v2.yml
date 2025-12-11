@@ -1,0 +1,3061 @@
+app:
+  description: "note記事ドラフト生成ワークフロー v2\n\n【v2の特徴】\n- 記事タイプ別ナレッジベース対応（4種類）\n  - アナウンスメント\n\
+    \  - イベントレポート\n  - インタビュー\n  - カルチャー\n- タイプに応じた最適な過去記事検索\n- 文体・構成の自動分析と模倣\n- ハルシネーション検知と[要確認]タグ挿入\n\
+    \n【対象】\n株式会社ギグー 採用広報note記事\n"
+  icon: 🤖
+  icon_background: '#DBEAFE'
+  mode: advanced-chat
+  name: note記事ドラフト生成_v2
+  use_icon_as_answer_icon: true
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openai:0.2.7@9031bbf9b37d9f6341a20c78a8bd18d686afd3ff627545496c3557705419d084
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/cohere:0.0.8@1456818eb78f25c1a25e91809cecbd78e5523d39868dcb78607e625913b5e4fe
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .TXT
+      - .MD
+      - .PDF
+      - .DOCX
+      allowed_file_types:
+      - document
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: true
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 5
+    opening_statement: 'こんにちは！株式会社ギグーのnote記事ドラフト生成AIです。
+
+
+      📝 対応している記事タイプ：
+
+      - アナウンスメント（お知らせ・リリース）
+
+      - イベントレポート（勉強会・イベント報告）
+
+      - インタビュー（社員インタビュー）
+
+      - カルチャー（企業文化・制度紹介）
+
+
+      以下の情報を入力してください：
+
+      - 記事のテーマ・主旨
+
+      - 箇条書きのメモ
+
+      - インタビュー内容（該当する場合）
+
+      - 関連データや数値
+
+      - その他の参考情報
+
+      '
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 新入社員のインタビュー記事を書きたい
+    - 社内勉強会のレポートを作成したい
+    - リモートワーク制度について紹介したい
+    - 新サービスリリースのお知らせを書きたい
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start-to-input-parser
+      source: node_start
+      sourceHandle: source
+      target: node_input_parser
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: input-parser-to-classifier
+      source: node_input_parser
+      sourceHandle: source
+      target: node_article_classifier
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: if-else
+      id: classifier-to-type-router
+      source: node_article_classifier
+      sourceHandle: source
+      target: node_type_router
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-query-announcement
+      source: node_type_router
+      sourceHandle: announcement
+      target: node_query_gen_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: iteration
+      id: query-to-search-announcement
+      source: node_query_gen_announcement
+      sourceHandle: source
+      target: node_search_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_announcement
+        sourceType: iteration-start
+        targetType: knowledge-retrieval
+      id: iter-start-to-kb-announcement
+      source: node_search_announcement_start
+      sourceHandle: source
+      target: node_kb_announcement
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: search-announcement-to-merger
+      source: node_search_announcement
+      sourceHandle: source
+      target: node_result_merger
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-query-event
+      source: node_type_router
+      sourceHandle: event_report
+      target: node_query_gen_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: iteration
+      id: query-to-search-event
+      source: node_query_gen_event
+      sourceHandle: source
+      target: node_search_event
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_event
+        sourceType: iteration-start
+        targetType: knowledge-retrieval
+      id: iter-start-to-kb-event
+      source: node_search_event_start
+      sourceHandle: source
+      target: node_kb_event
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: search-event-to-merger
+      source: node_search_event
+      sourceHandle: source
+      target: node_result_merger
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-query-interview
+      source: node_type_router
+      sourceHandle: interview
+      target: node_query_gen_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: iteration
+      id: query-to-search-interview
+      source: node_query_gen_interview
+      sourceHandle: source
+      target: node_search_interview
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_interview
+        sourceType: iteration-start
+        targetType: knowledge-retrieval
+      id: iter-start-to-kb-interview
+      source: node_search_interview_start
+      sourceHandle: source
+      target: node_kb_interview
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: search-interview-to-merger
+      source: node_search_interview
+      sourceHandle: source
+      target: node_result_merger
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: router-to-query-culture
+      source: node_type_router
+      sourceHandle: culture
+      target: node_query_gen_culture
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: iteration
+      id: query-to-search-culture
+      source: node_query_gen_culture
+      sourceHandle: source
+      target: node_search_culture
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_culture
+        sourceType: iteration-start
+        targetType: knowledge-retrieval
+      id: iter-start-to-kb-culture
+      source: node_search_culture_start
+      sourceHandle: source
+      target: node_kb_culture
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: search-culture-to-merger
+      source: node_search_culture
+      sourceHandle: source
+      target: node_result_merger
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: result-merger-to-reranker
+      source: node_result_merger
+      sourceHandle: source
+      target: node_reranker
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: reranker-to-style-analyzer
+      source: node_reranker
+      sourceHandle: source
+      target: node_style_analyzer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: reranker-to-structure-analyzer
+      source: node_reranker
+      sourceHandle: source
+      target: node_structure_analyzer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: style-analyzer-to-outline
+      source: node_style_analyzer
+      sourceHandle: source
+      target: node_outline_generator
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: structure-analyzer-to-outline
+      source: node_structure_analyzer
+      sourceHandle: source
+      target: node_outline_generator
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: outline-to-title
+      source: node_outline_generator
+      sourceHandle: source
+      target: node_title_generator
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: outline-to-lead
+      source: node_outline_generator
+      sourceHandle: source
+      target: node_lead_generator
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: iteration
+      id: outline-to-body-iteration
+      source: node_outline_generator
+      sourceHandle: source
+      target: node_body_iteration
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_body_iteration
+        sourceType: iteration-start
+        targetType: llm
+      id: body-iter-start-to-section
+      source: node_body_iteration_start
+      sourceHandle: source
+      target: node_section_generator
+      targetHandle: target
+      type: custom
+      zIndex: 1002
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: title-to-draft-assembler
+      source: node_title_generator
+      sourceHandle: source
+      target: node_draft_assembler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: lead-to-draft-assembler
+      source: node_lead_generator
+      sourceHandle: source
+      target: node_draft_assembler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: iteration
+        targetType: code
+      id: body-iteration-to-draft-assembler
+      source: node_body_iteration
+      sourceHandle: source
+      target: node_draft_assembler
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: llm
+      id: draft-assembler-to-closing
+      source: node_draft_assembler
+      sourceHandle: source
+      target: node_closing_generator
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: closing-to-style-checker
+      source: node_closing_generator
+      sourceHandle: source
+      target: node_style_checker
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: style-checker-to-hallucination
+      source: node_style_checker
+      sourceHandle: source
+      target: node_hallucination_detector
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: hallucination-to-tag-inserter
+      source: node_hallucination_detector
+      sourceHandle: source
+      target: node_tag_inserter
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: code
+      id: tag-inserter-to-formatter
+      source: node_tag_inserter
+      sourceHandle: source
+      target: node_draft_formatter
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: answer
+      id: formatter-to-answer
+      source: node_draft_formatter
+      sourceHandle: source
+      target: node_answer_output
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ユーザーから記事素材を受け取る開始ノード
+        selected: false
+        title: 素材入力
+        type: start
+        variables: []
+      height: 117
+      id: node_start
+      position:
+        x: 0
+        y: 500
+      positionAbsolute:
+        x: 0
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '整理されていない入力素材を構造化データに変換します。
+
+          テーマ、キーポイント、インタビュー引用、数値データなどを抽出。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-input-parser
+          role: system
+          text: 'あなたは入力素材を構造化するエキスパートです。
+
+
+            ## タスク
+
+            ユーザーから提供された記事素材を分析し、構造化データに変換してください。
+
+
+            ## 抽出項目
+
+            1. theme: 記事のテーマ・主旨（1文で要約）
+
+            2. key_points: 記事に含めるべき重要ポイント（箇条書きから抽出）
+
+            3. interview_quotes: インタビュー内容（そのまま引用可能な発言）
+
+            4. data_facts: 具体的な数値やデータ
+
+            5. people: 登場人物（名前、役職）
+
+            6. keywords: 検索に使えるキーワード（5-10個）
+
+            7. missing_info: 記事作成に不足していそうな情報
+
+
+            ## ルール
+
+            - 入力にない情報は推測しない
+
+            - 曖昧な表現はそのまま保持
+
+            - 数値や固有名詞は正確に抽出
+
+            '
+        - id: user-input
+          role: user
+          text: '## 入力素材
+
+            {{#sys.query#}}
+
+
+            上記の素材を構造化してください。
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            $schema: http://json-schema.org/draft-07/schema#
+            additionalProperties: false
+            properties:
+              data_facts:
+                description: 具体的な数値やデータ
+                items:
+                  type: string
+                type: array
+              interview_quotes:
+                description: 引用可能なインタビュー発言
+                items:
+                  properties:
+                    quote:
+                      type: string
+                    speaker:
+                      type: string
+                  type: object
+                type: array
+              key_points:
+                description: 記事に含めるべき重要ポイント
+                items:
+                  type: string
+                type: array
+              keywords:
+                description: 検索用キーワード
+                items:
+                  type: string
+                type: array
+              missing_info:
+                description: 不足している情報
+                items:
+                  type: string
+                type: array
+              people:
+                description: 登場人物
+                items:
+                  properties:
+                    name:
+                      type: string
+                    role:
+                      type: string
+                  type: object
+                type: array
+              theme:
+                description: 記事のテーマ・主旨
+                type: string
+            required:
+            - theme
+            - key_points
+            - keywords
+            type: object
+        structured_output_enabled: true
+        title: 素材構造化
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_input_parser
+      position:
+        x: 342
+        y: 460
+      positionAbsolute:
+        x: 342
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '記事の種類を4カテゴリに分類します。
+
+          アナウンスメント、イベントレポート、インタビュー、カルチャー。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-classifier
+          role: system
+          text: "あなたは記事タイプを分類する専門家です。\n\n## タスク\n構造化された素材から、作成すべき記事のタイプを判定してください。\n\
+            \n## 記事タイプ（4種類）\n\n1. ANNOUNCEMENT（アナウンスメント）\n   - 新サービス、新機能のリリース告知\n\
+            \   - 会社からの重要なお知らせ\n   - プレスリリース的な内容\n   - キーワード: リリース、お知らせ、開始、発表、ローンチ\n\
+            \n2. EVENT_REPORT（イベントレポート）\n   - 社内勉強会の報告\n   - 外部イベント参加レポート\n   - ワークショップ、セミナーの振り返り\n\
+            \   - キーワード: 勉強会、イベント、セミナー、参加、開催、LT\n\n3. INTERVIEW（インタビュー）\n   - 社員インタビュー\n\
+            \   - 入社エントリ、退職エントリ\n   - 特定の人物にフォーカスした記事\n   - キーワード: インタビュー、入社、〇〇さん、働き方、キャリア\n\
+            \n4. CULTURE（カルチャー）\n   - 企業文化、価値観の紹介\n   - 制度紹介（リモートワーク、福利厚生など）\n   -\
+            \ チーム・組織の紹介\n   - キーワード: 制度、文化、働き方、チーム、環境、福利厚生\n\n## 素材情報\nテーマ: {{#node_input_parser.structured_output.theme#}}\n\
+            キーポイント: {{#node_input_parser.structured_output.key_points#}}\n登場人物: {{#node_input_parser.structured_output.people#}}\n\
+            キーワード: {{#node_input_parser.structured_output.keywords#}}\n\n## 判定ルール\n\
+            - 迷った場合は素材の主目的で判定\n- 複合的な場合は最も強い要素で判定\n"
+        - id: user-input-classifier
+          role: user
+          text: '上記の素材から記事タイプを判定してください。
+
+            '
+        selected: false
+        structured_output:
+          schema:
+            $schema: http://json-schema.org/draft-07/schema#
+            additionalProperties: false
+            properties:
+              article_type:
+                enum:
+                - ANNOUNCEMENT
+                - EVENT_REPORT
+                - INTERVIEW
+                - CULTURE
+                type: string
+              article_type_ja:
+                description: 日本語での記事タイプ名
+                enum:
+                - アナウンスメント
+                - イベントレポート
+                - インタビュー
+                - カルチャー
+                type: string
+              confidence:
+                maximum: 1
+                minimum: 0
+                type: number
+              reason:
+                description: 判定理由
+                type: string
+              suggested_headings:
+                description: 推奨される見出し構成
+                items:
+                  type: string
+                maxItems: 4
+                minItems: 2
+                type: array
+            required:
+            - article_type
+            - article_type_ja
+            - confidence
+            - suggested_headings
+            type: object
+        structured_output_enabled: true
+        title: 記事タイプ分類
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_article_classifier
+      position:
+        x: 684
+        y: 460
+      positionAbsolute:
+        x: 684
+        y: 460
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: announcement
+          conditions:
+          - comparison_operator: is
+            id: condition-announcement
+            value: ANNOUNCEMENT
+            varType: string
+            variable_selector:
+            - node_article_classifier
+            - structured_output
+            - article_type
+          id: announcement
+          logical_operator: and
+        - case_id: event_report
+          conditions:
+          - comparison_operator: is
+            id: condition-event
+            value: EVENT_REPORT
+            varType: string
+            variable_selector:
+            - node_article_classifier
+            - structured_output
+            - article_type
+          id: event_report
+          logical_operator: and
+        - case_id: interview
+          conditions:
+          - comparison_operator: is
+            id: condition-interview
+            value: INTERVIEW
+            varType: string
+            variable_selector:
+            - node_article_classifier
+            - structured_output
+            - article_type
+          id: interview
+          logical_operator: and
+        - case_id: culture
+          conditions:
+          - comparison_operator: is
+            id: condition-culture
+            value: CULTURE
+            varType: string
+            variable_selector:
+            - node_article_classifier
+            - structured_output
+            - article_type
+          id: culture
+          logical_operator: and
+        desc: 記事タイプに応じて適切なナレッジベースへ振り分けます
+        selected: false
+        title: タイプ別分岐
+        type: if-else
+      height: 312
+      id: node_type_router
+      position:
+        x: 1026
+        y: 395
+      positionAbsolute:
+        x: 1026
+        y: 395
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: アナウンスメント記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-announcement
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            アナウンスメント（お知らせ・リリース）記事を検索するためのクエリを生成してください。
+
+
+            ## 入力情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーワード: {{#node_input_parser.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - テーマに関連するクエリ（2-3個）
+
+            - アナウンスメント記事の構成参考用クエリ（1-2個）
+
+            - 文体参考用クエリ（1個）
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-announcement
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              queries:
+                items:
+                  type: string
+                maxItems: 6
+                minItems: 3
+                type: array
+            required:
+            - queries
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（アナウンスメント）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_announcement
+      position:
+        x: 1368
+        y: 0
+      positionAbsolute:
+        x: 1368
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: アナウンスメント記事の並列検索
+        error_handle_mode: terminated
+        flatten_output: true
+        height: 280
+        is_parallel: true
+        iterator_input_type: string
+        iterator_selector:
+        - node_query_gen_announcement
+        - structured_output
+        - queries
+        output_selector:
+        - node_kb_announcement
+        - result
+        output_type: array[object]
+        parallel_nums: 3
+        selected: false
+        start_node_id: node_search_announcement_start
+        title: 検索（アナウンスメント）
+        type: iteration
+        width: 450
+      height: 280
+      id: node_search_announcement
+      position:
+        x: 1710
+        y: -60
+      positionAbsolute:
+        x: 1710
+        y: -60
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 450
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: node_search_announcement_start
+      parentId: node_search_announcement
+      position:
+        x: 60
+        y: 116
+      positionAbsolute:
+        x: 1770
+        y: 56
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        dataset_ids:
+        - T9oOmTCouVy8CThEzkHls5iSYnjKkW5BZ/+rXS8fTROcleRe6epxYyK7S3W0gBEf
+        desc: アナウンスメント記事ナレッジベース
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_announcement
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_search_announcement
+        - item
+        retrieval_mode: multiple
+        selected: false
+        title: KB（アナウンスメント）
+        type: knowledge-retrieval
+      height: 118
+      id: node_kb_announcement
+      parentId: node_search_announcement
+      position:
+        x: 164
+        y: 60
+      positionAbsolute:
+        x: 1874
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: イベントレポート記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-event
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            イベントレポート（勉強会・イベント報告）記事を検索するためのクエリを生成してください。
+
+
+            ## 入力情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーワード: {{#node_input_parser.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - テーマに関連するクエリ（2-3個）
+
+            - イベントレポートの構成参考用クエリ（1-2個）
+
+            - 文体参考用クエリ（1個）
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-event
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              queries:
+                items:
+                  type: string
+                maxItems: 6
+                minItems: 3
+                type: array
+            required:
+            - queries
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（イベントレポート）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_event
+      position:
+        x: 1368
+        y: 280
+      positionAbsolute:
+        x: 1368
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: イベントレポート記事の並列検索
+        error_handle_mode: terminated
+        flatten_output: true
+        height: 280
+        is_parallel: true
+        iterator_input_type: string
+        iterator_selector:
+        - node_query_gen_event
+        - structured_output
+        - queries
+        output_selector:
+        - node_kb_event
+        - result
+        output_type: array[object]
+        parallel_nums: 3
+        selected: false
+        start_node_id: node_search_event_start
+        title: 検索（イベントレポート）
+        type: iteration
+        width: 450
+      height: 280
+      id: node_search_event
+      position:
+        x: 1710
+        y: 220
+      positionAbsolute:
+        x: 1710
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 450
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: node_search_event_start
+      parentId: node_search_event
+      position:
+        x: 60
+        y: 116
+      positionAbsolute:
+        x: 1770
+        y: 336
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        dataset_ids:
+        - 8koU71fMg7GwsyBwW8VT2zZnGk/B+q1OWPD/Kc6gODCKMOMjZWrDMg8IldBABGcr
+        desc: イベントレポート記事ナレッジベース
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_event
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_search_event
+        - item
+        retrieval_mode: multiple
+        selected: false
+        title: KB（イベントレポート）
+        type: knowledge-retrieval
+      height: 118
+      id: node_kb_event
+      parentId: node_search_event
+      position:
+        x: 164
+        y: 60
+      positionAbsolute:
+        x: 1874
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: インタビュー記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-interview
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            インタビュー（社員インタビュー）記事を検索するためのクエリを生成してください。
+
+
+            ## 入力情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーワード: {{#node_input_parser.structured_output.keywords#}}
+
+            登場人物: {{#node_input_parser.structured_output.people#}}
+
+
+            ## クエリ生成ルール
+
+            - テーマに関連するクエリ（2-3個）
+
+            - インタビュー記事の構成参考用クエリ（1-2個）
+
+            - 文体参考用クエリ（1個）
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-interview
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              queries:
+                items:
+                  type: string
+                maxItems: 6
+                minItems: 3
+                type: array
+            required:
+            - queries
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（インタビュー）
+        type: llm
+        vision:
+          enabled: false
+      height: 132
+      id: node_query_gen_interview
+      position:
+        x: 1368
+        y: 560
+      positionAbsolute:
+        x: 1368
+        y: 560
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: インタビュー記事の並列検索
+        error_handle_mode: terminated
+        flatten_output: true
+        height: 280
+        is_parallel: true
+        iterator_input_type: string
+        iterator_selector:
+        - node_query_gen_interview
+        - structured_output
+        - queries
+        output_selector:
+        - node_kb_interview
+        - result
+        output_type: array[object]
+        parallel_nums: 3
+        selected: false
+        start_node_id: node_search_interview_start
+        title: 検索（インタビュー）
+        type: iteration
+        width: 450
+      height: 280
+      id: node_search_interview
+      position:
+        x: 1710
+        y: 500
+      positionAbsolute:
+        x: 1710
+        y: 500
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 450
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: node_search_interview_start
+      parentId: node_search_interview
+      position:
+        x: 60
+        y: 116
+      positionAbsolute:
+        x: 1770
+        y: 616
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        dataset_ids:
+        - MJ76sox5qOIVoWvQkEQW5eMwMFGMpvqO/A/0OUFacUz/lC0Pal/u6QAnqcmgkksm
+        desc: インタビュー記事ナレッジベース
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_interview
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_search_interview
+        - item
+        retrieval_mode: multiple
+        selected: false
+        title: KB（インタビュー）
+        type: knowledge-retrieval
+      height: 118
+      id: node_kb_interview
+      parentId: node_search_interview
+      position:
+        x: 164
+        y: 60
+      positionAbsolute:
+        x: 1874
+        y: 560
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: カルチャー記事用の検索クエリを生成
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-query-culture
+          role: system
+          text: 'あなたは検索クエリを最適化する専門家です。
+
+
+            ## タスク
+
+            カルチャー（企業文化・制度紹介）記事を検索するためのクエリを生成してください。
+
+
+            ## 入力情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーワード: {{#node_input_parser.structured_output.keywords#}}
+
+
+            ## クエリ生成ルール
+
+            - テーマに関連するクエリ（2-3個）
+
+            - カルチャー記事の構成参考用クエリ（1-2個）
+
+            - 文体参考用クエリ（1個）
+
+            - 各クエリは簡潔に（1-6単語）
+
+            '
+        - id: user-query-culture
+          role: user
+          text: 検索クエリを生成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              queries:
+                items:
+                  type: string
+                maxItems: 6
+                minItems: 3
+                type: array
+            required:
+            - queries
+            type: object
+        structured_output_enabled: true
+        title: クエリ生成（カルチャー）
+        type: llm
+        vision:
+          enabled: false
+      height: 116
+      id: node_query_gen_culture
+      position:
+        x: 1368
+        y: 840
+      positionAbsolute:
+        x: 1368
+        y: 840
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: カルチャー記事の並列検索
+        error_handle_mode: terminated
+        flatten_output: true
+        height: 280
+        is_parallel: true
+        iterator_input_type: string
+        iterator_selector:
+        - node_query_gen_culture
+        - structured_output
+        - queries
+        output_selector:
+        - node_kb_culture
+        - result
+        output_type: array[object]
+        parallel_nums: 3
+        selected: false
+        start_node_id: node_search_culture_start
+        title: 検索（カルチャー）
+        type: iteration
+        width: 450
+      height: 280
+      id: node_search_culture
+      position:
+        x: 1710
+        y: 780
+      positionAbsolute:
+        x: 1710
+        y: 780
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 450
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: node_search_culture_start
+      parentId: node_search_culture
+      position:
+        x: 60
+        y: 116
+      positionAbsolute:
+        x: 1770
+        y: 896
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        dataset_ids:
+        - cplMlK4lzAxWZxD5Az986vMJ6WEgnZzPm3VL83K+k3qdse77MR5k7axgMjyFJCpv
+        desc: カルチャー記事ナレッジベース
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_search_culture
+        multiple_retrieval_config:
+          reranking_enable: true
+          reranking_mode: reranking_model
+          reranking_model:
+            model: rerank-multilingual-v3.0
+            provider: langgenius/cohere/cohere
+          score_threshold: 0.2
+          top_k: 5
+          weights:
+            keyword_setting:
+              keyword_weight: 0.3
+            vector_setting:
+              embedding_model_name: text-embedding-3-large
+              embedding_provider_name: langgenius/openai/openai
+              vector_weight: 0.7
+            weight_type: customized
+        query_variable_selector:
+        - node_search_culture
+        - item
+        retrieval_mode: multiple
+        selected: false
+        title: KB（カルチャー）
+        type: knowledge-retrieval
+      height: 118
+      id: node_kb_culture
+      parentId: node_search_culture
+      position:
+        x: 164
+        y: 60
+      positionAbsolute:
+        x: 1874
+        y: 840
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "function main({ \n    announcement_results, \n    event_results, \n\
+          \    interview_results, \n    culture_results,\n    article_type\n}) {\n\
+          \    try {\n        let allResults = [];\n        \n        // 各タイプの結果を統合（分岐により1つだけに結果が入る）\n\
+          \        const resultSets = [\n            announcement_results,\n     \
+          \       event_results,\n            interview_results,\n            culture_results\n\
+          \        ];\n        \n        for (const resultSet of resultSets) {\n \
+          \           if (Array.isArray(resultSet)) {\n                for (const\
+          \ item of resultSet) {\n                    if (Array.isArray(item)) {\n\
+          \                        allResults = allResults.concat(item);\n       \
+          \             } else if (item && typeof item === 'object') {\n         \
+          \               allResults.push(item);\n                    }\n        \
+          \        }\n            }\n        }\n        \n        // スコア取得ヘルパー\n \
+          \       const getScore = (item) => {\n            if (!item) return 0;\n\
+          \            if (typeof item.score === 'number') return item.score;\n  \
+          \          if (item.metadata && typeof item.metadata.score === 'number')\
+          \ {\n                return item.metadata.score;\n            }\n      \
+          \      return 0;\n        };\n        \n        // コンテンツハッシュ（重複判定用）\n  \
+          \      const getContentHash = (content) => {\n            if (!content)\
+          \ return '';\n            return content.replace(/\\s+/g, '').toLowerCase().substring(0,\
+          \ 200);\n        };\n        \n        // 重複排除\n        const seen = new\
+          \ Set();\n        const uniqueResults = [];\n        \n        for (const\
+          \ item of allResults) {\n            if (item && item.content) {\n     \
+          \           const hash = getContentHash(item.content);\n               \
+          \ if (!seen.has(hash)) {\n                    seen.add(hash);\n        \
+          \            uniqueResults.push({\n                        ...item,\n  \
+          \                      _score: getScore(item)\n                    });\n\
+          \                }\n            }\n        }\n        \n        // スコア順ソート\n\
+          \        uniqueResults.sort((a, b) => b._score - a._score);\n        \n\
+          \        // 上位10件\n        const topResults = uniqueResults.slice(0, 10);\n\
+          \        \n        // コンテキストテキスト生成\n        const contextText = topResults.map((item,\
+          \ index) => {\n            const title = item.title || item.metadata?.document_name\
+          \ || `記事${index + 1}`;\n            const content = item.content || '';\n\
+          \            return `【${index + 1}. ${title}】\\n${content}`;\n        }).join('\\\
+          n\\n---\\n\\n');\n        \n        return {\n            merged_results:\
+          \ topResults,\n            result_count: topResults.length,\n          \
+          \  context_text: contextText,\n            has_results: topResults.length\
+          \ > 0,\n            searched_type: article_type || 'UNKNOWN'\n        };\n\
+          \    } catch (e) {\n        return {\n            merged_results: [],\n\
+          \            result_count: 0,\n            context_text: \"検索結果の処理中にエラーが発生しました:\
+          \ \" + e.message,\n            has_results: false,\n            searched_type:\
+          \ 'ERROR'\n        };\n    }\n}\n"
+        code_language: javascript
+        desc: 4つの検索パスからの結果を統合（実際には分岐により1つだけに結果が入る）
+        outputs:
+          context_text:
+            children: null
+            type: string
+          has_results:
+            children: null
+            type: boolean
+          merged_results:
+            children: null
+            type: array[object]
+          result_count:
+            children: null
+            type: number
+          searched_type:
+            children: null
+            type: string
+        selected: false
+        title: 結果統合
+        type: code
+        variables:
+        - value_selector:
+          - node_search_announcement
+          - output
+          value_type: array[object]
+          variable: announcement_results
+        - value_selector:
+          - node_search_event
+          - output
+          value_type: array[object]
+          variable: event_results
+        - value_selector:
+          - node_search_interview
+          - output
+          value_type: array[object]
+          variable: interview_results
+        - value_selector:
+          - node_search_culture
+          - output
+          value_type: array[object]
+          variable: culture_results
+        - value_selector:
+          - node_article_classifier
+          - structured_output
+          - article_type
+          value_type: string
+          variable: article_type
+      height: 96
+      id: node_result_merger
+      position:
+        x: 2260
+        y: 452
+      positionAbsolute:
+        x: 2260
+        y: 452
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '今回の記事作成に最も参考になる過去記事を選定。
+
+          テーマ関連、構成参考、文体参考の観点で上位5記事を選択。
+
+          '
+        model:
+          completion_params:
+            temperature: 0
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-reranker
+          role: system
+          text: 'あなたは記事執筆のための参考資料を選定する専門家です。
+
+
+            ## タスク
+
+            検索結果から、今回の記事作成に最も参考になる過去記事を5つ選定してください。
+
+
+            ## 今回の記事情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            記事タイプ: {{#node_article_classifier.structured_output.article_type_ja#}}
+
+
+            ## 検索結果
+
+            {{#node_result_merger.context_text#}}
+
+
+            ## 選定基準
+
+            1. テーマ関連（2記事）: 今回のテーマに類似した内容
+
+            2. 構成参考（2記事）: 同じ記事タイプで参考になる構成
+
+            3. 文体参考（1記事）: 最新の文体スタイルがわかる記事
+
+
+            ## 出力形式
+
+            選定した5記事の内容を、番号付きで出力してください。
+
+            各記事について「選定理由」を1文で記載。
+
+            '
+        selected: false
+        title: 参考記事選定
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_reranker
+      position:
+        x: 2602
+        y: 420
+      positionAbsolute:
+        x: 2602
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '過去記事から文体の特徴を抽出します。
+
+          語尾パターン、トーン、特徴的なフレーズなど。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-style
+          role: system
+          text: 'あなたは文章スタイルを分析する専門家です。
+
+
+            ## タスク
+
+            以下の過去記事から、株式会社ギグーのnote記事の文体特徴を抽出してください。
+
+
+            ## 記事タイプ
+
+            {{#node_article_classifier.structured_output.article_type_ja#}}
+
+
+            ## 過去記事
+
+            {{#node_reranker.text#}}
+
+
+            ## 分析項目
+
+            1. sentence_endings: よく使われる語尾パターン（例: 「〜ですね」「〜なんです」）
+
+            2. tone: 全体的なトーン（カジュアル/フォーマル/その中間）
+
+            3. first_person: 使われている一人称（私/僕/筆者など）
+
+            4. reader_address: 読者への呼びかけ方
+
+            5. paragraph_style: 段落の長さや区切り方の傾向
+
+            6. emoji_usage: 絵文字の使用有無と頻度
+
+            7. characteristic_phrases: 特徴的なフレーズや言い回し（5-10個）
+
+
+            ## ルール
+
+            - 具体例を挙げて説明
+
+            - 記事タイプに特有のスタイルがあれば明記
+
+            - 複数の記事に共通するパターンを優先
+
+            '
+        - id: user-style
+          role: user
+          text: 上記の過去記事から文体特徴を抽出してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              characteristic_phrases:
+                description: 特徴的フレーズ
+                items:
+                  type: string
+                type: array
+              emoji_usage:
+                description: 絵文字使用
+                type: string
+              first_person:
+                description: 一人称
+                type: string
+              paragraph_style:
+                description: 段落スタイル
+                type: string
+              reader_address:
+                description: 読者への呼びかけ方
+                type: string
+              sentence_endings:
+                description: 語尾パターン
+                items:
+                  type: string
+                type: array
+              tone:
+                description: 全体的なトーン
+                type: string
+            required:
+            - sentence_endings
+            - tone
+            - characteristic_phrases
+            type: object
+        structured_output_enabled: true
+        title: 文体分析
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_style_analyzer
+      position:
+        x: 2944
+        y: 280
+      positionAbsolute:
+        x: 2944
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '同タイプの過去記事から構成パターンを分析。
+
+          見出し構成、リード文パターン、締めパターンなど。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-structure
+          role: system
+          text: 'あなたは記事構成を分析する専門家です。
+
+
+            ## タスク
+
+            以下の過去記事から、記事の構成パターンを分析してください。
+
+
+            ## 今回の記事タイプ
+
+            {{#node_article_classifier.structured_output.article_type_ja#}}
+
+
+            ## 過去記事
+
+            {{#node_reranker.text#}}
+
+
+            ## 分析項目
+
+            1. typical_headings: よく使われる見出しパターン
+
+            2. intro_pattern: リード文の書き方パターン
+
+            3. section_flow: セクションの流れ（導入→展開→まとめ等）
+
+            4. closing_pattern: 締めの文章パターン
+
+            5. average_length: 平均的な文字数の目安
+
+
+            ## 記事タイプ別の特徴
+
+            - アナウンスメント: 結論先行、簡潔、リンク誘導
+
+            - イベントレポート: 時系列、参加者の声、学び
+
+            - インタビュー: Q&A形式、人物描写、ストーリー
+
+            - カルチャー: 制度説明、具体例、メリット
+
+            '
+        - id: user-structure
+          role: user
+          text: 上記から構成パターンを分析してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              average_length:
+                type: string
+              closing_pattern:
+                type: string
+              intro_pattern:
+                type: string
+              section_flow:
+                type: string
+              typical_headings:
+                items:
+                  type: string
+                type: array
+            required:
+            - typical_headings
+            - intro_pattern
+            - closing_pattern
+            type: object
+        structured_output_enabled: true
+        title: 構成分析
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_structure_analyzer
+      position:
+        x: 2944
+        y: 540
+      positionAbsolute:
+        x: 2944
+        y: 540
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '記事のアウトライン（骨子）を生成。
+
+          見出し構成と各セクションの概要を決定。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-outline
+          role: system
+          text: 'あなたは記事構成の専門家です。
+
+
+            ## タスク
+
+            以下の情報をもとに、記事のアウトライン（骨子）を作成してください。
+
+
+            ## 記事情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            記事タイプ: {{#node_article_classifier.structured_output.article_type_ja#}}
+
+            キーポイント: {{#node_input_parser.structured_output.key_points#}}
+
+            インタビュー引用: {{#node_input_parser.structured_output.interview_quotes#}}
+
+
+            ## 構成パターン（過去記事分析結果）
+
+            典型的な見出し: {{#node_structure_analyzer.structured_output.typical_headings#}}
+
+            セクションの流れ: {{#node_structure_analyzer.structured_output.section_flow#}}
+
+
+            ## 記事タイプ別ガイドライン
+
+            - アナウンスメント: 概要→詳細→今後の展開→CTA
+
+            - イベントレポート: 導入→イベント概要→学び・気づき→まとめ
+
+            - インタビュー: 人物紹介→きっかけ→現在の仕事→今後の展望
+
+            - カルチャー: 制度紹介→具体的な運用→社員の声→まとめ
+
+
+            ## 制約
+
+            - 見出しは2〜4個
+
+            - 全体で1,500字程度を想定
+
+            - 各見出しに対して、その下に書く内容の概要を記載
+
+            '
+        - id: user-outline
+          role: user
+          text: アウトラインを作成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              headings:
+                items:
+                  properties:
+                    key_content:
+                      description: 含めるべき素材からの情報
+                      items:
+                        type: string
+                      type: array
+                    summary:
+                      description: このセクションで書く内容の概要
+                      type: string
+                    target_length:
+                      description: 目標文字数
+                      type: number
+                    title:
+                      description: 見出しテキスト
+                      type: string
+                  type: object
+                maxItems: 4
+                minItems: 2
+                type: array
+              total_target_length:
+                description: 本文全体の目標文字数
+                type: number
+            required:
+            - headings
+            - total_target_length
+            type: object
+        structured_output_enabled: true
+        title: アウトライン生成
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_outline_generator
+      position:
+        x: 3286
+        y: 410
+      positionAbsolute:
+        x: 3286
+        y: 410
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '過去記事のタイトルパターンを参考に3案生成。
+
+          クリック率を意識した魅力的なタイトル。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-title
+          role: system
+          text: 'あなたはnote記事のタイトルを考える専門家です。
+
+
+            ## タスク
+
+            以下の情報をもとに、魅力的なタイトル案を3つ作成してください。
+
+
+            ## 記事情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            記事タイプ: {{#node_article_classifier.structured_output.article_type_ja#}}
+
+            アウトライン: {{#node_outline_generator.structured_output.headings#}}
+
+
+            ## 過去記事の参考情報
+
+            {{#node_reranker.text#}}
+
+
+            ## 記事タイプ別タイトル傾向
+
+            - アナウンスメント: 「〇〇をリリースしました」「〇〇のお知らせ」
+
+            - イベントレポート: 「〇〇勉強会レポート」「〇〇に参加してきました」
+
+            - インタビュー: 「〇〇さんに聞いてみた」「入社N年目の本音」
+
+            - カルチャー: 「ギグーの〇〇制度を紹介」「こんな働き方しています」
+
+
+            ## タイトル作成のポイント
+
+            - ターゲット読者: 転職を検討しているエンジニア
+
+            - 目的: 採用広報、企業文化の紹介
+
+            - 株式会社ギグーらしさを出す
+
+            - クリックしたくなる魅力的な表現
+
+            - 30文字前後を目安
+
+            '
+        - id: user-title
+          role: user
+          text: タイトル案を3つ作成してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              titles:
+                items:
+                  type: string
+                maxItems: 3
+                minItems: 3
+                type: array
+            required:
+            - titles
+            type: object
+        structured_output_enabled: true
+        title: タイトル生成
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_title_generator
+      position:
+        x: 3628
+        y: 220
+      positionAbsolute:
+        x: 3628
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '記事の冒頭を飾るリード文を生成。
+
+          100〜150字で記事の内容を魅力的に紹介。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-lead
+          role: system
+          text: 'あなたは株式会社ギグーのnote記事ライターです。
+
+
+            ## タスク
+
+            記事の冒頭を飾るリード文を作成してください。
+
+
+            ## 記事情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            記事タイプ: {{#node_article_classifier.structured_output.article_type_ja#}}
+
+            アウトライン: {{#node_outline_generator.structured_output.headings#}}
+
+
+            ## 文体ガイド
+
+            トーン: {{#node_style_analyzer.structured_output.tone#}}
+
+            語尾パターン: {{#node_style_analyzer.structured_output.sentence_endings#}}
+
+            特徴的フレーズ: {{#node_style_analyzer.structured_output.characteristic_phrases#}}
+
+
+            ## 過去記事のリード文パターン
+
+            {{#node_structure_analyzer.structured_output.intro_pattern#}}
+
+
+            ## 制約
+
+            - 100〜150字
+
+            - 記事を読みたくなる魅力的な書き出し
+
+            - 文体ガイドに従う
+
+            - ターゲット読者（転職検討中のエンジニア）を意識
+
+            '
+        - id: user-lead
+          role: user
+          text: リード文を作成してください。
+        selected: false
+        title: リード文生成
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_lead_generator
+      position:
+        x: 3628
+        y: 440
+      positionAbsolute:
+        x: 3628
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 各見出しに対して本文を順次生成
+        error_handle_mode: terminated
+        flatten_output: false
+        height: 350
+        is_parallel: false
+        iterator_input_type: object
+        iterator_selector:
+        - node_outline_generator
+        - structured_output
+        - headings
+        output_selector:
+        - node_section_generator
+        - text
+        output_type: array[string]
+        parallel_nums: 1
+        selected: false
+        start_node_id: node_body_iteration_start
+        title: 本文生成イテレーション
+        type: iteration
+        width: 520
+      height: 350
+      id: node_body_iteration
+      position:
+        x: 3628
+        y: 660
+      positionAbsolute:
+        x: 3628
+        y: 660
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 520
+      zIndex: 1
+    - data:
+        desc: ''
+        isInIteration: true
+        selected: false
+        title: ''
+        type: iteration-start
+      draggable: false
+      height: 48
+      id: node_body_iteration_start
+      parentId: node_body_iteration
+      position:
+        x: 60
+        y: 151
+      positionAbsolute:
+        x: 3688
+        y: 811
+      selectable: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-iteration-start
+      width: 44
+      zIndex: 1002
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 各見出しの本文を生成
+        isInIteration: true
+        isInLoop: false
+        iteration_id: node_body_iteration
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-section
+          role: system
+          text: 'あなたは株式会社ギグーのnote記事ライターです。
+
+
+            ## タスク
+
+            指定された見出しの本文を執筆してください。
+
+
+            ## 見出し情報
+
+            {{#node_body_iteration.item#}}
+
+
+            ## 記事タイプ
+
+            {{#node_article_classifier.structured_output.article_type_ja#}}
+
+
+            ## 入力素材
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーポイント: {{#node_input_parser.structured_output.key_points#}}
+
+            インタビュー引用: {{#node_input_parser.structured_output.interview_quotes#}}
+
+            データ・数値: {{#node_input_parser.structured_output.data_facts#}}
+
+            登場人物: {{#node_input_parser.structured_output.people#}}
+
+
+            ## 文体ガイド（必ず従うこと）
+
+            トーン: {{#node_style_analyzer.structured_output.tone#}}
+
+            語尾パターン: {{#node_style_analyzer.structured_output.sentence_endings#}}
+
+            一人称: {{#node_style_analyzer.structured_output.first_person#}}
+
+            読者への呼びかけ: {{#node_style_analyzer.structured_output.reader_address#}}
+
+            特徴的フレーズ: {{#node_style_analyzer.structured_output.characteristic_phrases#}}
+
+
+            ## 絶対ルール
+
+            1. 入力素材に含まれない具体的な数値・固有名詞は補完しない
+
+            2. 不明な情報は [要確認: 〇〇] と記載
+
+            3. インタビュー引用は「」で括って使用
+
+            4. 文体ガイドの語尾パターンを使用
+
+            5. 事実と異なる情報を創作しない
+
+
+            ## 出力
+
+            見出しの本文のみを出力（見出し自体は含めない）
+
+            '
+        - id: user-section
+          role: user
+          text: この見出しの本文を執筆してください。
+        selected: false
+        title: セクション生成
+        type: llm
+        vision:
+          enabled: false
+      height: 116
+      id: node_section_generator
+      parentId: node_body_iteration
+      position:
+        x: 184
+        y: 93
+      positionAbsolute:
+        x: 3812
+        y: 753
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 1002
+    - data:
+        code: "function main({ titles, lead, body_sections, outline }) {\n    try\
+          \ {\n        // 見出し情報を取得\n        const headings = outline?.headings ||\
+          \ [];\n        \n        // タイトル案をフォーマット\n        const titleText = (titles\
+          \ || []).map((t, i) => `${i + 1}. ${t}`).join('\\n');\n        \n      \
+          \  // 本文を組み立て\n        let bodyText = '';\n        const sections = body_sections\
+          \ || [];\n        \n        for (let i = 0; i < headings.length && i < sections.length;\
+          \ i++) {\n            const heading = headings[i]?.title || `見出し${i + 1}`;\n\
+          \            const content = sections[i] || '';\n            bodyText +=\
+          \ `### ${heading}\\n\\n${content}\\n\\n`;\n        }\n        \n       \
+          \ // 本文の文字数をカウント\n        const bodyLength = bodyText.replace(/\\s/g, '').length;\n\
+          \        \n        return {\n            title_section: titleText,\n   \
+          \         lead_section: lead || '',\n            body_section: bodyText.trim(),\n\
+          \            body_length: bodyLength,\n            heading_count: headings.length\n\
+          \        };\n    } catch (e) {\n        return {\n            title_section:\
+          \ '',\n            lead_section: '',\n            body_section: 'エラーが発生しました:\
+          \ ' + e.message,\n            body_length: 0,\n            heading_count:\
+          \ 0\n        };\n    }\n}\n"
+        code_language: javascript
+        desc: タイトル、リード文、本文を組み立て
+        outputs:
+          body_length:
+            children: null
+            type: number
+          body_section:
+            children: null
+            type: string
+          heading_count:
+            children: null
+            type: number
+          lead_section:
+            children: null
+            type: string
+          title_section:
+            children: null
+            type: string
+        selected: false
+        title: ドラフト組み立て
+        type: code
+        variables:
+        - value_selector:
+          - node_title_generator
+          - structured_output
+          - titles
+          variable: titles
+        - value_selector:
+          - node_lead_generator
+          - text
+          variable: lead
+        - value_selector:
+          - node_body_iteration
+          - output
+          variable: body_sections
+        - value_selector:
+          - node_outline_generator
+          - structured_output
+          variable: outline
+      height: 80
+      id: node_draft_assembler
+      position:
+        x: 4248
+        y: 470
+      positionAbsolute:
+        x: 4248
+        y: 470
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 記事の締めくくりを生成
+        model:
+          completion_params:
+            temperature: 0.5
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-closing
+          role: system
+          text: 'あなたは株式会社ギグーのnote記事ライターです。
+
+
+            ## タスク
+
+            記事の締めの文章を作成してください。
+
+
+            ## 記事情報
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            記事タイプ: {{#node_article_classifier.structured_output.article_type_ja#}}
+
+            本文: {{#node_draft_assembler.body_section#}}
+
+
+            ## 文体ガイド
+
+            トーン: {{#node_style_analyzer.structured_output.tone#}}
+
+            語尾パターン: {{#node_style_analyzer.structured_output.sentence_endings#}}
+
+
+            ## 過去記事の締めパターン
+
+            {{#node_structure_analyzer.structured_output.closing_pattern#}}
+
+
+            ## 記事タイプ別締め方
+
+            - アナウンスメント: サービスへの誘導、今後の展開
+
+            - イベントレポート: 次回予告、参加募集
+
+            - インタビュー: 応募への誘導、SNSフォロー促進
+
+            - カルチャー: 採用サイトへの誘導、問い合わせ案内
+
+
+            ## 制約
+
+            - 3〜5文程度
+
+            - 読後感の良い締めくくり
+
+            - 適切なCTA（Call To Action）を含める
+
+            - 文体ガイドに従う
+
+            '
+        - id: user-closing
+          role: user
+          text: 締めの文章を作成してください。
+        selected: false
+        title: 締め生成
+        type: llm
+        vision:
+          enabled: false
+      height: 116
+      id: node_closing_generator
+      position:
+        x: 4590
+        y: 438
+      positionAbsolute:
+        x: 4590
+        y: 438
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '生成された記事が文体ガイドに従っているか検証。
+
+          不一致箇所と修正提案を出力。
+
+          '
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-style-check
+          role: system
+          text: 'あなたは文体の一貫性を検証する専門家です。
+
+
+            ## タスク
+
+            生成された記事が文体ガイドに従っているか検証してください。
+
+
+            ## 文体ガイド
+
+            語尾パターン: {{#node_style_analyzer.structured_output.sentence_endings#}}
+
+            トーン: {{#node_style_analyzer.structured_output.tone#}}
+
+            一人称: {{#node_style_analyzer.structured_output.first_person#}}
+
+            特徴的フレーズ: {{#node_style_analyzer.structured_output.characteristic_phrases#}}
+
+
+            ## 生成された記事
+
+            リード文:
+
+            {{#node_draft_assembler.lead_section#}}
+
+
+            本文:
+
+            {{#node_draft_assembler.body_section#}}
+
+
+            締め:
+
+            {{#node_closing_generator.text#}}
+
+
+            ## 検証項目
+
+            1. 語尾パターンの使用率
+
+            2. トーンの一貫性
+
+            3. 一人称の統一
+
+            4. 特徴的フレーズの使用
+
+            5. 不自然な表現
+
+            '
+        - id: user-style-check
+          role: user
+          text: 文体の一貫性を検証してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              consistency_score:
+                description: 一貫性スコア（0-1）
+                maximum: 1
+                minimum: 0
+                type: number
+              corrected_sections:
+                description: 修正が必要な箇所の修正案
+                items:
+                  properties:
+                    corrected:
+                      type: string
+                    original:
+                      type: string
+                  type: object
+                type: array
+              is_consistent:
+                description: 文体が一貫しているか
+                type: boolean
+              issues:
+                description: 不一致箇所
+                items:
+                  properties:
+                    issue:
+                      type: string
+                    location:
+                      type: string
+                    suggestion:
+                      type: string
+                  type: object
+                type: array
+            required:
+            - is_consistent
+            - consistency_score
+            type: object
+        structured_output_enabled: true
+        title: 文体検証
+        type: llm
+        vision:
+          enabled: false
+      height: 148
+      id: node_style_checker
+      position:
+        x: 4932
+        y: 330
+      positionAbsolute:
+        x: 4932
+        y: 330
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: '入力素材にない情報が含まれていないか検証。
+
+          ハルシネーションの検出と[要確認]タグ候補の特定。
+
+          '
+        model:
+          completion_params:
+            temperature: 0
+          mode: chat
+          name: gpt-4o
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: prompt-hallucination
+          role: system
+          text: 'あなたは事実確認の専門家です。
+
+
+            ## タスク
+
+            生成された記事に、入力素材にない情報（ハルシネーション）が含まれていないか検証してください。
+
+
+            ## 入力素材（これが事実の根拠）
+
+            テーマ: {{#node_input_parser.structured_output.theme#}}
+
+            キーポイント: {{#node_input_parser.structured_output.key_points#}}
+
+            インタビュー引用: {{#node_input_parser.structured_output.interview_quotes#}}
+
+            データ・数値: {{#node_input_parser.structured_output.data_facts#}}
+
+            登場人物: {{#node_input_parser.structured_output.people#}}
+
+
+            ## 生成された記事
+
+            リード文:
+
+            {{#node_draft_assembler.lead_section#}}
+
+
+            本文:
+
+            {{#node_draft_assembler.body_section#}}
+
+
+            締め:
+
+            {{#node_closing_generator.text#}}
+
+
+            ## 検証ルール
+
+            1. 記事内の具体的な事実（数値、日付、固有名詞、発言）を抽出
+
+            2. 各事実が入力素材に存在するか照合
+
+            3. 存在しない事実を「要確認候補」としてマーク
+
+            4. 一般的な表現（感想、形容詞など）は許容
+
+
+            ## 重点チェック項目
+
+            - 数値（年数、金額、人数など）
+
+            - 固有名詞（製品名、サービス名、人名など）
+
+            - 具体的な日付・期間
+
+            - インタビュー発言（「」内）
+
+            '
+        - id: user-hallucination
+          role: user
+          text: ハルシネーションを検出してください。
+        selected: false
+        structured_output:
+          schema:
+            properties:
+              confidence:
+                description: 検証の信頼度
+                maximum: 1
+                minimum: 0
+                type: number
+              has_hallucination:
+                description: ハルシネーションがあるか
+                type: boolean
+              missing_citations:
+                description: 引用元が不明な発言
+                items:
+                  type: string
+                type: array
+              unverified_claims:
+                description: 入力素材で確認できなかった主張
+                items:
+                  properties:
+                    claim:
+                      type: string
+                    location:
+                      type: string
+                    suggested_tag:
+                      type: string
+                  type: object
+                type: array
+              verified_facts:
+                description: 入力素材で確認できた事実
+                items:
+                  type: string
+                type: array
+            required:
+            - has_hallucination
+            - confidence
+            type: object
+        structured_output_enabled: true
+        title: ハルシネーション検知
+        type: llm
+        vision:
+          enabled: false
+      height: 164
+      id: node_hallucination_detector
+      position:
+        x: 5274
+        y: 330
+      positionAbsolute:
+        x: 5274
+        y: 330
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ \n    lead, body, closing, \n    style_issues, unverified_claims,\
+          \ \n    corrected_sections \n}) {\n    try {\n        let correctedLead\
+          \ = lead || '';\n        let correctedBody = body || '';\n        let correctedClosing\
+          \ = closing || '';\n        \n        // 文体修正を適用\n        if (Array.isArray(corrected_sections))\
+          \ {\n            for (const correction of corrected_sections) {\n      \
+          \          if (correction.original && correction.corrected) {\n        \
+          \            correctedLead = correctedLead.replace(\n                  \
+          \      correction.original, \n                        correction.corrected\n\
+          \                    );\n                    correctedBody = correctedBody.replace(\n\
+          \                        correction.original, \n                       \
+          \ correction.corrected\n                    );\n                    correctedClosing\
+          \ = correctedClosing.replace(\n                        correction.original,\
+          \ \n                        correction.corrected\n                    );\n\
+          \                }\n            }\n        }\n        \n        // [要確認]タグを挿入\n\
+          \        let tagCount = 0;\n        if (Array.isArray(unverified_claims))\
+          \ {\n            for (const item of unverified_claims) {\n             \
+          \   if (item.claim && item.suggested_tag) {\n                    const tag\
+          \ = `[要確認: ${item.suggested_tag}]`;\n                    // 該当箇所を探して置換\n\
+          \                    if (correctedBody.includes(item.claim)) {\n       \
+          \                 correctedBody = correctedBody.replace(\n             \
+          \               item.claim,\n                            `${item.claim}\
+          \ ${tag}`\n                        );\n                        tagCount++;\n\
+          \                    } else if (correctedLead.includes(item.claim)) {\n\
+          \                        correctedLead = correctedLead.replace(\n      \
+          \                      item.claim,\n                            `${item.claim}\
+          \ ${tag}`\n                        );\n                        tagCount++;\n\
+          \                    }\n                }\n            }\n        }\n  \
+          \      \n        return {\n            corrected_lead: correctedLead,\n\
+          \            corrected_body: correctedBody,\n            corrected_closing:\
+          \ correctedClosing,\n            tag_count: tagCount,\n            style_fix_count:\
+          \ (corrected_sections || []).length\n        };\n    } catch (e) {\n   \
+          \     return {\n            corrected_lead: lead || '',\n            corrected_body:\
+          \ body || '',\n            corrected_closing: closing || '',\n         \
+          \   tag_count: 0,\n            style_fix_count: 0\n        };\n    }\n}\n"
+        code_language: javascript
+        desc: 文体修正と[要確認]タグの挿入
+        outputs:
+          corrected_body:
+            children: null
+            type: string
+          corrected_closing:
+            children: null
+            type: string
+          corrected_lead:
+            children: null
+            type: string
+          style_fix_count:
+            children: null
+            type: number
+          tag_count:
+            children: null
+            type: number
+        selected: false
+        title: 修正・タグ挿入
+        type: code
+        variables:
+        - value_selector:
+          - node_draft_assembler
+          - lead_section
+          variable: lead
+        - value_selector:
+          - node_draft_assembler
+          - body_section
+          variable: body
+        - value_selector:
+          - node_closing_generator
+          - text
+          variable: closing
+        - value_selector:
+          - node_style_checker
+          - structured_output
+          - issues
+          variable: style_issues
+        - value_selector:
+          - node_hallucination_detector
+          - structured_output
+          - unverified_claims
+          variable: unverified_claims
+        - value_selector:
+          - node_style_checker
+          - structured_output
+          - corrected_sections
+          variable: corrected_sections
+      height: 80
+      id: node_tag_inserter
+      position:
+        x: 5616
+        y: 390
+      positionAbsolute:
+        x: 5616
+        y: 390
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "function main({ \n    titles, \n    corrected_lead, \n    corrected_body,\
+          \ \n    corrected_closing,\n    body_length,\n    tag_count,\n    style_fix_count,\n\
+          \    article_type,\n    article_type_ja,\n    style_score,\n    hallucination_confidence\n\
+          }) {\n    try {\n        // タイトル案セクション\n        const titleSection = `##\
+          \ タイトル案（3つ）\\n\\n${\n            (titles || []).map((t, i) => `${i + 1}.\
+          \ ${t}`).join('\\n')\n        }`;\n        \n        // リード文セクション\n    \
+          \    const leadLength = (corrected_lead || '').replace(/\\s/g, '').length;\n\
+          \        const leadSection = `## リード文（${leadLength}字）\\n\\n${corrected_lead\
+          \ || ''}`;\n        \n        // 本文セクション\n        const bodyLength = (corrected_body\
+          \ || '').replace(/\\s/g, '').length;\n        const bodySection = `## 本文（${bodyLength}字）\\\
+          n\\n${corrected_body || ''}`;\n        \n        // 締めセクション\n        const\
+          \ closingSection = `## 締めの文章\\n\\n${corrected_closing || ''}`;\n       \
+          \ \n        // メタ情報\n        const totalLength = leadLength + bodyLength\
+          \ + (corrected_closing || '').replace(/\\s/g, '').length;\n        const\
+          \ metaSection = `---\\n\\n### \U0001F4CA メタ情報\\n\n- **記事タイプ**: ${article_type_ja\
+          \ || article_type || '不明'}\n- **総文字数**: 約${totalLength}字\n- **[要確認]タグ**:\
+          \ ${tag_count || 0}箇所\n- **文体修正**: ${style_fix_count || 0}箇所\n- **文体一貫性スコア**:\
+          \ ${((style_score || 0) * 100).toFixed(0)}%\n- **事実検証信頼度**: ${((hallucination_confidence\
+          \ || 0) * 100).toFixed(0)}%\n\n### \U0001F4A1 次のステップ\n1. [要確認] タグがある箇所は事実確認してください\n\
+          2. タイトルは3案から選択または調整してください\n3. 必要に応じて文章を微調整してください`;\n        \n        //\
+          \ 最終出力\n        const finalDraft = [\n            titleSection,\n      \
+          \      '',\n            leadSection,\n            '',\n            bodySection,\n\
+          \            '',\n            closingSection,\n            '',\n       \
+          \     metaSection\n        ].join('\\n');\n        \n        return {\n\
+          \            final_draft: finalDraft,\n            total_length: totalLength\n\
+          \        };\n    } catch (e) {\n        return {\n            final_draft:\
+          \ 'ドラフト生成中にエラーが発生しました: ' + e.message,\n            total_length: 0\n   \
+          \     };\n    }\n}\n"
+        code_language: javascript
+        desc: 最終的なドラフトをフォーマット
+        outputs:
+          final_draft:
+            children: null
+            type: string
+          total_length:
+            children: null
+            type: number
+        selected: false
+        title: ドラフト整形
+        type: code
+        variables:
+        - value_selector:
+          - node_title_generator
+          - structured_output
+          - titles
+          variable: titles
+        - value_selector:
+          - node_tag_inserter
+          - corrected_lead
+          variable: corrected_lead
+        - value_selector:
+          - node_tag_inserter
+          - corrected_body
+          variable: corrected_body
+        - value_selector:
+          - node_tag_inserter
+          - corrected_closing
+          variable: corrected_closing
+        - value_selector:
+          - node_draft_assembler
+          - body_length
+          variable: body_length
+        - value_selector:
+          - node_tag_inserter
+          - tag_count
+          variable: tag_count
+        - value_selector:
+          - node_tag_inserter
+          - style_fix_count
+          variable: style_fix_count
+        - value_selector:
+          - node_article_classifier
+          - structured_output
+          - article_type
+          variable: article_type
+        - value_selector:
+          - node_article_classifier
+          - structured_output
+          - article_type_ja
+          variable: article_type_ja
+        - value_selector:
+          - node_style_checker
+          - structured_output
+          - consistency_score
+          variable: style_score
+        - value_selector:
+          - node_hallucination_detector
+          - structured_output
+          - confidence
+          variable: hallucination_confidence
+      height: 80
+      id: node_draft_formatter
+      position:
+        x: 5958
+        y: 390
+      positionAbsolute:
+        x: 5958
+        y: 390
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#node_draft_formatter.final_draft#}}'
+        desc: 最終ドラフトを出力
+        selected: false
+        title: ドラフト出力
+        type: answer
+        variables: []
+      height: 130
+      id: node_answer_output
+      position:
+        x: 6300
+        y: 374
+      positionAbsolute:
+        x: 6300
+        y: 374
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 75.29402338773048
+      y: 159.44604122493791
+      zoom: 0.5558344925202533
+  rag_pipeline_variables: []

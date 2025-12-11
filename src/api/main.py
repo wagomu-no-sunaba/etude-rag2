@@ -3,6 +3,7 @@
 import asyncio
 import concurrent.futures
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -35,6 +36,11 @@ from src.chains.input_parser import InputParserChain
 from src.verification.hallucination_detector import HallucinationDetectorChain
 from src.verification.style_checker import StyleCheckerChain
 
+# Configure logging for Cloud Run
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # Global instances (initialized on startup)
