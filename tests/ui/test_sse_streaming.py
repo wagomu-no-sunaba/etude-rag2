@@ -88,9 +88,7 @@ class TestProgressPartial:
 
         html = response.text
         # Should have sse-swap for complete event to display results
-        assert 'sse-swap="complete"' in html, (
-            "Should have SSE swap target for complete event"
-        )
+        assert 'sse-swap="complete"' in html, "Should have SSE swap target for complete event"
 
     def test_error_message_display(self, client: TestClient):
         """Progress partial should have sse-swap for error event.
@@ -106,9 +104,7 @@ class TestProgressPartial:
 
         html = response.text
         # Should have sse-swap for error event to display errors
-        assert 'sse-swap="error"' in html, (
-            "Should have SSE swap target for error event"
-        )
+        assert 'sse-swap="error"' in html, "Should have SSE swap target for error event"
 
 
 class TestHTMXSSEExtension:
@@ -128,6 +124,4 @@ class TestHTMXSSEExtension:
         assert "htmx.org" in html, "HTMX core should be loaded"
         assert "sse" in html.lower(), "SSE extension script should be present"
         # Verify it's the extension, not just any mention of "sse"
-        assert 'ext/sse' in html or 'sse.js' in html, (
-            "HTMX SSE extension should be loaded from CDN"
-        )
+        assert "ext/sse" in html or "sse.js" in html, "HTMX SSE extension should be loaded from CDN"
