@@ -92,6 +92,24 @@ class TestProgressPartial:
             "Should have SSE swap target for complete event"
         )
 
+    def test_error_message_display(self, client: TestClient):
+        """Progress partial should have sse-swap for error event.
+
+        When SSE sends an 'error' event, an error message should
+        be displayed to the user.
+        """
+        response = client.post(
+            "/ui/generate/stream",
+            data={"input_material": "テスト素材", "article_type": ""},
+        )
+        assert response.status_code == 200
+
+        html = response.text
+        # Should have sse-swap for error event to display errors
+        assert 'sse-swap="error"' in html, (
+            "Should have SSE swap target for error event"
+        )
+
 
 class TestHTMXSSEExtension:
     """Tests for HTMX SSE extension loading."""
