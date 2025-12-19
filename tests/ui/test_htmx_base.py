@@ -78,3 +78,18 @@ class TestHTMXIntegration:
         # Check HTMX script is loaded from unpkg CDN
         assert "unpkg.com/htmx.org" in html, "HTMX should be loaded from unpkg CDN"
         assert "<script" in html and "htmx" in html.lower()
+
+
+class TestStaticFiles:
+    """Test static file serving."""
+
+    def test_css_file_served(self):
+        """Static CSS file is served at /static/css/style.css."""
+        from src.api.main import app
+
+        client = TestClient(app)
+        response = client.get("/static/css/style.css")
+
+        assert response.status_code == 200
+        assert "text/css" in response.headers.get("content-type", "")
+        assert "body" in response.text  # CSS should contain body rule
