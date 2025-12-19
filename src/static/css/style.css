@@ -167,7 +167,7 @@ body {
   font-family: var(--font-ja);
   line-height: var(--line-height-base);
   color: var(--color-neutral-800);
-  background-color: var(--color-neutral-50);
+  background-color: var(--color-neutral-200);
   min-height: 100vh;
 }
 
@@ -205,13 +205,13 @@ p {
 }
 
 a {
-  color: var(--color-magenta-600);
+  color: var(--color-orange-600);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--color-magenta-700);
+  color: var(--color-orange-700);
   text-decoration: underline;
 }
 
@@ -245,7 +245,7 @@ header nav a {
 }
 
 header nav a:hover {
-  color: var(--color-magenta-600);
+  color: var(--color-orange-600);
   text-decoration: none;
 }
 
@@ -269,24 +269,24 @@ header nav a:hover {
   padding: var(--spacing-2) var(--spacing-4);
   font-size: 14px;
   font-weight: 500;
-  color: var(--color-magenta-600);
-  background: var(--color-magenta-50);
+  color: var(--color-orange-600);
+  background: var(--color-orange-50);
   border-radius: var(--radius-full);
   transition: all var(--transition-fast);
 }
 
 .header-nav a:hover {
-  background: var(--color-magenta-100);
+  background: var(--color-orange-100);
   text-decoration: none;
 }
 
 /* Form Card */
 .form-card {
   background: white;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-8);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: none;
+  border: 1px solid var(--color-neutral-300);
 }
 
 /* -----------------------------------------
@@ -304,7 +304,10 @@ label {
   margin-bottom: var(--spacing-2);
 }
 
-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
 select,
 textarea {
   width: 100%;
@@ -314,22 +317,25 @@ textarea {
   line-height: var(--line-height-sm);
   color: var(--color-neutral-800);
   background-color: white;
-  border: 2px solid var(--color-neutral-300);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-input:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--color-magenta-400);
-  box-shadow: 0 0 0 3px var(--color-magenta-100);
+  border-color: var(--color-orange-400);
+  box-shadow: 0 0 0 2px var(--color-orange-100);
 }
 
 textarea {
   resize: vertical;
-  min-height: 200px;
+  min-height: 100px;
 }
 
 select {
@@ -339,10 +345,92 @@ select {
   background-position: right var(--spacing-3) center;
   padding-right: var(--spacing-10);
   appearance: none;
+  border: none;
+  border-bottom: 1px solid var(--color-neutral-300);
+  border-radius: 0;
+  padding-left: var(--spacing-2);
+}
+
+select:focus {
+  border-bottom-color: var(--color-orange-500);
+  box-shadow: none;
 }
 
 ::placeholder {
   color: var(--color-neutral-400);
+}
+
+/* -----------------------------------------
+ * Radio & Checkbox Groups
+ * ----------------------------------------- */
+.radio-group,
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.radio-group-vertical {
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.radio-label,
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  background: transparent;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.radio-label:hover,
+.checkbox-label:hover {
+  background: var(--color-neutral-50);
+  border-color: var(--color-neutral-400);
+}
+
+.radio-label:has(input:checked),
+.checkbox-label:has(input:checked) {
+  background: var(--color-orange-50);
+  border-color: var(--color-orange-500);
+  color: var(--color-orange-700);
+}
+
+.radio-label input,
+.checkbox-label input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--color-orange-500);
+}
+
+/* -----------------------------------------
+ * Conditional Fields
+ * ----------------------------------------- */
+.conditional-field {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-orange-400);
+  animation: slideDown var(--transition-normal);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* -----------------------------------------
@@ -361,17 +449,17 @@ button,
   font-weight: 600;
   line-height: 1;
   color: white;
-  background: var(--gradient-primary);
+  background: var(--color-orange-500);
   border: none;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .btn:hover,
 button:hover,
 .generate-btn:hover {
-  opacity: 0.9;
+  background: var(--color-orange-600);
   transform: translateY(-1px);
 }
 
@@ -415,17 +503,16 @@ button:disabled,
  * ----------------------------------------- */
 .history-card {
   background: white;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-6);
   margin-bottom: var(--spacing-4);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  box-shadow: none;
+  border: 1px solid var(--color-neutral-300);
+  transition: border-color var(--transition-fast);
 }
 
 .history-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--color-neutral-400);
 }
 
 .history-card h2 {
@@ -462,7 +549,7 @@ button:disabled,
   font-size: 14px;
   font-weight: 600;
   color: white;
-  background: var(--gradient-primary);
+  background: var(--color-orange-500);
   border-radius: var(--radius-full);
 }
 
@@ -475,10 +562,10 @@ button:disabled,
 
 .result-content {
   background: white;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-8);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: none;
+  border: 1px solid var(--color-neutral-300);
 }
 
 .result-header {
@@ -528,7 +615,7 @@ button:disabled,
 
 .result-section h3 {
   font-size: var(--font-size-ss);
-  color: var(--color-magenta-600);
+  color: var(--color-orange-600);
   margin-bottom: var(--spacing-3);
 }
 
@@ -561,7 +648,7 @@ button:disabled,
   transform: translateY(-50%);
   width: 8px;
   height: 8px;
-  background: var(--gradient-primary);
+  background: var(--color-orange-500);
   border-radius: 50%;
 }
 
@@ -570,7 +657,7 @@ button:disabled,
   padding: var(--spacing-4);
   background: var(--color-neutral-50);
   border-radius: var(--radius-md);
-  border-left: 4px solid var(--color-magenta-500);
+  border-left: 3px solid var(--color-orange-500);
 }
 
 .body-section {
@@ -614,10 +701,10 @@ button:disabled,
 
 .progress-card {
   background: white;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-6);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: none;
+  border: 1px solid var(--color-neutral-300);
 }
 
 .progress-header {
@@ -633,7 +720,7 @@ button:disabled,
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--gradient-primary);
+  background: var(--color-orange-500);
   border-radius: var(--radius-full);
   color: white;
   animation: spin 2s linear infinite;
@@ -660,7 +747,7 @@ button:disabled,
 
 .progress-bar {
   height: 100%;
-  background: var(--gradient-primary);
+  background: var(--color-orange-500);
   border-radius: var(--radius-full);
   transition: width var(--transition-normal);
 }
@@ -696,7 +783,7 @@ button:disabled,
 }
 
 .detail-header .breadcrumb a:hover {
-  color: var(--color-magenta-600);
+  color: var(--color-orange-600);
   text-decoration: none;
 }
 
@@ -718,10 +805,10 @@ button:disabled,
 
 .content-card {
   background: white;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   padding: var(--spacing-6);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--color-neutral-200);
+  box-shadow: none;
+  border: 1px solid var(--color-neutral-300);
 }
 
 .content-card h2 {
@@ -743,8 +830,8 @@ button:disabled,
   padding: var(--spacing-16) var(--spacing-8);
   color: var(--color-neutral-500);
   background: white;
-  border-radius: var(--radius-xl);
-  border: 2px dashed var(--color-neutral-300);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-neutral-400);
 }
 
 /* -----------------------------------------
