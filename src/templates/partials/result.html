@@ -1,0 +1,42 @@
+<div class="result-content">
+    <h2>生成結果</h2>
+
+    <section class="result-section">
+        <h3>記事タイプ</h3>
+        <p class="article-type">{{ article_type_ja }}</p>
+    </section>
+
+    <section class="result-section">
+        <h3>タイトル案</h3>
+        <ul class="titles-list">
+            {% for title in titles %}
+            <li>{{ title }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="result-section">
+        <h3>リード文</h3>
+        <p class="lead-text">{{ lead }}</p>
+    </section>
+
+    <section class="result-section">
+        <h3>本文</h3>
+        {% for section in sections %}
+        <div class="body-section">
+            <h4>{{ section.heading }}</h4>
+            <p>{{ section.body }}</p>
+        </div>
+        {% endfor %}
+    </section>
+
+    <section class="result-section">
+        <h3>締め</h3>
+        <p class="closing-text">{{ closing }}</p>
+    </section>
+
+    <section class="result-section">
+        <h3>Markdown</h3>
+        <pre class="markdown-preview">{{ markdown }}</pre>
+    </section>
+</div>

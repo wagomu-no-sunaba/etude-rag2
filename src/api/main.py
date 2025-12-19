@@ -103,6 +103,55 @@ async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.post("/ui/generate")
+async def ui_generate(request: Request):
+    """Generate article and return HTML partial for HTMX.
+
+    Args:
+        request: FastAPI request with form data.
+
+    Returns:
+        HTML partial with generated article content.
+    """
+    if pipeline is None:
+        raise HTTPException(status_code=500, detail="Pipeline not initialized")
+
+    form_data = await request.form()
+    input_material = form_data.get("input_material", "")
+
+    try:
+        draft = pipeline.generate(str(input_material))
+
+        return templates.TemplateResponse(
+            request,
+            "partials/result.html",
+            {
+                "titles": draft.titles,
+                "lead": draft.lead,
+                "sections": draft.sections,
+                "closing": draft.closing,
+                "article_type": draft.article_type,
+                "article_type_ja": draft.article_type_ja,
+                "markdown": draft.to_markdown(),
+            },
+        )
+    except Exception as e:
+        logger.exception("Error generating article via UI")
+        return templates.TemplateResponse(
+            request,
+            "partials/result.html",
+            {
+                "titles": [],
+                "lead": f"エラーが発生しました: {e}",
+                "sections": [],
+                "closing": "",
+                "article_type": "",
+                "article_type_ja": "",
+                "markdown": "",
+            },
+        )
+
+
 @app.post(
     "/generate",
     response_model=GenerateResponse,
