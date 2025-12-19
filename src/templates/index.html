@@ -2,34 +2,41 @@
 
 {% block content %}
 <main>
-    <h1>Note記事ドラフト生成</h1>
+    <header class="page-header">
+        <h1>Note記事ドラフト生成</h1>
+        <nav class="header-nav">
+            <a href="/ui/history">履歴を見る →</a>
+        </nav>
+    </header>
 
-    <form hx-post="/ui/generate/stream" hx-target="#result" hx-swap="innerHTML">
-        <div class="form-group">
-            <label for="article_type">記事タイプ</label>
-            <select name="article_type" id="article_type">
-                <option value="">自動判定</option>
-                <option value="ANNOUNCEMENT">お知らせ</option>
-                <option value="EVENT_REPORT">イベントレポート</option>
-                <option value="INTERVIEW">インタビュー</option>
-                <option value="CULTURE">カルチャー</option>
-            </select>
-        </div>
+    <section class="form-card">
+        <form hx-post="/ui/generate/stream" hx-target="#result" hx-swap="innerHTML">
+            <div class="form-group">
+                <label for="article_type">記事タイプ</label>
+                <select name="article_type" id="article_type">
+                    <option value="">自動判定</option>
+                    <option value="ANNOUNCEMENT">お知らせ</option>
+                    <option value="EVENT_REPORT">イベントレポート</option>
+                    <option value="INTERVIEW">インタビュー</option>
+                    <option value="CULTURE">カルチャー</option>
+                </select>
+            </div>
 
-        <div class="form-group">
-            <label for="input_material">素材テキスト</label>
-            <textarea
-                name="input_material"
-                id="input_material"
-                rows="10"
-                placeholder="記事の素材となるテキストを入力してください。例：&#10;&#10;・イベント名：技術カンファレンス2024&#10;・日時：2024年12月20日&#10;・登壇者：田中太郎、鈴木花子&#10;・内容：最新のAI技術について議論..."
-            ></textarea>
-        </div>
+            <div class="form-group">
+                <label for="input_material">素材テキスト</label>
+                <textarea
+                    name="input_material"
+                    id="input_material"
+                    rows="10"
+                    placeholder="記事の素材となるテキストを入力してください。例：&#10;&#10;・イベント名：技術カンファレンス2024&#10;・日時：2024年12月20日&#10;・登壇者：田中太郎、鈴木花子&#10;・内容：最新のAI技術について議論..."
+                ></textarea>
+            </div>
 
-        <button type="submit" class="generate-btn">
-            記事を生成
-        </button>
-    </form>
+            <button type="submit" class="generate-btn">
+                記事を生成
+            </button>
+        </form>
+    </section>
 
     <div id="result" class="result-container">
         <!-- Generation result will be inserted here -->

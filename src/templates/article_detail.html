@@ -4,8 +4,8 @@
 
 {% block content %}
 <main class="container">
-    <header>
-        <nav>
+    <header class="detail-header">
+        <nav class="breadcrumb">
             <a href="/ui/history">← 履歴一覧</a>
         </nav>
         <h1>{{ article.generated_content.titles[0] if article.generated_content.titles else '無題' }}</h1>
@@ -16,8 +16,11 @@
     </header>
 
     <section class="article-content">
-        <div class="markdown-preview">
-            <pre>{{ article.markdown }}</pre>
+        <div class="content-card">
+            <h2>生成されたMarkdown</h2>
+            <div class="markdown-preview">
+                <pre>{{ article.markdown }}</pre>
+            </div>
         </div>
     </section>
 
@@ -26,7 +29,7 @@
                 hx-confirm="この記事を削除しますか？"
                 hx-target="body"
                 hx-swap="innerHTML"
-                class="btn btn-danger">削除</button>
+                class="btn btn-danger">この記事を削除</button>
     </section>
 </main>
 {% endblock %}

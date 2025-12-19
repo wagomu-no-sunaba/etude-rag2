@@ -4,9 +4,9 @@
 
 {% block content %}
 <main class="container">
-    <header>
+    <header class="page-header">
         <h1>生成履歴</h1>
-        <nav>
+        <nav class="header-nav">
             <a href="/">← 新規生成</a>
         </nav>
     </header>
@@ -31,7 +31,10 @@
             </article>
             {% endfor %}
         {% else %}
-            <p class="empty-state">まだ生成された記事がありません。</p>
+            <div class="empty-state">
+                <p>まだ生成された記事がありません。</p>
+                <a href="/" class="btn" style="margin-top: var(--spacing-4);">記事を生成する</a>
+            </div>
         {% endif %}
     </section>
 </main>

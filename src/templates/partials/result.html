@@ -1,5 +1,13 @@
 <div class="result-content">
-    <h2>生成結果</h2>
+    <header class="result-header">
+        <h2>生成結果</h2>
+        <span class="success-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 6L9 17l-5-5"></path>
+            </svg>
+            完了
+        </span>
+    </header>
 
     <section class="result-section">
         <h3>記事タイプ</h3>
@@ -35,8 +43,10 @@
         <p class="closing-text">{{ closing }}</p>
     </section>
 
-    <section class="result-section">
+    <section class="result-section markdown-section">
         <h3>Markdown</h3>
-        <pre class="markdown-preview">{{ markdown }}</pre>
+        <div class="markdown-preview">
+            <pre>{{ markdown }}</pre>
+        </div>
     </section>
 </div>
