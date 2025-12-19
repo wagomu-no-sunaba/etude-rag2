@@ -31,6 +31,30 @@ class TestFormSSEConnection:
         )
 
 
+class TestProgressPartial:
+    """Tests for progress partial template."""
+
+    def test_progress_bar_updates(self, client: TestClient):
+        """POST /ui/generate/stream should return progress partial with progress bar.
+
+        The progress partial displays:
+        - A progress bar showing percentage
+        - Current step name in Japanese
+        - SSE connection attributes for live updates
+        """
+        response = client.post(
+            "/ui/generate/stream",
+            data={"input_material": "テスト素材", "article_type": ""},
+        )
+        assert response.status_code == 200
+
+        html = response.text
+        # Should contain progress bar element
+        assert "progress" in html.lower(), "Response should contain progress element"
+        # Should have SSE extension enabled
+        assert 'hx-ext="sse"' in html, "Progress partial should use SSE extension"
+
+
 class TestHTMXSSEExtension:
     """Tests for HTMX SSE extension loading."""
 
