@@ -123,11 +123,11 @@ Sprint Cycle:
 
 ```yaml
 sprint:
-  number: 2
-  pbi: PBI-002
-  status: done
-  subtasks_completed: 7
-  subtasks_total: 7
+  number: 3
+  pbi: PBI-003
+  status: in_progress
+  subtasks_completed: 0
+  subtasks_total: 5
   impediments: 0
 ```
 
@@ -264,108 +264,71 @@ definition_of_ready:
 
 ```yaml
 sprint:
-  number: 2
-  pbi_id: PBI-002
-  story: "As a recruiter, I can see real-time generation progress in the HTMX UI so that I understand what the system is doing and can see intermediate results"
-  status: done
+  number: 3
+  pbi_id: PBI-003
+  story: "As a recruiter, I can view and manage previously generated articles so that I can review past work, reuse successful articles, and track my generation history"
+  status: in_progress
 
   sprint_goal:
-    statement: "Add real-time SSE streaming progress to the HTMX UI"
+    statement: "Implement article history management with storage and CRUD operations"
     success_criteria:
-      - "HTMX SSE extension loaded and functional"
-      - "Progress bar shows 6 generation steps"
-      - "Generated result displays on completion"
-    stakeholder_value: "Recruiters understand generation progress and can see intermediate results"
-    alignment_with_product_goal: "Improves UX by providing transparency during article generation"
+      - "generated_articles table exists with required schema"
+      - "Article generation saves results to database"
+      - "History list and detail views are functional"
+      - "Article deletion works correctly"
+    stakeholder_value: "Recruiters can review past work and track generation history"
+    alignment_with_product_goal: "Enables knowledge reuse and productivity tracking for recruiters"
 
   subtasks:
-    - test: "Base template includes HTMX SSE extension script from CDN"
-      implementation: "Add htmx sse extension script tag to base.html after htmx.org"
+    - test: "generated_articles table has required schema (id, input_material, article_type, generated_content JSONB, markdown, created_at)"
+      implementation: "Add generated_articles table to schema.sql with UUID primary key, proper types, and indexes"
       type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add failing test for HTMX SSE extension (Red phase)"
-        - phase: green
-          message: "feat: add HTMX SSE extension for real-time progress streaming"
+      status: pending
+      commits: []
 
-    - test: "Index page form submits to /ui/generate/stream and connects to SSE"
-      implementation: "Update form to use hx-ext='sse' and return progress partial with SSE connection"
+    - test: "Article generation saves result to database with all fields"
+      implementation: "Modify /ui/generate/stream to save GeneratedArticle after successful generation"
       type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add test for form SSE connection endpoint (Red phase)"
-        - phase: green
-          message: "feat: update form to use SSE streaming endpoint"
+      status: pending
+      commits: []
 
-    - test: "Progress partial displays progress bar with percentage and step name"
-      implementation: "Create partials/progress.html with progress bar and step indicator"
+    - test: "GET /ui/history returns article history list with title, type, date"
+      implementation: "Add /ui/history endpoint and history_list.html template"
       type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add test for progress partial with SSE (Red phase)"
-        - phase: green
-          message: "feat: add /ui/generate/stream endpoint with progress partial"
+      status: pending
+      commits: []
 
-    - test: "POST /ui/generate/stream endpoint returns progress partial and starts SSE"
-      implementation: "Add endpoint that returns initial HTML with SSE connection, then streams events"
+    - test: "GET /ui/history/{id} returns individual article view with full content"
+      implementation: "Add /ui/history/{id} endpoint and article_detail.html template"
       type: behavioral
-      status: completed
-      commits:
-        - phase: green
-          message: "Already implemented in Subtask 3 (progress partial with SSE connection)"
+      status: pending
+      commits: []
 
-    - test: "SSE progress events update progress bar width and step name"
-      implementation: "Add sse-swap targets for progress bar and step name updates"
+    - test: "DELETE /ui/history/{id} removes article and returns success response"
+      implementation: "Add DELETE /ui/history/{id} endpoint with HTMX support"
       type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add test for step name display in progress partial"
-        - phase: green
-          message: "Already implemented in Subtask 3 (sse-swap='progress' attribute)"
-
-    - test: "SSE complete event displays result partial with generated article"
-      implementation: "Handle complete event to swap result content into container"
-      type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add test for SSE complete event handling (Red phase)"
-        - phase: green
-          message: "feat: add SSE complete event swap to progress partial"
-
-    - test: "SSE error event displays error message"
-      implementation: "Handle error event to display error message to user"
-      type: behavioral
-      status: completed
-      commits:
-        - phase: red
-          message: "test: add test for SSE error event handling (Red phase)"
-        - phase: green
-          message: "feat: add SSE error event swap to progress partial"
-        - phase: refactor
-          message: "refactor: format test_sse_streaming.py"
+      status: pending
+      commits: []
 
   notes: |
-    ## Sprint 2 Planning Notes
+    ## Sprint 3 Planning Notes
 
     ### Sprint Goal
-    Add real-time SSE streaming progress to the HTMX UI.
+    Implement article history management with storage and CRUD operations.
 
     ### Capacity
     - AI Agent: Full availability
-    - Dependencies: PBI-001 completed
+    - Dependencies: PBI-001, PBI-002 completed
 
     ### Technical Decisions
-    - HTMX SSE extension 2.0.x from CDN
-    - Progress bar with CSS transition
-    - 6 steps matching existing STEP_METADATA
+    - UUID primary key for generated_articles (consistent with style_profiles)
+    - JSONB for generated_content (flexible schema for titles, lead, sections, closing)
+    - Markdown stored separately for quick preview
+    - Card layout for history list (consistent with existing UI)
+    - HTMX for delete operation (no page reload)
 
     ### Definition of Done Verification
-    1. All 7 subtasks completed through TDD cycle
+    1. All 5 subtasks completed through TDD cycle
     2. All acceptance criteria tests pass
     3. uv run pytest tests/ -v --tb=short
     4. uv run ruff check . && uv run ruff format --check .

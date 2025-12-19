@@ -135,3 +135,31 @@ CREATE TRIGGER update_style_profiles_updated_at
 COMMENT ON TABLE style_profiles IS 'Stores writing style profiles and excerpts for each article category';
 COMMENT ON COLUMN style_profiles.profile_type IS 'Type of profile: "profile" for style rules, "excerpt" for sample text';
 COMMENT ON COLUMN style_profiles.embedding IS 'Vector embedding for excerpt similarity search';
+
+-- =============================================================================
+-- Generated Articles Table
+-- =============================================================================
+-- Stores generated article history for recruiters to review and manage
+
+CREATE TABLE IF NOT EXISTS generated_articles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    input_material TEXT NOT NULL,
+    article_type article_type NOT NULL,
+    generated_content JSONB NOT NULL,
+    markdown TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for listing articles by creation date (most recent first)
+CREATE INDEX IF NOT EXISTS idx_generated_articles_created_at
+    ON generated_articles(created_at DESC);
+
+-- Index for filtering by article type
+CREATE INDEX IF NOT EXISTS idx_generated_articles_type
+    ON generated_articles(article_type);
+
+-- Comment on generated_articles table
+COMMENT ON TABLE generated_articles IS 'Stores generated article history for review and management';
+COMMENT ON COLUMN generated_articles.input_material IS 'Original input material provided by the user';
+COMMENT ON COLUMN generated_articles.generated_content IS 'Generated article content as JSONB (titles, lead, sections, closing)';
+COMMENT ON COLUMN generated_articles.markdown IS 'Complete article in Markdown format for preview';
