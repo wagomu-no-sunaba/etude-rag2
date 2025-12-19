@@ -94,7 +94,7 @@ app.state.templates = templates
 @app.get("/")
 async def index(request: Request):
     """Render the main index page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.get("/health")
