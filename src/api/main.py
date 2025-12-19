@@ -97,6 +97,21 @@ async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+@app.get("/ui/history")
+async def history_list(request: Request):
+    """Render the article history list page.
+
+    Args:
+        request: FastAPI request.
+
+    Returns:
+        HTML page with list of previously generated articles.
+    """
+    # TODO: Fetch articles from database
+    articles: list = []
+    return templates.TemplateResponse(request, "history_list.html", {"articles": articles})
+
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""

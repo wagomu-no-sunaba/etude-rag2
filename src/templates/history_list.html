@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}生成履歴 - Note記事ドラフト生成{% endblock %}
+
+{% block content %}
+<main class="container">
+    <header>
+        <h1>生成履歴</h1>
+        <nav>
+            <a href="/">← 新規生成</a>
+        </nav>
+    </header>
+
+    <section class="history-list">
+        {% if articles %}
+            {% for article in articles %}
+            <article class="history-card">
+                <h2>{{ article.titles[0] if article.titles else '無題' }}</h2>
+                <div class="meta">
+                    <span class="article-type">{{ article.article_type_ja }}</span>
+                    <time datetime="{{ article.created_at }}">{{ article.created_at.strftime('%Y-%m-%d %H:%M') }}</time>
+                </div>
+                <div class="actions">
+                    <a href="/ui/history/{{ article.id }}" class="btn">詳細</a>
+                    <button hx-delete="/ui/history/{{ article.id }}"
+                            hx-target="closest article"
+                            hx-swap="outerHTML"
+                            hx-confirm="この記事を削除しますか？"
+                            class="btn btn-danger">削除</button>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <p class="empty-state">まだ生成された記事がありません。</p>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}
