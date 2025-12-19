@@ -74,6 +74,24 @@ class TestProgressPartial:
         # Should have sse-swap for step updates
         assert 'sse-swap="progress"' in html, "Should have SSE swap target for progress events"
 
+    def test_result_displays_on_complete(self, client: TestClient):
+        """Progress partial should have sse-swap for complete event.
+
+        When SSE sends a 'complete' event, the result partial should
+        replace the progress container with the generated article.
+        """
+        response = client.post(
+            "/ui/generate/stream",
+            data={"input_material": "テスト素材", "article_type": ""},
+        )
+        assert response.status_code == 200
+
+        html = response.text
+        # Should have sse-swap for complete event to display results
+        assert 'sse-swap="complete"' in html, (
+            "Should have SSE swap target for complete event"
+        )
+
 
 class TestHTMXSSEExtension:
     """Tests for HTMX SSE extension loading."""
