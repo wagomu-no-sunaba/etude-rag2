@@ -27,3 +27,5 @@ terraform/terraform.tfvars
 .vscode/
 *.swp
 *.swo
+
+.DS_Store
