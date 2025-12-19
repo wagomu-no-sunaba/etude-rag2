@@ -125,8 +125,8 @@ Sprint Cycle:
 sprint:
   number: 3
   pbi: PBI-003
-  status: in_progress
-  subtasks_completed: 0
+  status: done
+  subtasks_completed: 5
   subtasks_total: 5
   impediments: 0
 ```
@@ -267,7 +267,7 @@ sprint:
   number: 3
   pbi_id: PBI-003
   story: "As a recruiter, I can view and manage previously generated articles so that I can review past work, reuse successful articles, and track my generation history"
-  status: in_progress
+  status: done
 
   sprint_goal:
     statement: "Implement article history management with storage and CRUD operations"
@@ -283,32 +283,52 @@ sprint:
     - test: "generated_articles table has required schema (id, input_material, article_type, generated_content JSONB, markdown, created_at)"
       implementation: "Add generated_articles table to schema.sql with UUID primary key, proper types, and indexes"
       type: behavioral
-      status: pending
-      commits: []
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for generated_articles table schema"
+        - phase: green
+          message: "feat: add generated_articles table for article history management"
 
     - test: "Article generation saves result to database with all fields"
       implementation: "Modify /ui/generate/stream to save GeneratedArticle after successful generation"
       type: behavioral
-      status: pending
-      commits: []
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for GeneratedArticleRepository"
+        - phase: green
+          message: "feat: add GeneratedArticleRepository for article persistence"
 
     - test: "GET /ui/history returns article history list with title, type, date"
       implementation: "Add /ui/history endpoint and history_list.html template"
       type: behavioral
-      status: pending
-      commits: []
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for GET /ui/history endpoint"
+        - phase: green
+          message: "feat: add GET /ui/history endpoint for article history list"
 
     - test: "GET /ui/history/{id} returns individual article view with full content"
       implementation: "Add /ui/history/{id} endpoint and article_detail.html template"
       type: behavioral
-      status: pending
-      commits: []
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for GET /ui/history/{id} endpoint"
+        - phase: green
+          message: "feat: add GET /ui/history/{id} endpoint for article detail view"
 
     - test: "DELETE /ui/history/{id} removes article and returns success response"
       implementation: "Add DELETE /ui/history/{id} endpoint with HTMX support"
       type: behavioral
-      status: pending
-      commits: []
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for DELETE /ui/history/{id} endpoint"
+        - phase: green
+          message: "feat: add DELETE /ui/history/{id} endpoint for article deletion"
 
   notes: |
     ## Sprint 3 Planning Notes
