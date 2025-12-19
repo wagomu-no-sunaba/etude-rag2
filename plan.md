@@ -202,18 +202,44 @@ product_backlog:
       capability: "view and manage previously generated articles"
       benefit: "I can review past work, reuse successful articles, and track my generation history"
     acceptance_criteria:
-      - criterion: "Article history list displays past generations"
+      - criterion: "generated_articles table exists with required schema"
+        verification: "uv run pytest tests/test_generated_articles_schema.py -v"
+      - criterion: "Article generation saves result to database"
+        verification: "uv run pytest tests/ui/test_article_save.py -v"
+      - criterion: "GET /ui/history returns article history list"
         verification: "uv run pytest tests/ui/test_history_list.py -v"
-      - criterion: "Individual article view shows full content"
+      - criterion: "GET /ui/history/{id} returns individual article view"
         verification: "uv run pytest tests/ui/test_article_view.py -v"
-      - criterion: "Articles can be deleted from history"
+      - criterion: "DELETE /ui/history/{id} removes article from history"
         verification: "uv run pytest tests/ui/test_article_delete.py -v"
     dependencies:
       - PBI-001
-    status: draft
+      - PBI-002
+    status: ready
     notes: |
-      Requires new database table or storage mechanism for generated articles.
-      Consider: pagination, search/filter, export options.
+      ## Technical Analysis (Refinement)
+
+      ### Database Design
+      New table: generated_articles
+      - id: UUID PRIMARY KEY
+      - input_material: TEXT NOT NULL
+      - article_type: article_type NOT NULL
+      - generated_content: JSONB NOT NULL (titles, lead, sections, closing)
+      - markdown: TEXT NOT NULL
+      - created_at: TIMESTAMPTZ DEFAULT NOW()
+
+      ### Implementation Approach
+      1. Add generated_articles table to schema.sql
+      2. Create GeneratedArticle Pydantic model
+      3. Modify /ui/generate/stream to save result after generation
+      4. Add /ui/history endpoint with list template
+      5. Add /ui/history/{id} endpoint with detail template
+      6. Add DELETE /ui/history/{id} endpoint
+
+      ### UI Design
+      - History list: Card layout with title, type, date
+      - Detail view: Full article display with Markdown preview
+      - Delete: Confirmation modal before deletion
 ```
 
 ### Definition of Ready
