@@ -6,10 +6,13 @@ import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from sse_starlette.sse import EventSourceResponse
 
 from src.api.models import (
@@ -80,6 +83,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Configure templates and static files
+BASE_DIR = Path(__file__).resolve().parent.parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.state.templates = templates
+
+
+@app.get("/")
+async def index(request: Request):
+    """Render the main index page."""
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/health")
