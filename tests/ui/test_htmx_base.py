@@ -16,9 +16,9 @@ class TestJinja2TemplatesConfiguration:
         # Verify it's a Jinja2Templates instance
         from fastapi.templating import Jinja2Templates
 
-        assert isinstance(
-            app.state.templates, Jinja2Templates
-        ), "templates should be Jinja2Templates instance"
+        assert isinstance(app.state.templates, Jinja2Templates), (
+            "templates should be Jinja2Templates instance"
+        )
 
     def test_static_files_mounted(self):
         """Static files are mounted at /static path."""

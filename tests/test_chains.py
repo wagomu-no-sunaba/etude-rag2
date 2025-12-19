@@ -362,8 +362,9 @@ Closing.
 
     def test_from_markdown_invalid_format(self):
         """Test that invalid markdown raises ValueError."""
-        from src.chains.article_chain import ArticleDraft
         import pytest
+
+        from src.chains.article_chain import ArticleDraft
 
         invalid_markdown = "This is not valid markdown format"
 

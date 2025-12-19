@@ -231,11 +231,7 @@ class DriveIngester:
             "and mimeType = 'application/vnd.google-apps.folder' "
             "and trashed = false"
         )
-        results = (
-            self.drive_service.files()
-            .list(q=query, fields="files(id, name)")
-            .execute()
-        )
+        results = self.drive_service.files().list(q=query, fields="files(id, name)").execute()
 
         for item in results.get("files", []):
             folder_name = item["name"].lower()

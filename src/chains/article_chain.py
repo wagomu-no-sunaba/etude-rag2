@@ -169,20 +169,24 @@ class ArticleDraft(BaseModel):
             elif line.startswith("## 締め"):
                 # Save previous body section if exists
                 if current_heading and current_body_lines:
-                    sections.append({
-                        "heading": current_heading,
-                        "body": "\n".join(current_body_lines).strip(),
-                    })
+                    sections.append(
+                        {
+                            "heading": current_heading,
+                            "body": "\n".join(current_body_lines).strip(),
+                        }
+                    )
                 current_section = "closing"
                 continue
             elif line.startswith("---"):
                 # End of content, metadata follows
                 # Save any pending body section
                 if current_section == "body" and current_heading and current_body_lines:
-                    sections.append({
-                        "heading": current_heading,
-                        "body": "\n".join(current_body_lines).strip(),
-                    })
+                    sections.append(
+                        {
+                            "heading": current_heading,
+                            "body": "\n".join(current_body_lines).strip(),
+                        }
+                    )
                 break
 
             # Parse based on current section
@@ -202,10 +206,12 @@ class ArticleDraft(BaseModel):
                 if line.startswith("### "):
                     # Save previous section
                     if current_heading and current_body_lines:
-                        sections.append({
-                            "heading": current_heading,
-                            "body": "\n".join(current_body_lines).strip(),
-                        })
+                        sections.append(
+                            {
+                                "heading": current_heading,
+                                "body": "\n".join(current_body_lines).strip(),
+                            }
+                        )
                     current_heading = line[4:].strip()
                     current_body_lines = []
                 elif current_heading is not None:
