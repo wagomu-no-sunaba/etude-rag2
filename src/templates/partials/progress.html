@@ -1,6 +1,109 @@
-<div id="progress-container" hx-ext="sse" sse-connect="/generate/stream" sse-swap="progress,complete,error">
+<div id="progress-container" class="progress-card">
+    <div class="progress-header">
+        <span class="progress-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+            </svg>
+        </span>
+        <span class="progress-title">生成中...</span>
+    </div>
     <div class="progress-wrapper">
         <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
     </div>
     <p class="progress-step" id="progress-step">準備中...</p>
 </div>
+
+<script>
+(function() {
+    const container = document.getElementById('progress-container');
+    const resultContainer = document.getElementById('result');
+    const jobId = '{{ job_id }}';
+
+    // Use native EventSource instead of HTMX SSE extension
+    const eventSource = new EventSource('/ui/generate/stream/' + jobId);
+
+    eventSource.addEventListener('progress', function(event) {
+        const data = JSON.parse(event.data);
+        const progressBar = document.getElementById('progress-bar');
+        const progressStep = document.getElementById('progress-step');
+        if (progressBar) progressBar.style.width = data.percentage + '%';
+        if (progressStep) progressStep.textContent = data.step_name + ' (' + data.step_number + '/' + data.total_steps + ')';
+    });
+
+    eventSource.addEventListener('complete', function(event) {
+        const data = JSON.parse(event.data);
+        // Close the connection
+        eventSource.close();
+        // Hide progress and show result
+        container.style.display = 'none';
+        resultContainer.innerHTML = buildResultHtml(data.result);
+    });
+
+    eventSource.addEventListener('error', function(event) {
+        // Check if this is a custom error event or connection error
+        if (event.data) {
+            const data = JSON.parse(event.data);
+            eventSource.close();
+            container.style.display = 'none';
+            resultContainer.innerHTML = '<div class="error-card"><p>エラーが発生しました: ' + escapeHtml(data.error) + '</p></div>';
+        }
+        // Ignore connection errors (they trigger on normal close)
+    });
+
+    eventSource.onerror = function(event) {
+        // Only handle if connection failed completely
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.log('SSE connection closed');
+        }
+    };
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function buildResultHtml(result) {
+        let html = '<div class="result-content">';
+        html += '<header class="result-header"><h2>生成結果</h2>';
+        html += '<span class="success-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>完了</span></header>';
+
+        // Article type
+        html += '<section class="result-section"><h3>記事タイプ</h3>';
+        html += '<p class="article-type">' + escapeHtml(result.article_type_ja) + '</p></section>';
+
+        // Titles
+        html += '<section class="result-section"><h3>タイトル案</h3><ul class="titles-list">';
+        for (const title of result.titles) {
+            html += '<li>' + escapeHtml(title) + '</li>';
+        }
+        html += '</ul></section>';
+
+        // Lead
+        html += '<section class="result-section"><h3>リード文</h3>';
+        html += '<p class="lead-text">' + escapeHtml(result.lead) + '</p></section>';
+
+        // Sections
+        html += '<section class="result-section"><h3>本文</h3>';
+        for (const section of result.sections) {
+            html += '<div class="body-section">';
+            html += '<h4>' + escapeHtml(section.heading) + '</h4>';
+            html += '<p>' + escapeHtml(section.body) + '</p>';
+            html += '</div>';
+        }
+        html += '</section>';
+
+        // Closing
+        html += '<section class="result-section"><h3>締め</h3>';
+        html += '<p class="closing-text">' + escapeHtml(result.closing) + '</p></section>';
+
+        // Markdown
+        html += '<section class="result-section markdown-section"><h3>Markdown</h3>';
+        html += '<div class="markdown-preview"><pre>' + escapeHtml(result.markdown) + '</pre></div></section>';
+
+        html += '</div>';
+        return html;
+    }
+})();
+</script>

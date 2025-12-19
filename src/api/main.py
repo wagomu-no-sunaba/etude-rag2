@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sse_starlette.sse import EventSourceResponse
 
+from src.api.job_manager import Job, JobStatus, job_manager
 from src.api.models import (
     ErrorResponse,
     GenerateRequest,
@@ -187,18 +188,193 @@ async def health_check() -> dict[str, str]:
 
 
 @app.post("/ui/generate/stream")
-async def ui_generate_stream(request: Request):
-    """Return progress partial for SSE streaming generation.
+async def ui_generate_start(request: Request):
+    """Start an article generation job and return progress partial with job ID.
+
+    This endpoint:
+    1. Creates a new job with the form data
+    2. Starts the generation in a background task
+    3. Returns HTML partial that connects to the SSE stream
 
     Args:
         request: FastAPI request with form data.
 
     Returns:
-        HTML partial with progress bar and SSE connection.
+        HTML partial with progress bar and SSE connection to job stream.
     """
-    # For now, just return the progress partial
-    # The actual SSE connection will be handled by the existing /generate/stream endpoint
-    return templates.TemplateResponse(request, "partials/progress.html")
+    if pipeline is None:
+        raise HTTPException(status_code=500, detail="Pipeline not initialized")
+
+    form_data = await request.form()
+    input_material = str(form_data.get("input_material", ""))
+    article_type = form_data.get("article_type")
+    article_type_str = str(article_type) if article_type else None
+
+    # Create a new job
+    job = await job_manager.create_job(
+        input_material=input_material,
+        article_type=article_type_str,
+    )
+
+    # Start generation in background
+    asyncio.create_task(_run_generation_job(job))
+
+    return templates.TemplateResponse(
+        request,
+        "partials/progress.html",
+        {"job_id": str(job.id)},
+    )
+
+
+async def _run_generation_job(job: Job) -> None:
+    """Run article generation in background and push events to job queue.
+
+    Args:
+        job: The job to execute.
+    """
+    if pipeline is None:
+        error_event = ErrorEvent(error="Pipeline not initialized")
+        await job_manager.add_event(job.id, error_event)
+        await job_manager.signal_complete(job.id)
+        return
+
+    await job_manager.update_status(job.id, JobStatus.RUNNING)
+    loop = asyncio.get_running_loop()
+
+    def progress_callback(step: str) -> None:
+        """Callback to emit progress events from sync thread."""
+        step_enum = GenerationStep(step)
+        metadata = STEP_METADATA[step_enum]
+        event = ProgressEvent(
+            step=step_enum,
+            step_name=metadata["name_ja"],
+            step_number=metadata["order"],
+            percentage=metadata["percentage"],
+        )
+        asyncio.run_coroutine_threadsafe(
+            job_manager.add_event(job.id, event),
+            loop,
+        )
+
+    def run_generation() -> None:
+        """Run generation in a thread."""
+        try:
+            draft = pipeline.generate_with_progress(
+                job.input_material,
+                progress_callback=progress_callback,
+            )
+            complete_event = CompleteEvent(
+                result={
+                    "titles": draft.titles,
+                    "lead": draft.lead,
+                    "sections": draft.sections,
+                    "closing": draft.closing,
+                    "article_type": draft.article_type,
+                    "article_type_ja": draft.article_type_ja,
+                    "markdown": draft.to_markdown(),
+                }
+            )
+            asyncio.run_coroutine_threadsafe(
+                job_manager.add_event(job.id, complete_event),
+                loop,
+            )
+        except Exception as e:
+            logger.exception("Error in job generation")
+            error_event = ErrorEvent(error=str(e))
+            asyncio.run_coroutine_threadsafe(
+                job_manager.add_event(job.id, error_event),
+                loop,
+            )
+        finally:
+            asyncio.run_coroutine_threadsafe(
+                job_manager.signal_complete(job.id),
+                loop,
+            )
+
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    try:
+        await loop.run_in_executor(executor, run_generation)
+    finally:
+        executor.shutdown(wait=False)
+
+
+@app.get("/ui/generate/stream/{job_id}")
+async def ui_generate_stream(request: Request, job_id: UUID) -> EventSourceResponse:
+    """Stream generation progress for a specific job via SSE.
+
+    Args:
+        request: FastAPI request for disconnect detection.
+        job_id: UUID of the job to stream.
+
+    Returns:
+        EventSourceResponse streaming progress and result events.
+
+    Raises:
+        HTTPException: 404 if job not found.
+    """
+    job = await job_manager.get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    queue = job_manager.get_queue(job_id)
+    if queue is None:
+        raise HTTPException(status_code=404, detail="Job queue not found")
+
+    async def event_generator() -> AsyncGenerator[dict[str, Any], None]:
+        # First, replay any existing events for late joiners
+        for event in job.events:
+            if isinstance(event, ProgressEvent):
+                yield {
+                    "event": SSEEventType.PROGRESS.value,
+                    "data": event.model_dump_json(),
+                }
+            elif isinstance(event, CompleteEvent):
+                yield {
+                    "event": SSEEventType.COMPLETE.value,
+                    "data": event.model_dump_json(),
+                }
+            elif isinstance(event, ErrorEvent):
+                yield {
+                    "event": SSEEventType.ERROR.value,
+                    "data": event.model_dump_json(),
+                }
+
+        # If job is already completed, we're done
+        if job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+            return
+
+        # Stream new events as they arrive
+        while True:
+            if await request.is_disconnected():
+                logger.info(f"Client disconnected from job {job_id}")
+                break
+
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=1.0)
+            except TimeoutError:
+                continue
+
+            if event is None:
+                # Generation complete
+                break
+
+            if isinstance(event, ProgressEvent):
+                yield {
+                    "event": SSEEventType.PROGRESS.value,
+                    "data": event.model_dump_json(),
+                }
+            elif isinstance(event, CompleteEvent):
+                yield {
+                    "event": SSEEventType.COMPLETE.value,
+                    "data": event.model_dump_json(),
+                }
+            elif isinstance(event, ErrorEvent):
+                yield {
+                    "event": SSEEventType.ERROR.value,
+                    "data": event.model_dump_json(),
+                }
+
+    return EventSourceResponse(event_generator())
 
 
 @app.post("/ui/generate")
