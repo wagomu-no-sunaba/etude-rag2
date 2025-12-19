@@ -54,6 +54,26 @@ class TestProgressPartial:
         # Should have SSE extension enabled
         assert 'hx-ext="sse"' in html, "Progress partial should use SSE extension"
 
+    def test_step_name_display(self, client: TestClient):
+        """Progress partial should display current step name in Japanese.
+
+        The step name element should:
+        - Have an ID for SSE targeting
+        - Display initial "準備中..." text
+        - Be updatable via SSE events
+        """
+        response = client.post(
+            "/ui/generate/stream",
+            data={"input_material": "テスト素材", "article_type": ""},
+        )
+        assert response.status_code == 200
+
+        html = response.text
+        # Should have step name element with initial text
+        assert "準備中" in html, "Should display initial step name in Japanese"
+        # Should have sse-swap for step updates
+        assert 'sse-swap="progress"' in html, "Should have SSE swap target for progress events"
+
 
 class TestHTMXSSEExtension:
     """Tests for HTMX SSE extension loading."""
