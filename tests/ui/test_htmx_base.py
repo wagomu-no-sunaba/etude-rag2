@@ -1,6 +1,5 @@
 """Tests for HTMX base template and configuration."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -61,3 +60,21 @@ class TestJinja2TemplatesConfiguration:
         assert "<html" in html
         assert "<head>" in html
         assert "<body>" in html
+
+
+class TestHTMXIntegration:
+    """Test HTMX script is properly loaded."""
+
+    def test_htmx_script_from_cdn(self):
+        """GET / returns HTML with HTMX script tag from unpkg CDN."""
+        from src.api.main import app
+
+        client = TestClient(app)
+        response = client.get("/")
+
+        assert response.status_code == 200
+        html = response.text
+
+        # Check HTMX script is loaded from unpkg CDN
+        assert "unpkg.com/htmx.org" in html, "HTMX should be loaded from unpkg CDN"
+        assert "<script" in html and "htmx" in html.lower()
