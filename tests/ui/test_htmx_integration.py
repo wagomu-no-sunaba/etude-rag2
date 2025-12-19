@@ -102,8 +102,8 @@ class TestFullFormSubmissionFlow:
         response = client.get("/")
         html = response.text
 
-        # Form should post to /ui/generate
-        assert 'hx-post="/ui/generate"' in html
+        # Form should post to /ui/generate/stream for SSE streaming
+        assert 'hx-post="/ui/generate/stream"' in html
 
         # Form should target #result
         assert 'hx-target="#result"' in html

@@ -12,6 +12,25 @@ def client():
     return TestClient(app)
 
 
+class TestFormSSEConnection:
+    """Tests for form SSE connection setup."""
+
+    def test_form_uses_sse_connection(self, client: TestClient):
+        """Form should submit to streaming endpoint and trigger SSE connection.
+
+        The form posts to /ui/generate/stream which returns HTML with
+        SSE connection attributes for real-time progress updates.
+        """
+        response = client.get("/")
+        assert response.status_code == 200
+
+        html = response.text
+        # Form should post to streaming endpoint
+        assert 'hx-post="/ui/generate/stream"' in html, (
+            "Form should POST to /ui/generate/stream for SSE streaming"
+        )
+
+
 class TestHTMXSSEExtension:
     """Tests for HTMX SSE extension loading."""
 
