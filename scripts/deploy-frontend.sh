@@ -1,8 +1,34 @@
 #!/bin/bash
+# ============================================================================
+# DEPRECATED: Streamlit UI has been replaced by HTMX Web UI integrated into
+# the FastAPI Backend. Use deploy-backend.sh or deploy-all.sh instead.
+#
+# This script is kept for reference and potential future use only.
+# ============================================================================
+#
 # Frontend (Streamlit UI) Deployment Script
 # Usage: ./scripts/deploy-frontend.sh
 
 set -e
+
+# Show deprecation warning
+echo ""
+echo "============================================================================"
+echo "⚠️  WARNING: This script is DEPRECATED"
+echo "============================================================================"
+echo ""
+echo "Streamlit UI has been replaced by HTMX Web UI integrated into FastAPI."
+echo "Please use one of the following scripts instead:"
+echo "  - ./scripts/deploy-backend.sh   (Backend + Web UI)"
+echo "  - ./scripts/deploy-all.sh       (Backend + Ingester)"
+echo ""
+echo "Continue anyway? (y/N): "
+read -r confirm
+if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "Cancelled."
+    exit 0
+fi
+echo ""
 
 # Record start time
 START_TIME=$(date +%s)

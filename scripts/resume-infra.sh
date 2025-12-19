@@ -42,8 +42,7 @@ echo "=========================================="
 echo ""
 echo -e "${YELLOW}This will start the following resources:${NC}"
 echo "  - Cloud SQL: etude-rag2-db-${ENVIRONMENT}"
-echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT} (max-instances=10)"
-echo "  - Cloud Run: etude-rag2-streamlit-${ENVIRONMENT} (max-instances=5)"
+echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT} (max-instances=10) - includes HTMX Web UI"
 echo ""
 
 # Confirmation prompt
@@ -74,29 +73,21 @@ else
     echo -e "${YELLOW}[SKIP]${NC} etude-rag2-api-${ENVIRONMENT} not found or already configured."
 fi
 
-if gcloud run services update "etude-rag2-streamlit-${ENVIRONMENT}" --region="${REGION}" --max-instances=5 --quiet 2>/dev/null; then
-    echo -e "${GREEN}[OK]${NC} etude-rag2-streamlit-${ENVIRONMENT} set to max 5 instances."
-else
-    echo -e "${YELLOW}[SKIP]${NC} etude-rag2-streamlit-${ENVIRONMENT} not found or already configured."
-fi
-
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
 MINUTES=$((ELAPSED / 60))
 SECONDS=$((ELAPSED % 60))
 
-# Get service URLs
-BACKEND_URL=$(gcloud run services describe "etude-rag2-api-${ENVIRONMENT}" --region="${REGION}" --format="value(status.url)" 2>/dev/null || echo "N/A")
-FRONTEND_URL=$(gcloud run services describe "etude-rag2-streamlit-${ENVIRONMENT}" --region="${REGION}" --format="value(status.url)" 2>/dev/null || echo "N/A")
+# Get service URL (Backend includes HTMX Web UI)
+SERVICE_URL=$(gcloud run services describe "etude-rag2-api-${ENVIRONMENT}" --region="${REGION}" --format="value(status.url)" 2>/dev/null || echo "N/A")
 
 echo ""
 echo "=========================================="
 echo -e "${GREEN}Infrastructure resumed successfully!${NC}"
 echo "=========================================="
 echo ""
-echo "Service URLs:"
-echo "  Backend:  ${BACKEND_URL}"
-echo "  Frontend: ${FRONTEND_URL}"
+echo "Service URL (API + Web UI):"
+echo "  ${SERVICE_URL}"
 echo ""
 echo "Elapsed time: ${MINUTES}m ${SECONDS}s"
 echo ""

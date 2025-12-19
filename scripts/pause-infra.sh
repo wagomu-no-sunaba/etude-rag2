@@ -43,8 +43,7 @@ echo "=========================================="
 echo ""
 echo -e "${YELLOW}This will stop the following resources:${NC}"
 echo "  - Cloud SQL: etude-rag2-db-${ENVIRONMENT}"
-echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT} (max-instances=0)"
-echo "  - Cloud Run: etude-rag2-streamlit-${ENVIRONMENT} (max-instances=0)"
+echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT} (max-instances=0) - includes HTMX Web UI"
 echo ""
 echo -e "${GREEN}Data will be preserved. Use resume-infra.sh to restart.${NC}"
 echo ""
@@ -69,17 +68,11 @@ else
 fi
 
 echo ""
-echo ">>> Setting Cloud Run services to 0 max instances..."
+echo ">>> Setting Cloud Run service to 0 max instances..."
 if gcloud run services update "etude-rag2-api-${ENVIRONMENT}" --region="${REGION}" --max-instances=0 --quiet 2>/dev/null; then
     echo -e "${GREEN}[OK]${NC} etude-rag2-api-${ENVIRONMENT} set to 0 instances."
 else
     echo -e "${YELLOW}[SKIP]${NC} etude-rag2-api-${ENVIRONMENT} not found or already configured."
-fi
-
-if gcloud run services update "etude-rag2-streamlit-${ENVIRONMENT}" --region="${REGION}" --max-instances=0 --quiet 2>/dev/null; then
-    echo -e "${GREEN}[OK]${NC} etude-rag2-streamlit-${ENVIRONMENT} set to 0 instances."
-else
-    echo -e "${YELLOW}[SKIP]${NC} etude-rag2-streamlit-${ENVIRONMENT} not found or already configured."
 fi
 
 END_TIME=$(date +%s)

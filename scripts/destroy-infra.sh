@@ -51,12 +51,11 @@ echo ""
 echo -e "${RED}WARNING: This will PERMANENTLY DELETE all resources!${NC}"
 echo ""
 echo "Resources to be deleted:"
-echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT}"
-echo "  - Cloud Run: etude-rag2-streamlit-${ENVIRONMENT}"
+echo "  - Cloud Run: etude-rag2-api-${ENVIRONMENT} (includes HTMX Web UI)"
 echo "  - Cloud Run Job: etude-rag2-ingester-${ENVIRONMENT}"
 echo "  - Cloud SQL: etude-rag2-db-${ENVIRONMENT} (ALL DATA WILL BE LOST)"
 echo "  - VPC Connector: etude-rag2-vpc-${ENVIRONMENT}"
-echo "  - Artifact Registry: etude-rag2"
+echo "  - Artifact Registry: etude-rag2-repo"
 echo "  - Secret Manager secrets"
 echo "  - Service accounts"
 echo "  - VPC / Subnet"
@@ -115,14 +114,10 @@ fi
 
 # Manual deletion (gcloud commands)
 echo ""
-echo ">>> Deleting Cloud Run services..."
+echo ">>> Deleting Cloud Run service..."
 gcloud run services delete "etude-rag2-api-${ENVIRONMENT}" --region="${REGION}" --quiet 2>/dev/null && \
     echo -e "${GREEN}[OK]${NC} etude-rag2-api-${ENVIRONMENT} deleted." || \
     echo -e "${YELLOW}[SKIP]${NC} etude-rag2-api-${ENVIRONMENT} not found."
-
-gcloud run services delete "etude-rag2-streamlit-${ENVIRONMENT}" --region="${REGION}" --quiet 2>/dev/null && \
-    echo -e "${GREEN}[OK]${NC} etude-rag2-streamlit-${ENVIRONMENT} deleted." || \
-    echo -e "${YELLOW}[SKIP]${NC} etude-rag2-streamlit-${ENVIRONMENT} not found."
 
 echo ""
 echo ">>> Deleting Cloud Run Job..."
@@ -150,13 +145,23 @@ gcloud sql instances delete "etude-rag2-db-${ENVIRONMENT}" --quiet 2>/dev/null &
 
 echo ""
 echo ">>> Deleting Artifact Registry repository..."
-gcloud artifacts repositories delete etude-rag2 --location="${REGION}" --quiet 2>/dev/null && \
-    echo -e "${GREEN}[OK]${NC} etude-rag2 repository deleted." || \
-    echo -e "${YELLOW}[SKIP]${NC} etude-rag2 repository not found."
+gcloud artifacts repositories delete etude-rag2-repo --location="${REGION}" --quiet 2>/dev/null && \
+    echo -e "${GREEN}[OK]${NC} etude-rag2-repo repository deleted." || \
+    echo -e "${YELLOW}[SKIP]${NC} etude-rag2-repo repository not found."
 
 echo ""
 echo ">>> Deleting Secret Manager secrets..."
-for secret in "etude-rag2-db-password-${ENVIRONMENT}" "etude-rag2-drive-folder-id-${ENVIRONMENT}" "etude-rag2-my-email-${ENVIRONMENT}" "etude-rag2-service-account-key-${ENVIRONMENT}"; do
+SECRETS=(
+    "etude-rag2-db-password-${ENVIRONMENT}"
+    "etude-rag2-drive-folder-id-${ENVIRONMENT}"
+    "etude-rag2-my-email-${ENVIRONMENT}"
+    "etude-rag2-app-config-${ENVIRONMENT}"
+    "etude-rag2-oauth-client-id-${ENVIRONMENT}"
+    "etude-rag2-oauth-client-secret-${ENVIRONMENT}"
+    "etude-rag2-session-secret-key-${ENVIRONMENT}"
+    "etude-rag2-allowed-emails-${ENVIRONMENT}"
+)
+for secret in "${SECRETS[@]}"; do
     gcloud secrets delete "${secret}" --quiet 2>/dev/null && \
         echo -e "${GREEN}[OK]${NC} Secret ${secret} deleted." || \
         echo -e "${YELLOW}[SKIP]${NC} Secret ${secret} not found."
