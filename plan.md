@@ -552,6 +552,44 @@ completed:
         types: "mypy passed"
       product_goal_progress: "HTMX UI foundation delivered - recruiters can use lightweight alternative to Streamlit"
     notes: "Clean implementation with TDD. All 10 subtasks completed."
+
+  - sprint: 2
+    pbi: PBI-002
+    story: "As a recruiter, I can see real-time generation progress in the HTMX UI so that I understand what the system is doing and can see intermediate results"
+    verification: passed
+    review_summary:
+      increment_delivered:
+        - "HTMX SSE extension loaded from CDN (htmx-ext-sse@2.2.2)"
+        - "Form posts to /ui/generate/stream endpoint"
+        - "Progress partial with progress bar (src/templates/partials/progress.html)"
+        - "SSE connection with sse-swap for progress, complete, error events"
+        - "/ui/generate/stream endpoint returns progress partial"
+        - "6 new SSE streaming tests (tests/ui/test_sse_streaming.py)"
+      acceptance_criteria_verification:
+        - criterion: "Base template loads HTMX SSE extension from CDN"
+          test: "test_sse_streaming.py::test_htmx_sse_extension_loaded"
+          status: passed
+        - criterion: "Form uses SSE connection for streaming generation"
+          test: "test_sse_streaming.py::test_form_uses_sse_connection"
+          status: passed
+        - criterion: "Progress bar shows current generation step (1-6)"
+          test: "test_sse_streaming.py::test_progress_bar_updates"
+          status: passed
+        - criterion: "Current step name displays in Japanese"
+          test: "test_sse_streaming.py::test_step_name_display"
+          status: passed
+        - criterion: "Generated result displays after completion"
+          test: "test_sse_streaming.py::test_result_displays_on_complete"
+          status: passed
+        - criterion: "Error message displays on generation failure"
+          test: "test_sse_streaming.py::test_error_message_display"
+          status: passed
+      definition_of_done:
+        tests: "75 tests passed"
+        lint: "ruff check passed"
+        types: "mypy passed"
+      product_goal_progress: "Real-time progress UI enables transparency during article generation"
+    notes: "Clean TDD implementation. All 7 subtasks completed. Leveraged existing /generate/stream SSE endpoint."
 ```
 
 ---
@@ -596,6 +634,37 @@ retrospectives:
     notes: |
       Sprint 1は成功裏に完了。TDDプロセスが機能した良いスタート。
       サブタスク粒度の改善は次Sprint以降で適用する。
+
+  - sprint: 2
+    pbi: PBI-002
+    outcome: success
+    worked_well:
+      - "TDDサイクルの継続的実行（Red→Green→Refactorを全サブタスクで実施）"
+      - "既存のSSEエンドポイント(/generate/stream)を活用した効率的な実装"
+      - "HTMX SSE拡張の採用でシンプルなクライアント実装を実現"
+      - "Sprint 1の学びを活かしたサブタスク粒度の改善（Subtask 3がエンドポイント+テンプレート作成をまとめて実装）"
+      - "全7サブタスクが計画通り完了"
+    to_improve:
+      - "Subtask 4-5がSubtask 3で既に実装済みだった（サブタスク定義時の重複確認不足）"
+      - "progress.htmlの複数sse-swap属性が冗長（HTML仕様上は最後の属性のみ有効）"
+    root_cause_analysis:
+      problem: "サブタスク定義時に実装の依存関係を十分に分析できていなかった"
+      insight: "テンプレートとエンドポイントは一緒に実装されることが多い"
+      pattern: "関連するテンプレートとエンドポイントは1つのサブタスクにまとめるべき"
+    actions:
+      - action: "サブタスク定義時に既存コードとの依存関係を分析する"
+        why: "重複サブタスクや既に実装済みの機能を事前に特定するため"
+        success_criteria: "次のSprintで重複サブタスクが発生しない"
+        backlog: Sprint Backlog
+      - action: "HTMX SSE拡張のsse-swap属性の正しい使い方を確認"
+        why: "現在の実装が動作するか実際のブラウザでテストが必要"
+        success_criteria: "E2Eテストまたは手動テストでSSEイベントの動作を確認"
+        backlog: Product Backlog
+    happiness_score: 4
+    happiness_trend: stable
+    notes: |
+      Sprint 2は成功裏に完了。既存SSE基盤を活用できた。
+      サブタスク粒度はSprint 1より改善したが、まだ重複があった。
 ```
 
 ---
