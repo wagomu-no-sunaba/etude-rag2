@@ -8,7 +8,10 @@
 *.pyo
 .mypy_cache/
 .pytest_cache/
+.ruff_cache/
 *.egg-info/
+.venv/
+venv/
 
 # Terraform
 terraform/.terraform/
