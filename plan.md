@@ -123,11 +123,11 @@ Sprint Cycle:
 
 ```yaml
 sprint:
-  number: 1
-  pbi: PBI-001
-  status: in_progress
-  subtasks_completed: 10
-  subtasks_total: 10
+  number: 2
+  pbi: PBI-002
+  status: done
+  subtasks_completed: 7
+  subtasks_total: 7
   impediments: 0
 ```
 
@@ -154,145 +154,47 @@ product_goal:
 
 ```yaml
 product_backlog:
-  - id: PBI-001
-    story:
-      role: "recruiter"
-      capability: "use the article generation system through an HTMX-based web UI instead of Streamlit"
-      benefit: "I get a more responsive, lightweight UI that integrates seamlessly with the FastAPI backend"
-    acceptance_criteria:
-      - criterion: "GET / returns base HTML page with HTMX script loaded from CDN"
-        verification: "uv run pytest tests/ui/test_htmx_base.py::test_index_returns_html -v"
-      - criterion: "Base template includes proper HTML5 structure with Japanese lang attribute"
-        verification: "uv run pytest tests/ui/test_htmx_base.py::test_html_structure -v"
-      - criterion: "Article type dropdown renders with 5 options (auto + 4 types)"
-        verification: "uv run pytest tests/ui/test_htmx_form.py::test_article_type_options -v"
-      - criterion: "Input textarea renders with placeholder example text"
-        verification: "uv run pytest tests/ui/test_htmx_form.py::test_input_textarea -v"
-      - criterion: "Generate button posts form data to /generate endpoint via HTMX"
-        verification: "uv run pytest tests/ui/test_htmx_form.py::test_generate_button_htmx_attrs -v"
-      - criterion: "Generation result displays in result container without full page reload"
-        verification: "uv run pytest tests/ui/test_htmx_form.py::test_partial_update_result -v"
-    dependencies: []
-    status: ready
-    technical_decisions:
-      template_location: "src/templates/"
-      static_location: "src/static/"
-      css_framework: "Minimal custom CSS (no heavy framework)"
-      htmx_version: "2.0.x (CDN)"
-      template_engine: "Jinja2"
-      new_dependencies:
-        - "jinja2"
-        - "python-multipart"
-    notes: |
-      ## Refinement Summary (2025-12-19)
-
-      ### Scope
-      This PBI covers the foundational HTMX UI setup. It does NOT include:
-      - Streaming progress display (PBI-002)
-      - Verification features (future PBI)
-      - History/saved articles (PBI-003)
-
-      ### Technical Approach
-      1. Add Jinja2Templates to FastAPI app
-      2. Create base template with HTMX script from CDN
-      3. Create form partial for article generation input
-      4. Create result partial for displaying generated article
-      5. Add endpoint to serve main page (GET /)
-      6. Add endpoint to return result partial (POST /generate returns HTML partial)
-
-      ### File Structure
-      ```
-      src/
-        templates/
-          base.html          # Base layout with HTMX
-          index.html         # Main page extending base
-          partials/
-            form.html        # Input form partial
-            result.html      # Generation result partial
-        static/
-          css/
-            style.css        # Minimal styling
-      ```
-
-      ### INVEST Validation
-      - Independent: No dependencies, self-contained UI foundation
-      - Negotiable: CSS styling, exact layout can be adjusted
-      - Valuable: Enables lightweight UI as alternative to Streamlit
-      - Estimable: Clear scope with defined endpoints and templates
-      - Small: Focused on basic form and result display only
-      - Testable: 6 specific acceptance criteria with pytest verification
-
-      ### TDD Subtasks (Sprint Execution Plan)
-      When this PBI is selected for sprint, use these subtasks:
-
-      1. **Setup Jinja2 templates in FastAPI**
-         - test: "FastAPI app has Jinja2Templates configured with src/templates directory"
-         - implementation: "Add Jinja2Templates to main.py, mount static files"
-         - type: behavioral
-
-      2. **Create base HTML template with HTMX**
-         - test: "GET / returns HTML with HTMX script tag from unpkg CDN"
-         - implementation: "Create base.html with HTML5 structure, HTMX CDN link, Japanese lang"
-         - type: behavioral
-
-      3. **Create index page extending base**
-         - test: "GET / returns page with title 'Note記事ドラフト生成' and main content area"
-         - implementation: "Create index.html extending base.html with header and content sections"
-         - type: behavioral
-
-      4. **Add article type selection dropdown**
-         - test: "Index page contains select element with 5 options for article types"
-         - implementation: "Add select with options: 自動判定, お知らせ, イベントレポート, インタビュー, カルチャー"
-         - type: behavioral
-
-      5. **Add input textarea for material**
-         - test: "Index page contains textarea with name='input_material' and placeholder"
-         - implementation: "Add textarea with Japanese placeholder showing example input format"
-         - type: behavioral
-
-      6. **Add generate button with HTMX attributes**
-         - test: "Form has button with hx-post='/ui/generate', hx-target='#result', hx-swap='innerHTML'"
-         - implementation: "Add button element with HTMX attributes for partial page update"
-         - type: behavioral
-
-      7. **Create result partial template**
-         - test: "POST /ui/generate returns HTML partial with article sections"
-         - implementation: "Create result.html partial with tabs for titles, lead, body, closing, markdown"
-         - type: behavioral
-
-      8. **Add /ui/generate endpoint**
-         - test: "POST /ui/generate with form data calls pipeline and returns result partial"
-         - implementation: "Add endpoint that parses form, calls ArticleGenerationPipeline, renders partial"
-         - type: behavioral
-
-      9. **Add minimal CSS styling**
-         - test: "Static CSS file is served at /static/css/style.css"
-         - implementation: "Create style.css with basic layout, form styling, result container styles"
-         - type: behavioral
-
-      10. **Integration test: Full form submission flow**
-          - test: "Submitting form updates result container without page reload"
-          - implementation: "Verify HTMX attributes work together for seamless UX"
-          - type: behavioral
-
   - id: PBI-002
     story:
       role: "recruiter"
       capability: "see real-time generation progress in the HTMX UI"
       benefit: "I understand what the system is doing and can see intermediate results"
     acceptance_criteria:
-      - criterion: "SSE endpoint streams generation progress to HTMX"
-        verification: "uv run pytest tests/ui/test_sse_streaming.py -v"
-      - criterion: "Progress indicators show current generation stage"
-        verification: "uv run pytest tests/ui/test_progress_indicators.py -v"
-      - criterion: "Generated content appears incrementally"
-        verification: "uv run pytest tests/ui/test_incremental_content.py -v"
+      - criterion: "Base template loads HTMX SSE extension from CDN"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_htmx_sse_extension_loaded -v"
+      - criterion: "Form uses SSE connection for streaming generation"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_form_uses_sse_connection -v"
+      - criterion: "Progress bar shows current generation step (1-6)"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_progress_bar_updates -v"
+      - criterion: "Current step name displays in Japanese"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_step_name_display -v"
+      - criterion: "Generated result displays after completion"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_result_displays_on_complete -v"
+      - criterion: "Error message displays on generation failure"
+        verification: "uv run pytest tests/ui/test_sse_streaming.py::test_error_message_display -v"
     dependencies:
       - PBI-001
-    status: draft
+    status: ready
     notes: |
-      Leverage existing /generate/stream SSE endpoint.
-      Use HTMX sse extension for real-time updates.
+      ## Technical Analysis (Refinement)
+
+      ### Existing Infrastructure
+      - /generate/stream endpoint already exists with SSE support
+      - sse_models.py defines ProgressEvent, CompleteEvent, ErrorEvent
+      - 6 generation steps with Japanese names and percentages defined
+
+      ### Implementation Approach
+      1. Add HTMX SSE extension to base.html (htmx.org/extensions/sse)
+      2. Create new POST /ui/generate/stream endpoint that returns initial progress UI
+      3. Add progress.html partial with progress bar and step indicator
+      4. Use hx-ext="sse" with sse-connect to /generate/stream
+      5. Use sse-swap to update progress bar on "progress" events
+      6. Display result partial on "complete" event
+
+      ### Key Decisions
+      - Use htmx sse extension (not vanilla EventSource) for consistency
+      - POST form data to /ui/generate/stream, which returns SSE-enabled HTML
+      - Progress bar uses CSS width transition for smooth animation
 
   - id: PBI-003
     story:
@@ -336,21 +238,115 @@ definition_of_ready:
 
 ```yaml
 sprint:
-  number: 1
-  pbi_id: PBI-001
-  story: "As a recruiter, I can use the article generation system through an HTMX-based web UI instead of Streamlit, so that I get a more responsive, lightweight UI that integrates seamlessly with the FastAPI backend"
-  status: in_progress
+  number: 2
+  pbi_id: PBI-002
+  story: "As a recruiter, I can see real-time generation progress in the HTMX UI so that I understand what the system is doing and can see intermediate results"
+  status: done
 
   sprint_goal:
-    statement: "Deliver a functional HTMX-based web UI foundation for article generation"
+    statement: "Add real-time SSE streaming progress to the HTMX UI"
     success_criteria:
-      - "Base HTML page loads with HTMX from CDN"
-      - "Article generation form is fully functional"
-      - "Generated articles display without page reload"
-    stakeholder_value: "Recruiters can start using a lightweight, responsive alternative to Streamlit UI"
-    alignment_with_product_goal: "Enables efficient article generation through improved UX"
+      - "HTMX SSE extension loaded and functional"
+      - "Progress bar shows 6 generation steps"
+      - "Generated result displays on completion"
+    stakeholder_value: "Recruiters understand generation progress and can see intermediate results"
+    alignment_with_product_goal: "Improves UX by providing transparency during article generation"
 
   subtasks:
+    - test: "Base template includes HTMX SSE extension script from CDN"
+      implementation: "Add htmx sse extension script tag to base.html after htmx.org"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add failing test for HTMX SSE extension (Red phase)"
+        - phase: green
+          message: "feat: add HTMX SSE extension for real-time progress streaming"
+
+    - test: "Index page form submits to /ui/generate/stream and connects to SSE"
+      implementation: "Update form to use hx-ext='sse' and return progress partial with SSE connection"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for form SSE connection endpoint (Red phase)"
+        - phase: green
+          message: "feat: update form to use SSE streaming endpoint"
+
+    - test: "Progress partial displays progress bar with percentage and step name"
+      implementation: "Create partials/progress.html with progress bar and step indicator"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for progress partial with SSE (Red phase)"
+        - phase: green
+          message: "feat: add /ui/generate/stream endpoint with progress partial"
+
+    - test: "POST /ui/generate/stream endpoint returns progress partial and starts SSE"
+      implementation: "Add endpoint that returns initial HTML with SSE connection, then streams events"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: green
+          message: "Already implemented in Subtask 3 (progress partial with SSE connection)"
+
+    - test: "SSE progress events update progress bar width and step name"
+      implementation: "Add sse-swap targets for progress bar and step name updates"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for step name display in progress partial"
+        - phase: green
+          message: "Already implemented in Subtask 3 (sse-swap='progress' attribute)"
+
+    - test: "SSE complete event displays result partial with generated article"
+      implementation: "Handle complete event to swap result content into container"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for SSE complete event handling (Red phase)"
+        - phase: green
+          message: "feat: add SSE complete event swap to progress partial"
+
+    - test: "SSE error event displays error message"
+      implementation: "Handle error event to display error message to user"
+      type: behavioral
+      status: completed
+      commits:
+        - phase: red
+          message: "test: add test for SSE error event handling (Red phase)"
+        - phase: green
+          message: "feat: add SSE error event swap to progress partial"
+        - phase: refactor
+          message: "refactor: format test_sse_streaming.py"
+
+  notes: |
+    ## Sprint 2 Planning Notes
+
+    ### Sprint Goal
+    Add real-time SSE streaming progress to the HTMX UI.
+
+    ### Capacity
+    - AI Agent: Full availability
+    - Dependencies: PBI-001 completed
+
+    ### Technical Decisions
+    - HTMX SSE extension 2.0.x from CDN
+    - Progress bar with CSS transition
+    - 6 steps matching existing STEP_METADATA
+
+    ### Definition of Done Verification
+    1. All 7 subtasks completed through TDD cycle
+    2. All acceptance criteria tests pass
+    3. uv run pytest tests/ -v --tb=short
+    4. uv run ruff check . && uv run ruff format --check .
+    5. uv run mypy src/
+
+  # Sprint 1 subtasks moved to completed section
+  completed_subtasks:
     - test: "FastAPI app has Jinja2Templates configured with src/templates directory"
       implementation: "Add Jinja2Templates to main.py, mount static files"
       type: behavioral
@@ -517,13 +513,45 @@ definition_of_done:
 
 ```yaml
 # Log of completed PBIs (one per sprint)
-completed: []
-# Example completed sprint format:
-# - sprint: 1
-#   pbi: PBI-001
-#   story: "As registered user, I can log in..."
-#   verification: passed
-#   notes: "Clean implementation"
+completed:
+  - sprint: 1
+    pbi: PBI-001
+    story: "As a recruiter, I can use the article generation system through an HTMX-based web UI instead of Streamlit, so that I get a more responsive, lightweight UI that integrates seamlessly with the FastAPI backend"
+    verification: passed
+    review_summary:
+      increment_delivered:
+        - "Jinja2Templates configuration in FastAPI (src/api/main.py)"
+        - "Base HTML template with HTMX 2.0.4 CDN (src/templates/base.html)"
+        - "Index page with article generation form (src/templates/index.html)"
+        - "Result partial for HTMX updates (src/templates/partials/result.html)"
+        - "/ui/generate endpoint for form submission"
+        - "Static CSS file (src/static/css/style.css)"
+        - "17 UI-specific tests (tests/ui/)"
+      acceptance_criteria_verification:
+        - criterion: "GET / returns base HTML page with HTMX script loaded from CDN"
+          test: "test_htmx_base.py::test_index_returns_html, test_htmx_script_from_cdn"
+          status: passed
+        - criterion: "Base template includes proper HTML5 structure with Japanese lang attribute"
+          test: "test_htmx_base.py::test_html_structure"
+          status: passed
+        - criterion: "Article type dropdown renders with 5 options (auto + 4 types)"
+          test: "test_htmx_form.py::test_article_type_options"
+          status: passed
+        - criterion: "Input textarea renders with placeholder example text"
+          test: "test_htmx_form.py::test_input_textarea"
+          status: passed
+        - criterion: "Generate button posts form data to /generate endpoint via HTMX"
+          test: "test_htmx_form.py::test_generate_button_htmx_attrs"
+          status: passed
+        - criterion: "Generation result displays in result container without full page reload"
+          test: "test_htmx_form.py::test_partial_update_result"
+          status: passed
+      definition_of_done:
+        tests: "69 tests passed"
+        lint: "ruff check passed"
+        types: "mypy passed"
+      product_goal_progress: "HTMX UI foundation delivered - recruiters can use lightweight alternative to Streamlit"
+    notes: "Clean implementation with TDD. All 10 subtasks completed."
 ```
 
 ---
@@ -532,15 +560,42 @@ completed: []
 
 ```yaml
 # After each sprint, record what to improve
-retrospectives: []
-# Example retrospective format:
-# - sprint: 1
-#   worked_well:
-#     - "Clear acceptance criteria"
-#   to_improve:
-#     - "Better subtask breakdown"
-#   actions:
-#     - "Add more specific verification commands"
+retrospectives:
+  - sprint: 1
+    pbi: PBI-001
+    outcome: success
+    worked_well:
+      - "TDDサイクルが明確に機能（Red→Green→Refactor）"
+      - "サブタスクの事前定義がスムーズな実装を可能にした"
+      - "依存関係（python-multipart）の問題を即座に解決"
+      - "DeprecationWarningをRefactorフェーズで適切に修正"
+      - "全10サブタスクが計画通り完了"
+    to_improve:
+      - "Subtask 1-3が1つの実装で完了（base.htmlで複数テストがまとめて実装）"
+      - "Subtask 4-6も同様に1コミットで完了（フォーム要素が論理的に1つ）"
+      - "CSSスタイリングが最小限のまま（機能優先で見た目は後回し）"
+    root_cause_analysis:
+      problem: "サブタスク分割がテスト観点で細かすぎた"
+      insight: "テンプレート/HTMLの最小単位はファイル/コンポーネントであり、個別要素ではない"
+      pattern: "実装の最小単位とサブタスク粒度を合わせるべき"
+    actions:
+      - action: "サブタスク分割を「実装の最小単位」に合わせる"
+        why: "1つの実装で複数サブタスクが完了する非効率を防ぐ"
+        success_criteria: "次のSprintで1サブタスク=1実装コミットが達成される"
+        backlog: Sprint Backlog
+      - action: "テンプレート作業はファイル/コンポーネント単位でサブタスク化"
+        why: "HTML/CSSはファイルが最小デプロイ単位"
+        success_criteria: "テンプレート関連PBIで適切な粒度が維持される"
+        backlog: Sprint Backlog
+      - action: "CSSスタイリング改善は機能PBIとは別に計画を検討"
+        why: "機能とスタイルは異なるスコープ"
+        success_criteria: "見た目改善が必要な場合は明確に別PBIとして定義される"
+        backlog: Product Backlog
+    happiness_score: 4
+    happiness_trend: stable
+    notes: |
+      Sprint 1は成功裏に完了。TDDプロセスが機能した良いスタート。
+      サブタスク粒度の改善は次Sprint以降で適用する。
 ```
 
 ---
