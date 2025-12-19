@@ -147,6 +147,39 @@ async def article_detail(request: Request, article_id: UUID):
     return templates.TemplateResponse(request, "article_detail.html", {"article": article})
 
 
+def delete_article_by_id(article_id: UUID) -> bool:
+    """Delete an article by its ID from the database.
+
+    Args:
+        article_id: UUID of the article to delete.
+
+    Returns:
+        True if deleted successfully, False if not found.
+    """
+    # TODO: Implement actual database deletion
+    return True
+
+
+@app.delete("/ui/history/{article_id}")
+async def delete_article(article_id: UUID):
+    """Delete an article from history.
+
+    Args:
+        article_id: UUID of the article to delete.
+
+    Returns:
+        Empty response on success.
+
+    Raises:
+        HTTPException: 404 if article not found.
+    """
+    success = delete_article_by_id(article_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    return {"status": "deleted", "id": str(article_id)}
+
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
