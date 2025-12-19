@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Note記事ドラフト生成{% endblock %}</title>
+    <title>{% block title %}記事ドラフト生成{% endblock %}</title>
     <!-- Google Fonts: Noto Sans JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,6 +15,18 @@
     <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
 </head>
 <body>
+    {% if user %}
+    <header class="app-header">
+        <div class="user-info">
+            {% if user.picture %}
+            <img src="{{ user.picture }}" alt="{{ user.name }}" class="user-avatar" referrerpolicy="no-referrer">
+            {% endif %}
+            <span class="user-name">{{ user.name }}</span>
+        </div>
+        <a href="/auth/logout" class="logout-btn">ログアウト</a>
+    </header>
+    {% endif %}
+
     {% block content %}{% endblock %}
 </body>
 </html>

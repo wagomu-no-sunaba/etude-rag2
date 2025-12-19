@@ -73,6 +73,11 @@ SECRET_NAMES = {
     "target_folder_id": "drive-folder-id",
     "my_email": "my-email",
     "service_account_key": "service-account-key",
+    # OAuth authentication
+    "google_oauth_client_id": "oauth-client-id",
+    "google_oauth_client_secret": "oauth-client-secret",
+    "session_secret_key": "session-secret-key",
+    "allowed_emails": "allowed-emails",
 }
 
 

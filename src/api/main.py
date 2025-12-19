@@ -12,10 +12,14 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sse_starlette.sse import EventSourceResponse
+from starlette.middleware.sessions import SessionMiddleware
 
+from src.api.auth import get_current_user, require_auth
+from src.api.auth import router as auth_router
 from src.api.job_manager import Job, JobStatus, job_manager
 from src.api.models import (
     ErrorResponse,
@@ -38,6 +42,7 @@ from src.api.sse_models import (
 )
 from src.chains.article_chain import ArticleGenerationPipeline
 from src.chains.input_parser import InputParserChain
+from src.config import get_settings
 from src.verification.hallucination_detector import HallucinationDetectorChain
 from src.verification.style_checker import StyleCheckerChain
 
@@ -78,6 +83,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Get settings for middleware configuration
+settings = get_settings()
+
+# Session middleware (must be added before CORS)
+# Uses signed cookies for OAuth state and user session
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.session_secret_key or "dev-secret-key-change-in-production",
+    max_age=86400,  # 24 hours
+    same_site="lax",
+    https_only=settings.is_production,
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -85,6 +103,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include auth router
+app.include_router(auth_router)
 
 # Configure templates and static files
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,13 +116,16 @@ app.state.templates = templates
 
 @app.get("/")
 async def index(request: Request):
-    """Render the main index page."""
-    return templates.TemplateResponse(request, "index.html")
+    """Render the main index page (requires authentication)."""
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+    return templates.TemplateResponse(request, "index.html", {"user": user})
 
 
 @app.get("/ui/history")
 async def history_list(request: Request):
-    """Render the article history list page.
+    """Render the article history list page (requires authentication).
 
     Args:
         request: FastAPI request.
@@ -109,9 +133,13 @@ async def history_list(request: Request):
     Returns:
         HTML page with list of previously generated articles.
     """
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
     # TODO: Fetch articles from database
     articles: list = []
-    return templates.TemplateResponse(request, "history_list.html", {"articles": articles})
+    context = {"articles": articles, "user": user}
+    return templates.TemplateResponse(request, "history_list.html", context)
 
 
 def get_article_by_id(article_id: UUID) -> dict[str, Any] | None:
@@ -129,7 +157,7 @@ def get_article_by_id(article_id: UUID) -> dict[str, Any] | None:
 
 @app.get("/ui/history/{article_id}")
 async def article_detail(request: Request, article_id: UUID):
-    """Render the article detail page.
+    """Render the article detail page (requires authentication).
 
     Args:
         request: FastAPI request.
@@ -141,11 +169,16 @@ async def article_detail(request: Request, article_id: UUID):
     Raises:
         HTTPException: 404 if article not found.
     """
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth/login", status_code=302)
+
     article = get_article_by_id(article_id)
     if article is None:
         raise HTTPException(status_code=404, detail="Article not found")
 
-    return templates.TemplateResponse(request, "article_detail.html", {"article": article})
+    context = {"article": article, "user": user}
+    return templates.TemplateResponse(request, "article_detail.html", context)
 
 
 def delete_article_by_id(article_id: UUID) -> bool:
@@ -162,18 +195,21 @@ def delete_article_by_id(article_id: UUID) -> bool:
 
 
 @app.delete("/ui/history/{article_id}")
-async def delete_article(article_id: UUID):
-    """Delete an article from history.
+async def delete_article(request: Request, article_id: UUID):
+    """Delete an article from history (requires authentication).
 
     Args:
+        request: FastAPI request.
         article_id: UUID of the article to delete.
 
     Returns:
         Empty response on success.
 
     Raises:
-        HTTPException: 404 if article not found.
+        HTTPException: 401 if not authenticated, 404 if article not found.
     """
+    require_auth(request)
+
     success = delete_article_by_id(article_id)
     if not success:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -191,7 +227,7 @@ async def health_check() -> dict[str, str]:
 async def ui_generate_start(request: Request):
     """Start an article generation job and return progress partial with job ID.
 
-    This endpoint:
+    This endpoint (requires authentication):
     1. Creates a new job with the form data
     2. Starts the generation in a background task
     3. Returns HTML partial that connects to the SSE stream
@@ -202,6 +238,8 @@ async def ui_generate_start(request: Request):
     Returns:
         HTML partial with progress bar and SSE connection to job stream.
     """
+    require_auth(request)
+
     if pipeline is None:
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
 
@@ -300,7 +338,7 @@ async def _run_generation_job(job: Job) -> None:
 
 @app.get("/ui/generate/stream/{job_id}")
 async def ui_generate_stream(request: Request, job_id: UUID) -> EventSourceResponse:
-    """Stream generation progress for a specific job via SSE.
+    """Stream generation progress for a specific job via SSE (requires authentication).
 
     Args:
         request: FastAPI request for disconnect detection.
@@ -310,8 +348,10 @@ async def ui_generate_stream(request: Request, job_id: UUID) -> EventSourceRespo
         EventSourceResponse streaming progress and result events.
 
     Raises:
-        HTTPException: 404 if job not found.
+        HTTPException: 401 if not authenticated, 404 if job not found.
     """
+    require_auth(request)
+
     job = await job_manager.get_job(job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -379,7 +419,7 @@ async def ui_generate_stream(request: Request, job_id: UUID) -> EventSourceRespo
 
 @app.post("/ui/generate")
 async def ui_generate(request: Request):
-    """Generate article and return HTML partial for HTMX.
+    """Generate article and return HTML partial for HTMX (requires authentication).
 
     Args:
         request: FastAPI request with form data.
@@ -387,6 +427,8 @@ async def ui_generate(request: Request):
     Returns:
         HTML partial with generated article content.
     """
+    require_auth(request)
+
     if pipeline is None:
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
 
@@ -431,20 +473,23 @@ async def ui_generate(request: Request):
     response_model=GenerateResponse,
     responses={500: {"model": ErrorResponse}},
 )
-async def generate_article(request: GenerateRequest) -> GenerateResponse:
-    """Generate an article draft from input material.
+async def generate_article(request: Request, body: GenerateRequest) -> GenerateResponse:
+    """Generate an article draft from input material (requires authentication).
 
     Args:
-        request: Generation request with input material.
+        request: FastAPI request.
+        body: Generation request with input material.
 
     Returns:
         Generated article draft with titles, lead, sections, and closing.
     """
+    require_auth(request)
+
     if pipeline is None:
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
 
     try:
-        draft = pipeline.generate(request.input_material)
+        draft = pipeline.generate(body.input_material)
 
         return GenerateResponse(
             titles=draft.titles,
@@ -465,27 +510,30 @@ async def generate_article(request: GenerateRequest) -> GenerateResponse:
     response_model=VerifyResponse,
     responses={500: {"model": ErrorResponse}},
 )
-async def verify_content(request: VerifyRequest) -> VerifyResponse:
-    """Verify generated content for hallucinations and style consistency.
+async def verify_content(request: Request, body: VerifyRequest) -> VerifyResponse:
+    """Verify generated content for hallucinations and style consistency (requires authentication).
 
     Args:
-        request: Verification request with content and original input.
+        request: FastAPI request.
+        body: Verification request with content and original input.
 
     Returns:
         Verification results for hallucination and style checks.
     """
+    require_auth(request)
+
     if input_parser is None or hallucination_detector is None or style_checker is None:
         raise HTTPException(status_code=500, detail="Verifiers not initialized")
 
     try:
         # Parse input material for fact checking
-        parsed_input = input_parser.parse(request.input_material)
+        parsed_input = input_parser.parse(body.input_material)
 
         # Run hallucination detection
         hallucination_result = await hallucination_detector.adetect(
-            lead=request.lead,
-            body=request.body,
-            closing=request.closing,
+            lead=body.lead,
+            body=body.body,
+            closing=body.closing,
             parsed_input=parsed_input,
         )
 
@@ -499,9 +547,9 @@ async def verify_content(request: VerifyRequest) -> VerifyResponse:
         )
 
         style_result = await style_checker.acheck(
-            lead=request.lead,
-            body=request.body,
-            closing=request.closing,
+            lead=body.lead,
+            body=body.body,
+            closing=body.closing,
             style_analysis=default_style,
         )
 
@@ -542,15 +590,18 @@ async def verify_content(request: VerifyRequest) -> VerifyResponse:
     response_model=list[SearchResult],
     responses={500: {"model": ErrorResponse}},
 )
-async def search_articles(request: SearchRequest) -> list[SearchResult]:
-    """Search for reference articles.
+async def search_articles(request: Request, body: SearchRequest) -> list[SearchResult]:
+    """Search for reference articles (requires authentication).
 
     Args:
-        request: Search request with query and filters.
+        request: FastAPI request.
+        body: Search request with query and filters.
 
     Returns:
         List of matching articles.
     """
+    require_auth(request)
+
     # Note: This endpoint requires a configured retriever
     # For now, return empty list as retriever setup needs database connection
     logger.warning("Search endpoint called but retriever not configured")
@@ -562,7 +613,7 @@ async def generate_article_stream(
     request: Request,
     generate_request: GenerateRequest,
 ) -> EventSourceResponse:
-    """Generate an article draft with SSE streaming progress updates.
+    """Generate an article draft with SSE streaming progress updates (requires authentication).
 
     Sends progress events as each step completes, then a complete event
     with the final result.
@@ -574,6 +625,8 @@ async def generate_article_stream(
     Returns:
         EventSourceResponse streaming progress and result events.
     """
+    require_auth(request)
+
     if pipeline is None:
         raise HTTPException(status_code=500, detail="Pipeline not initialized")
 

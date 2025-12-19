@@ -90,6 +90,14 @@ class Settings(BaseSettings):
     # Email for ACL filtering
     my_email: str | None = None
 
+    # OAuth (Google)
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    session_secret_key: str = ""
+
+    # Access Control (comma-separated email list)
+    allowed_emails: str = ""
+
     # Chunking
     chunk_size: int = 1000
     chunk_overlap: int = 200
@@ -102,7 +110,15 @@ class Settings(BaseSettings):
         This allows Secret Manager to be the single source of truth while
         still allowing environment variables to override.
         """
-        secret_fields = ["db_password", "target_folder_id", "my_email"]
+        secret_fields = [
+            "db_password",
+            "target_folder_id",
+            "my_email",
+            "google_oauth_client_id",
+            "google_oauth_client_secret",
+            "session_secret_key",
+            "allowed_emails",
+        ]
 
         for field in secret_fields:
             # Skip if already set via env var or .env
@@ -136,6 +152,18 @@ class Settings(BaseSettings):
         """Connection string with psycopg driver for LangChain PGVector."""
         base = self.db_connection_string
         return base.replace("postgresql://", "postgresql+psycopg://")
+
+    @property
+    def allowed_emails_list(self) -> list[str]:
+        """Parse allowed emails from comma-separated string."""
+        if not self.allowed_emails:
+            return []
+        return [e.strip().lower() for e in self.allowed_emails.split(",") if e.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.environment == "prod"
 
 
 @lru_cache

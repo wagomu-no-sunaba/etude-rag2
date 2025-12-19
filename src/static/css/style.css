@@ -835,6 +835,136 @@ button:disabled,
 }
 
 /* -----------------------------------------
+ * Login Page
+ * ----------------------------------------- */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: var(--color-neutral-200);
+  padding: var(--spacing-4);
+}
+
+.login-card {
+  background: white;
+  padding: var(--spacing-10) var(--spacing-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+}
+
+.login-card h1 {
+  font-size: var(--font-size-ms);
+  margin-bottom: var(--spacing-4);
+  color: var(--color-neutral-900);
+}
+
+.login-description {
+  color: var(--color-neutral-600);
+  margin-bottom: var(--spacing-8);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+
+.google-login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-6);
+  background: white;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-lg);
+  color: var(--color-neutral-800);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.google-login-btn:hover {
+  background: var(--color-neutral-50);
+  border-color: var(--color-neutral-400);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
+
+.login-note {
+  margin-top: var(--spacing-6);
+  font-size: 14px;
+  color: var(--color-neutral-500);
+}
+
+.error-message {
+  background: var(--color-error-50);
+  border: 1px solid var(--color-error-500);
+  color: var(--color-error-700);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-6);
+  font-size: 14px;
+}
+
+/* -----------------------------------------
+ * App Header (Authenticated)
+ * ----------------------------------------- */
+.app-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-6);
+  background: white;
+  border-bottom: 1px solid var(--color-neutral-300);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-neutral-200);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-neutral-700);
+}
+
+.logout-btn {
+  padding: var(--spacing-2) var(--spacing-4);
+  background: transparent;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md);
+  color: var(--color-neutral-600);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.logout-btn:hover {
+  background: var(--color-neutral-50);
+  border-color: var(--color-neutral-400);
+  text-decoration: none;
+}
+
+/* -----------------------------------------
  * Responsive
  * ----------------------------------------- */
 @media (max-width: 768px) {

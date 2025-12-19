@@ -97,3 +97,84 @@ resource "google_secret_manager_secret_iam_member" "app_config_accessor" {
   member    = "serviceAccount:${google_service_account.cloud_run.email}"
   project   = var.project_id
 }
+
+
+# =============================================================================
+# OAuth Authentication Secrets
+# =============================================================================
+
+# OAuth Client ID
+resource "google_secret_manager_secret" "oauth_client_id" {
+  secret_id = "etude-rag2-oauth-client-id-${var.environment}"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_iam_member" "oauth_client_id_accessor" {
+  secret_id = google_secret_manager_secret.oauth_client_id.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+  project   = var.project_id
+}
+
+# OAuth Client Secret
+resource "google_secret_manager_secret" "oauth_client_secret" {
+  secret_id = "etude-rag2-oauth-client-secret-${var.environment}"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_iam_member" "oauth_client_secret_accessor" {
+  secret_id = google_secret_manager_secret.oauth_client_secret.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+  project   = var.project_id
+}
+
+# Session Secret Key (for cookie signing)
+resource "google_secret_manager_secret" "session_secret_key" {
+  secret_id = "etude-rag2-session-secret-key-${var.environment}"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_iam_member" "session_secret_key_accessor" {
+  secret_id = google_secret_manager_secret.session_secret_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+  project   = var.project_id
+}
+
+# Allowed Emails (whitelist)
+resource "google_secret_manager_secret" "allowed_emails" {
+  secret_id = "etude-rag2-allowed-emails-${var.environment}"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.services]
+}
+
+resource "google_secret_manager_secret_iam_member" "allowed_emails_accessor" {
+  secret_id = google_secret_manager_secret.allowed_emails.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run.email}"
+  project   = var.project_id
+}
