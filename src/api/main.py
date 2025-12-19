@@ -103,6 +103,21 @@ async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.post("/ui/generate/stream")
+async def ui_generate_stream(request: Request):
+    """Return progress partial for SSE streaming generation.
+
+    Args:
+        request: FastAPI request with form data.
+
+    Returns:
+        HTML partial with progress bar and SSE connection.
+    """
+    # For now, just return the progress partial
+    # The actual SSE connection will be handled by the existing /generate/stream endpoint
+    return templates.TemplateResponse(request, "partials/progress.html")
+
+
 @app.post("/ui/generate")
 async def ui_generate(request: Request):
     """Generate article and return HTML partial for HTMX.
