@@ -23,10 +23,11 @@ output "api_service_url" {
   value       = google_cloud_run_v2_service.api.uri
 }
 
-output "streamlit_service_url" {
-  description = "URL of the Streamlit Cloud Run service"
-  value       = google_cloud_run_v2_service.streamlit.uri
-}
+# Streamlit output disabled - Web UI is now integrated into FastAPI with HTMX
+# output "streamlit_service_url" {
+#   description = "URL of the Streamlit Cloud Run service"
+#   value       = google_cloud_run_v2_service.streamlit.uri
+# }
 
 output "ingester_job_name" {
   description = "Name of the Ingester Cloud Run Job"
@@ -91,10 +92,11 @@ output "api_image_uri" {
   value       = "${local.api_image_base}:latest"
 }
 
-output "streamlit_image_uri" {
-  description = "Docker image URI for Streamlit UI"
-  value       = "${local.streamlit_image_base}:latest"
-}
+# Streamlit output disabled - Web UI is now integrated into FastAPI with HTMX
+# output "streamlit_image_uri" {
+#   description = "Docker image URI for Streamlit UI"
+#   value       = "${local.streamlit_image_base}:latest"
+# }
 
 output "ingester_image_uri" {
   description = "Docker image URI for Drive Ingester"

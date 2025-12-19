@@ -197,9 +197,11 @@ resource "google_cloud_run_v2_service_iam_member" "api_public" {
 }
 
 # =============================================================================
-# Streamlit UI
+# Streamlit UI (DISABLED - Web UI is now integrated into FastAPI with HTMX)
+# Uncomment this section to re-enable Streamlit UI
 # =============================================================================
 
+/*
 resource "google_cloud_run_v2_service" "streamlit" {
   name     = "etude-rag2-streamlit-${var.environment}"
   location = var.region
@@ -384,6 +386,7 @@ resource "google_cloud_run_v2_service_iam_member" "streamlit_public" {
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
+*/
 
 # =============================================================================
 # Drive Ingester Job

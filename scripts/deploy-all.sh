@@ -1,11 +1,14 @@
 #!/bin/bash
-# Full Deployment Script (Backend + Frontend + Ingester)
+# Full Deployment Script (Backend + Ingester)
 # Usage: ./scripts/deploy-all.sh [--rebuild-base] [--include-ingester]
 #
-# By default, deploys Backend and Frontend in parallel.
+# By default, deploys Backend only (includes HTMX Web UI).
 # Options:
 #   --rebuild-base     Rebuild base images before deploying (use when dependencies changed)
 #   --include-ingester Also deploy the Ingester job
+#
+# Note: Streamlit UI has been replaced by HTMX Web UI integrated into FastAPI.
+#       Use scripts/deploy-frontend.sh if you need to re-enable Streamlit.
 
 set -e
 
@@ -33,11 +36,10 @@ for arg in "$@"; do
 done
 
 echo "=========================================="
-echo "Full Deployment (Parallel Execution)"
+echo "Full Deployment"
 echo "=========================================="
 echo "Rebuild Base: ${REBUILD_BASE}"
-echo "Backend: Yes"
-echo "Frontend: Yes"
+echo "Backend (includes HTMX Web UI): Yes"
 echo "Ingester: ${INCLUDE_INGESTER}"
 echo "=========================================="
 
@@ -72,9 +74,9 @@ fi
 # Record deployment start times
 DEPLOY_START_TIME=$(date +%s)
 
-# Deploy Backend in background
+# Deploy Backend (includes HTMX Web UI)
 echo ""
-echo ">>> Starting Backend deployment..."
+echo ">>> Starting Backend deployment (includes HTMX Web UI)..."
 (
     START=$(date +%s)
     "${SCRIPT_DIR}/deploy-backend.sh" > "${LOG_DIR}/backend.log" 2>&1
@@ -84,18 +86,6 @@ echo ">>> Starting Backend deployment..."
     exit $EXIT_CODE
 ) &
 BACKEND_PID=$!
-
-# Deploy Frontend in background
-echo ">>> Starting Frontend deployment..."
-(
-    START=$(date +%s)
-    "${SCRIPT_DIR}/deploy-frontend.sh" > "${LOG_DIR}/frontend.log" 2>&1
-    EXIT_CODE=$?
-    END=$(date +%s)
-    echo $((END - START)) > "${LOG_DIR}/frontend.time"
-    exit $EXIT_CODE
-) &
-FRONTEND_PID=$!
 
 # Deploy Ingester in background (if requested)
 if [ "${INCLUDE_INGESTER}" = true ]; then
@@ -112,7 +102,11 @@ if [ "${INCLUDE_INGESTER}" = true ]; then
 fi
 
 echo ""
-echo ">>> All deployments started in parallel. Waiting for completion..."
+if [ "${INCLUDE_INGESTER}" = true ]; then
+    echo ">>> Deployments started in parallel. Waiting for completion..."
+else
+    echo ">>> Waiting for Backend deployment to complete..."
+fi
 echo ""
 
 # Track failures
@@ -126,15 +120,6 @@ else
     echo "[FAILED] Backend deployment failed."
     FAILED=true
     FAILED_COMPONENTS="${FAILED_COMPONENTS} Backend"
-fi
-
-# Wait for Frontend
-if wait ${FRONTEND_PID}; then
-    echo "[OK] Frontend deployment completed."
-else
-    echo "[FAILED] Frontend deployment failed."
-    FAILED=true
-    FAILED_COMPONENTS="${FAILED_COMPONENTS} Frontend"
 fi
 
 # Wait for Ingester (if started)
@@ -167,14 +152,12 @@ format_time() {
 
 # Read individual deployment times
 BACKEND_TIME=$(cat "${LOG_DIR}/backend.time" 2>/dev/null || echo "0")
-FRONTEND_TIME=$(cat "${LOG_DIR}/frontend.time" 2>/dev/null || echo "0")
 if [ "${INCLUDE_INGESTER}" = true ]; then
     INGESTER_TIME=$(cat "${LOG_DIR}/ingester.time" 2>/dev/null || echo "0")
 fi
 
-# Get service URLs
+# Get service URL (Backend includes HTMX Web UI)
 BACKEND_URL=$(gcloud run services describe "etude-rag2-api-${ENVIRONMENT}" --region "${REGION}" --format="value(status.url)" 2>/dev/null || echo "N/A")
-FRONTEND_URL=$(gcloud run services describe "etude-rag2-streamlit-${ENVIRONMENT}" --region "${REGION}" --format="value(status.url)" 2>/dev/null || echo "N/A")
 
 # Show results
 if [ "${FAILED}" = true ]; then
@@ -183,7 +166,6 @@ if [ "${FAILED}" = true ]; then
     echo ""
     echo "--- Deployment Times ---"
     echo "  Backend:  $(format_time ${BACKEND_TIME})"
-    echo "  Frontend: $(format_time ${FRONTEND_TIME})"
     if [ "${INCLUDE_INGESTER}" = true ]; then
         echo "  Ingester: $(format_time ${INGESTER_TIME})"
     fi
@@ -208,20 +190,18 @@ else
     echo ""
     echo "Deployment Times:"
     echo "  Backend:  $(format_time ${BACKEND_TIME})"
-    echo "  Frontend: $(format_time ${FRONTEND_TIME})"
     if [ "${INCLUDE_INGESTER}" = true ]; then
         echo "  Ingester: $(format_time ${INGESTER_TIME})"
     fi
     echo ""
-    echo "Service URLs:"
-    echo "  Backend:  ${BACKEND_URL}"
-    echo "  Frontend: ${FRONTEND_URL}"
+    echo "Service URL (API + Web UI):"
+    echo "  ${BACKEND_URL}"
     echo ""
     echo "Total elapsed time: ${MINUTES}m ${SECONDS}s"
     echo "=========================================="
     if [ "${INCLUDE_INGESTER}" = true ]; then
-        notify "Full Deploy Success" "Backend, Frontend, and Ingester deployed!" "Glass"
+        notify "Full Deploy Success" "Backend and Ingester deployed!" "Glass"
     else
-        notify "Full Deploy Success" "Backend and Frontend deployed!" "Glass"
+        notify "Full Deploy Success" "Backend deployed!" "Glass"
     fi
 fi

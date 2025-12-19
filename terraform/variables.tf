@@ -93,9 +93,11 @@ variable "cloud_run_concurrency" {
 }
 
 # =============================================================================
-# Cloud Run Streamlit settings
+# Cloud Run Streamlit settings (DISABLED - Web UI is now integrated into FastAPI)
+# Uncomment this section to re-enable Streamlit UI
 # =============================================================================
 
+/*
 variable "streamlit_memory" {
   description = "Memory limit for Streamlit Cloud Run service"
   type        = string
@@ -113,6 +115,7 @@ variable "streamlit_max_instances" {
   type        = number
   default     = 5
 }
+*/
 
 # =============================================================================
 # Ingester Job settings
