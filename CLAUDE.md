@@ -12,11 +12,13 @@ RAG system for generating note article drafts (recruiting articles). Supports 4 
 # Install dependencies
 uv sync
 
-# Run API server
+# Run API server (includes HTMX Web UI)
 uv run uvicorn src.api.main:app --reload --port 8000
+# Web UI: http://localhost:8000
+# API Docs: http://localhost:8000/docs
 
-# Run Streamlit UI
-uv run streamlit run src/ui/app.py
+# Streamlit UI (deprecated, scheduled for removal)
+# uv run streamlit run src/ui/app.py
 
 # Run tests
 uv run pytest tests/ -v
@@ -63,9 +65,18 @@ psql rag_db < schemas/schema.sql
 - **HallucinationDetectorChain** - Identifies claims not grounded in source material
 - **StyleCheckerChain** - Verifies consistency with company writing style
 
+### Web UI (src/templates/, src/static/)
+
+HTMX + Jinja2 based UI with SSE streaming:
+- `templates/base.html` - Base template with HTMX 2.0.4 + SSE extension
+- `templates/index.html` - Main page with article generation form
+- `templates/partials/` - Partial templates for progress and results
+
 ### API Layer (src/api/)
 
-FastAPI with endpoints: `/generate`, `/generate/stream` (SSE), `/search`, `/verify`, `/health`
+FastAPI with endpoints:
+- Web UI: `GET /`, `POST /ui/generate`, `POST /ui/generate/stream`
+- REST API: `/generate`, `/generate/stream` (SSE), `/search`, `/verify`, `/health`
 
 ### Configuration (src/config.py, src/secret_manager.py)
 
@@ -88,6 +99,11 @@ Secret Manager secrets (managed by Terraform):
 
 Local development:
 ```bash
+# Start local dev with Cloud SQL (auto public IP enable/disable)
+./scripts/start-local-dev.sh dev       # API server mode
+./scripts/start-local-dev.sh dev --shell  # psql shell mode
+./scripts/start-local-dev.sh dev --proxy  # Cloud SQL Auth Proxy mode
+
 # Generate .env from Secret Manager
 ./scripts/sync-env-from-secrets.sh dev
 ```

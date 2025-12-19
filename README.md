@@ -22,7 +22,7 @@ note記事ドラフト自動生成のためのRAG（Retrieval-Augmented Generati
 | パッケージ管理 | uv |
 | LLM/Embeddings | Google Vertex AI (Gemini 2.0 Flash, text-embedding-004) |
 | ベクトルDB | PostgreSQL 15+ with pgvector |
-| フレームワーク | LangChain 0.3.0+, FastAPI, Streamlit |
+| フレームワーク | LangChain 0.3.0+, FastAPI, HTMX + Jinja2 |
 | リランカー | BAAI/bge-reranker-v2-m3 |
 | インフラ | Google Cloud Platform (Cloud Run, Cloud SQL, Vertex AI) |
 | IaC | Terraform |
@@ -58,11 +58,19 @@ etude-rag2/
 │   │   └── style_retriever.py  # スタイルプロファイル検索（v3）
 │   ├── ingestion/              # データ取り込み
 │   │   └── drive_ingester.py   # Google Drive連携
-│   ├── ui/                     # Streamlit UI
+│   ├── templates/              # Jinja2テンプレート（HTMX UI）
+│   │   ├── base.html           # ベーステンプレート
+│   │   ├── index.html          # メインページ
+│   │   └── partials/           # パーシャルテンプレート
+│   │       ├── progress.html   # SSE進捗表示
+│   │       └── result.html     # 生成結果表示
+│   ├── static/                 # 静的ファイル
+│   │   └── css/style.css       # カスタムCSS
+│   ├── ui/                     # Streamlit UI（非推奨・削除予定）
 │   │   ├── app.py
-│   │   ├── api_client.py       # APIクライアント
-│   │   ├── state.py            # セッション状態管理
-│   │   └── utils.py            # ユーティリティ
+│   │   ├── api_client.py
+│   │   ├── state.py
+│   │   └── utils.py
 │   └── verification/           # 品質検証
 │       ├── hallucination_detector.py
 │       └── style_checker.py
@@ -72,8 +80,8 @@ etude-rag2/
 ├── terraform/                  # インフラ設定
 ├── scripts/
 │   └── sync-env-from-secrets.sh # Secret Manager → .env 生成
-├── Dockerfile                  # APIサーバー用
-├── Dockerfile.streamlit        # UI用
+├── Dockerfile                  # APIサーバー用（HTMX UI含む）
+├── Dockerfile.streamlit        # Streamlit UI用（非推奨・削除予定）
 ├── Dockerfile.ingester         # データ取り込み用
 └── cloudbuild.yaml             # CI/CD設定
 ```
@@ -114,18 +122,26 @@ uv run python src/main.py --local-file input.md --article-type ANNOUNCEMENT
 ### サービスの起動
 
 ```bash
-# APIサーバー
+# APIサーバー（HTMX UI含む）
 uv run uvicorn src.api.main:app --reload --port 8000
-
-# Streamlit UI
-uv run streamlit run src/ui/app.py
 ```
 
-- API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- UI: http://localhost:8501
+- **Web UI**: http://localhost:8000 （HTMX + SSEストリーミング）
+- **API Docs**: http://localhost:8000/docs
+
+> **Note**: Streamlit UI（`uv run streamlit run src/ui/app.py`）は非推奨・削除予定です。
 
 ## API エンドポイント
+
+### Web UI
+
+| メソッド | パス | 説明 |
+|---------|------|------|
+| GET | `/` | メインページ（記事生成フォーム） |
+| POST | `/ui/generate` | 記事生成（HTMLパーシャル返却） |
+| POST | `/ui/generate/stream` | 記事生成（SSE進捗表示用） |
+
+### REST API
 
 | メソッド | パス | 説明 |
 |---------|------|------|
@@ -247,29 +263,31 @@ terraform apply
 ### Cloud Build
 
 ```bash
-# APIサーバーのビルド・デプロイ
+# APIサーバーのビルド・デプロイ（HTMX UI含む）
 gcloud builds submit --config cloudbuild.yaml
-
-# Streamlit UIのビルド・デプロイ
-gcloud builds submit --config cloudbuild-streamlit.yaml
 
 # データ取り込みジョブのビルド
 gcloud builds submit --config cloudbuild-ingester.yaml
+
+# Streamlit UIのビルド・デプロイ（非推奨・削除予定）
+# gcloud builds submit --config cloudbuild-streamlit.yaml
 ```
 
 ## アーキテクチャ
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────────┐
-│ Streamlit   │────▶│  FastAPI    │────▶│  Cloud SQL      │
-│    UI       │     │   Server    │     │  (PostgreSQL)   │
-└─────────────┘     └──────┬──────┘     │  + pgvector     │
-                           │            │  + pg_trgm      │
-                           ▼            └─────────────────┘
-                    ┌─────────────┐
-                    │  Vertex AI  │
-                    │  Gemini     │
-                    └─────────────┘
+┌─────────────┐     ┌───────────────────┐     ┌─────────────────┐
+│   Browser   │────▶│     FastAPI       │────▶│  Cloud SQL      │
+│  (HTMX UI)  │     │  (API + Web UI)   │     │  (PostgreSQL)   │
+└─────────────┘     │  + Jinja2         │     │  + pgvector     │
+      │             │  + SSE Streaming  │     │  + pg_trgm      │
+      │ SSE         └────────┬──────────┘     └─────────────────┘
+      ▼                      │
+ リアルタイム                 ▼
+ 進捗表示             ┌─────────────┐
+                     │  Vertex AI  │
+                     │  Gemini 2.0 │
+                     └─────────────┘
 ```
 
 ### RAGパイプライン

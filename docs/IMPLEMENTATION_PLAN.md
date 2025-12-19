@@ -66,8 +66,21 @@
 src/
 ├── main.py                    # データ取り込みエントリポイント
 ├── config.py                  # 設定管理（Pydantic Settings）
-├── api_server.py              # FastAPI REST API
-├── streamlit_app.py           # Streamlit Web UI
+├── api/                       # FastAPI REST API + Web UI
+│   ├── main.py                # アプリケーション
+│   ├── models.py              # リクエスト/レスポンスモデル
+│   └── sse_models.py          # SSEイベントモデル
+├── templates/                 # Jinja2テンプレート（HTMX UI）
+│   ├── base.html              # ベーステンプレート
+│   ├── index.html             # メインページ
+│   └── partials/              # パーシャルテンプレート
+│       ├── progress.html      # SSE進捗表示
+│       └── result.html        # 生成結果表示
+├── static/                    # 静的ファイル
+│   └── css/style.css          # カスタムCSS
+├── ui/                        # Streamlit UI（非推奨・削除予定）
+│   ├── app.py
+│   └── ...
 ├── models/
 │   ├── __init__.py
 │   ├── document.py            # Documentモデル
@@ -262,8 +275,9 @@ class DriveIngester:
 
 | コンポーネント | ファイル | 説明 |
 |--------------|---------|------|
-| REST API | `api_server.py` | FastAPIエンドポイント |
-| Web UI | `streamlit_app.py` | Streamlitインターフェース |
+| REST API | `api/main.py` | FastAPIエンドポイント |
+| Web UI（メイン） | `templates/` | HTMX + Jinja2（SSEストリーミング対応） |
+| Web UI（非推奨） | `ui/app.py` | Streamlit（削除予定） |
 
 ### Phase 5: デプロイ（後続実装）
 

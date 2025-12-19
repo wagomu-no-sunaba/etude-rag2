@@ -64,17 +64,23 @@ project-root/
 ├── src/                          # アプリケーションコード
 │   ├── main.py                   # データ取り込みエントリポイント
 │   ├── config.py                 # 設定管理（Pydantic Settings）
-│   ├── api_server.py             # FastAPI REST API
-│   ├── streamlit_app.py          # Streamlit Web UI
-│   ├── retriever.py              # ACL制御付きベクトル検索
-│   ├── hybrid_search.py          # ハイブリッド検索（RRF融合）
-│   ├── reranker.py               # BGEリランカー
-│   ├── faq_chain.py              # FAQ回答生成チェーン
-│   ├── blog_chain.py             # ブログ生成チェーン
-│   ├── query_rewriter.py         # クエリ拡張
-│   ├── tag_service.py            # タグ管理
-│   ├── evaluation.py             # RAG評価
-│   └── web_searcher.py           # Web検索統合
+│   ├── api/                      # FastAPI REST API + Web UI
+│   │   ├── main.py               # アプリケーション
+│   │   ├── models.py             # リクエスト/レスポンスモデル
+│   │   └── sse_models.py         # SSEイベントモデル
+│   ├── templates/                # Jinja2テンプレート（HTMX UI）
+│   │   ├── base.html             # ベーステンプレート
+│   │   ├── index.html            # メインページ
+│   │   └── partials/             # パーシャルテンプレート
+│   │       ├── progress.html     # SSE進捗表示
+│   │       └── result.html       # 生成結果表示
+│   ├── static/                   # 静的ファイル
+│   │   └── css/style.css         # カスタムCSS
+│   ├── ui/                       # Streamlit UI（非推奨・削除予定）
+│   ├── retriever/                # 検索システム
+│   ├── chains/                   # 記事生成パイプライン
+│   ├── verification/             # 品質検証
+│   └── ingestion/                # データ取り込み
 ├── schemas/
 │   └── schema.sql                # データベーススキーマ
 ├── terraform/                    # インフラ定義（IaC）
@@ -82,10 +88,10 @@ project-root/
 │   ├── cloud_run.tf
 │   ├── cloudsql.tf
 │   └── variables.tf
-├── Dockerfile                    # APIサーバー用
+├── Dockerfile                    # APIサーバー用（HTMX UI含む）
 ├── Dockerfile.base               # 依存関係プリビルド
 ├── Dockerfile.ingester           # データ取り込みジョブ用
-├── Dockerfile.streamlit          # Streamlit UI用
+├── Dockerfile.streamlit          # Streamlit UI用（非推奨・削除予定）
 ├── cloudbuild.yaml               # CI/CD設定
 ├── pyproject.toml                # Python依存関係
 └── tests/                        # テストコード
@@ -101,7 +107,7 @@ project-root/
 │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
 │  │   Cloud Run     │    │   Cloud Run     │    │  Cloud Run   │ │
 │  │   (API Server)  │    │   (Streamlit)   │    │    Job       │ │
-│  │                 │    │                 │    │  (Ingester)  │ │
+│  │  + HTMX Web UI  │    │  非推奨・削除予定 │    │  (Ingester)  │ │
 │  └────────┬────────┘    └────────┬────────┘    └──────┬───────┘ │
 │           │                      │                    │         │
 │           └──────────┬───────────┴────────────────────┘         │
@@ -529,44 +535,54 @@ async def health():
     return {"status": "healthy"}
 ```
 
-### 7. Streamlit UI (`streamlit_app.py`)
+### 7. Web UI（HTMX + Jinja2）
 
-インタラクティブなWeb UI:
+FastAPI + Jinja2 + HTMXベースの軽量Web UI（SSEストリーミング対応）:
+
+```html
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>{% block content %}{% endblock %}</body>
+</html>
+
+<!-- templates/index.html -->
+<form hx-post="/ui/generate/stream" hx-target="#result" hx-swap="innerHTML">
+    <select name="article_type">
+        <option value="auto">自動判定</option>
+        <option value="ANNOUNCEMENT">お知らせ</option>
+        <!-- ... -->
+    </select>
+    <textarea name="input_material" rows="10" required></textarea>
+    <button type="submit">生成</button>
+</form>
+<div id="result"></div>
+
+<!-- templates/partials/progress.html -->
+<div hx-ext="sse" sse-connect="/generate/stream" sse-swap="progress,complete,error">
+    <progress value="{{ percentage }}" max="100"></progress>
+    <span>{{ step_name }}</span>
+</div>
+```
+
+**技術スタック:**
+- HTMX 2.0.4 + SSE Extension 2.2.2
+- Jinja2テンプレートエンジン
+- Server-Sent Events（リアルタイム進捗表示）
+
+### 7.1 Streamlit UI（非推奨・削除予定）
+
+> **Warning**: Streamlit UIは非推奨です。新しいHTMX UIをご利用ください。
 
 ```python
+# src/ui/app.py - 非推奨・削除予定
 import streamlit as st
-
-# コンポーネントのキャッシュ
-@st.cache_resource
-def get_faq_chain():
-    return FAQAnswerChain()
-
-# セッション状態の初期化
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# サイドバー設定
-with st.sidebar:
-    st.header("設定")
-    user_email = st.text_input("メールアドレス（ACL制御）")
-    mode = st.selectbox("モード", ["FAQ回答", "ブログ生成", "検索"])
-
-# モード別UI
-tab1, tab2, tab3 = st.tabs(["FAQ", "ブログ", "検索"])
-
-with tab1:
-    if query := st.chat_input("質問を入力"):
-        with st.spinner("回答を生成中..."):
-            result = get_faq_chain().generate_answer(query, user_email)
-
-        st.write(result["answer"])
-
-        # 参照元の表示
-        with st.expander("参照元"):
-            for source in result["sources"]:
-                st.write(f"- {source['source']}")
-                if "rerank_score_normalized" in source:
-                    st.write(f"  スコア: {source['rerank_score_normalized']:.2f}")
+# ...
 ```
 
 ---

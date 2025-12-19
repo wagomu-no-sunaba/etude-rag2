@@ -465,16 +465,14 @@ TARGET_FOLDER_ID=1ABCdefGHI...
 ```bash
 # Cloud SQL Proxy が起動していることを確認
 
-# API サーバー起動
+# API サーバー起動（HTMX Web UI含む）
 uv run uvicorn src.api.main:app --reload --port 8000
-
-# 別ターミナルで Streamlit UI 起動
-uv run streamlit run src/ui/app.py
 ```
 
-- API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-- Streamlit UI: http://localhost:8501
+- **Web UI**: http://localhost:8000 （HTMX + SSEストリーミング）
+- **API Docs**: http://localhost:8000/docs
+
+> **Note**: Streamlit UI（`uv run streamlit run src/ui/app.py`）は非推奨・削除予定です。
 
 ---
 
@@ -491,9 +489,11 @@ curl https://YOUR_API_URL/health
 {"status": "ok"}
 ```
 
-### 7.2 Streamlit UI へのアクセス
+### 7.2 Web UI へのアクセス
 
-ブラウザで Streamlit の URL を開き、UI が表示されることを確認します。
+ブラウザで http://localhost:8000 を開き、記事生成フォームが表示されることを確認します。
+
+> **Note**: Streamlit UI は非推奨・削除予定です。新しい HTMX UI をご利用ください。
 
 ### 7.3 データ取り込みジョブの実行
 
