@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.generated_content.titles[0] if article.generated_content.titles else '記事詳細' }} - Note記事ドラフト生成{% endblock %}
+
+{% block content %}
+<main class="container">
+    <header>
+        <nav>
+            <a href="/ui/history">← 履歴一覧</a>
+        </nav>
+        <h1>{{ article.generated_content.titles[0] if article.generated_content.titles else '無題' }}</h1>
+        <div class="meta">
+            <span class="article-type">{{ article.article_type_ja }}</span>
+            <time datetime="{{ article.created_at }}">{{ article.created_at }}</time>
+        </div>
+    </header>
+
+    <section class="article-content">
+        <div class="markdown-preview">
+            <pre>{{ article.markdown }}</pre>
+        </div>
+    </section>
+
+    <section class="article-actions">
+        <button hx-delete="/ui/history/{{ article.id }}"
+                hx-confirm="この記事を削除しますか？"
+                hx-target="body"
+                hx-swap="innerHTML"
+                class="btn btn-danger">削除</button>
+    </section>
+</main>
+{% endblock %}

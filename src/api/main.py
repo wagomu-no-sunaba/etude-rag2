@@ -8,6 +8,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -110,6 +111,40 @@ async def history_list(request: Request):
     # TODO: Fetch articles from database
     articles: list = []
     return templates.TemplateResponse(request, "history_list.html", {"articles": articles})
+
+
+def get_article_by_id(article_id: UUID) -> dict[str, Any] | None:
+    """Get an article by its ID from the database.
+
+    Args:
+        article_id: UUID of the article to fetch.
+
+    Returns:
+        Article data as dict, or None if not found.
+    """
+    # TODO: Implement actual database lookup
+    return None
+
+
+@app.get("/ui/history/{article_id}")
+async def article_detail(request: Request, article_id: UUID):
+    """Render the article detail page.
+
+    Args:
+        request: FastAPI request.
+        article_id: UUID of the article to display.
+
+    Returns:
+        HTML page with full article content.
+
+    Raises:
+        HTTPException: 404 if article not found.
+    """
+    article = get_article_by_id(article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    return templates.TemplateResponse(request, "article_detail.html", {"article": article})
 
 
 @app.get("/health")
